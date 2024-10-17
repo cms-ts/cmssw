@@ -18,13 +18,14 @@ process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 132X, mc")
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
     fileNames = cms.untracked.vstring(
-        'root://eoscms.cern.ch//store/group/phys_heavyions/jviinika/PythiaHydjetRun3_5p36TeV_dijet_ptHat15_100kEvents_miniAOD_2023_08_30/PythiaHydjetDijetRun3/PythiaHydjetRun3_dijet_ptHat15_5p36TeV_miniAOD/230830_165931/0000/pythiaHydjet_miniAOD_11.root'
+#	'root://eoscms.cern.ch//store/mc/HINPbPbSpring23MiniAOD/DYto2E_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/MINIAODSIM/132X_mcRun3_2023_realistic_HI_v9-v3/120000/0057a099-3ad9-4c80-a911-cf686d96f2eb.root',
+	'root://cms-xrd-global.cern.ch//store/mc/HINPbPbSpring23MiniAOD/DYto2Mu_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/MINIAODSIM/132X_mcRun3_2023_realistic_HI_v9-v3/2820000/011a30f6-bf65-4c60-ba97-a97f6fbf9351.root',
     ),
 )
 
 # number of events to process, set to -1 to process all events
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(20)
+    input = cms.untracked.int32(100)
     )
 
 ###############################################################################
@@ -129,9 +130,9 @@ process.forest = cms.Path(
     process.ggHiNtuplizer +
 #    process.zdcdigi +
 #    process.QWzdcreco +
-    process.zdcanalyzer #+
-#    process.unpackedMuons +
-#    process.muonAnalyzer
+#    process.zdcanalyzer +
+    process.unpackedMuons +
+    process.muonAnalyzer
     )
 
 #customisation
