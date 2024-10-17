@@ -132,14 +132,14 @@ process.forest = cms.Path(
     process.centralityBin +
     process.hiEvtAnalyzer +
     process.hltanalysis +
-    process.hltobject +
-    process.l1object +
+    #process.hltobject +
+    #process.l1object +
     process.trackSequencePbPb +
     #process.particleFlowAnalyser +
     process.ggHiNtuplizer +
     #process.zdcdigi +
     #process.QWzdcreco +
-    process.zdcanalyzer +
+    #process.zdcanalyzer +
     process.unpackedMuons +
     process.muonAnalyzer +
     process.akPu4CaloJetAnalyzer
