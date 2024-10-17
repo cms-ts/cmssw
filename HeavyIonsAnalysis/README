@@ -1,0 +1,17 @@
+Setup instructions
+
+cmssw-el8
+export SCRAM_ARCH=el8_amd64_gcc11
+
+mkdir Hi_forest
+cd Hi_forest
+
+cmsrel CMSSW_13_2_4
+cd CMSSW_13_2_4/src
+cmsenv
+git cms-init --upstream-only
+git remote add my-cmssw https://github.com/cms-ts/cmssw.git
+git fetch my-cmssw --no-tags
+git checkout forest_CMSSW_13_2_X
+git cms-addpkg HeavyIonsAnalysis
+scram b -j8
