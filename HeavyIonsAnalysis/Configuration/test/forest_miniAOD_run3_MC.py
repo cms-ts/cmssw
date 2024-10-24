@@ -235,9 +235,8 @@ if addCandidateTagging:
     )
 
     process.akCs4PFJetAnalyzer.jetTag = "updatedPatJets"
-    process.akCs4PFJetAnalyzerSubstructure.jetTag = "updatedPatJetsSubstructure"
 
-    process.forest.insert(1,process.candidateBtagging*process.updatedPatJets+process.updatedPatJets_substructure)
+    process.forest.insert(1,process.candidateBtagging*process.updatedPatJets)
 
 
 #########################

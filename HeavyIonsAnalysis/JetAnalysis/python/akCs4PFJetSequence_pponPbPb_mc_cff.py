@@ -30,3 +30,4 @@ akCs4PFJetAnalyzerSubstructure = inclusiveJetSubstructure.clone(
     )
 
 akFlowPuCs4PFJetAnalyzer = akCs4PFJetAnalyzer.clone()
+akFlowPuCs4PFJetAnalyzerSubstructure = akCs4PFJetAnalyzerSubstructure.clone()

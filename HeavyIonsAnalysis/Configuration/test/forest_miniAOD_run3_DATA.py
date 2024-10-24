@@ -34,7 +34,7 @@ process.source.lumisToProcess = LumiList.LumiList(filename = '/eos/user/c/cmsdqm
 
 # number of events to process, set to -1 to process all events
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(20)
+    input = cms.untracked.int32(100)
     )
 
 ###############################################################################
@@ -62,7 +62,7 @@ process.centralityBin.centralityVariable = cms.string("HFtowers")
 
 # root output
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string("HiForestMiniAOD.root"))
+    fileName = cms.string("HiForestMiniAOD_DATA.root"))
 
 # # edm output for debugging purposes
 # process.output = cms.OutputModule(
@@ -132,7 +132,7 @@ process.forest = cms.Path(
     process.centralityBin +
     process.hiEvtAnalyzer +
     process.hltanalysis +
-    #process.hltobject +
+    process.hltobject +
     #process.l1object +
     process.trackSequencePbPb +
     #process.particleFlowAnalyser +
@@ -148,10 +148,12 @@ process.forest = cms.Path(
 #customisation
 
 # Select the types of jets filled
-addR3Jets = False
-addR3FlowJets = False
+addR2Jets = True
+addR2FlowJets = True
 addR4Jets = True
 addR4FlowJets = True
+addR2JetsSubstructure = True
+addR2FlowJetsSubstructure = True
 addUnsubtractedR4Jets = True
 
 # Choose which additional information is added to jet trees
@@ -162,24 +164,24 @@ doWTARecluster = True        # Add jet phi and eta for WTA axis
 addCandidateTagging = False
 
 
-if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets or addUnsubtractedR4Jets :
+if addR2Jets or addR2FlowJets or addR4Jets or addR4FlowJets or addR2JetsSubstructure or addR2FlowJetsSubstructure or addUnsubtractedR4Jets :
     process.load("HeavyIonsAnalysis.JetAnalysis.extraJets_cff")
     from HeavyIonsAnalysis.JetAnalysis.clusterJetsFromMiniAOD_cff import setupHeavyIonJets
     process.load("HeavyIonsAnalysis.JetAnalysis.candidateBtaggingMiniAOD_cff")
 
-    if addR3Jets :
-        process.jetsR3 = cms.Sequence()
-        setupHeavyIonJets('akCs3PF', process.jetsR3, process, isMC = 0, radius = 0.30, JECTag = 'AK3PF', doFlow = False)
-        process.akCs3PFpatJetCorrFactors.levels = ['L2Relative', 'L2L3Residual']
-        process.akCs3PFJetAnalyzer = process.akCs4PFJetAnalyzer.clone(jetTag = "akCs3PFpatJets", jetName = 'akCs3PF', doHiJetID = doHIJetID, doWTARecluster = doWTARecluster)
-        process.forest += process.extraJetsData * process.jetsR3 * process.akCs3PFJetAnalyzer
+    if addR2Jets :
+        process.jetsR2 = cms.Sequence()
+        setupHeavyIonJets('akCs2PF', process.jetsR2, process, isMC = 0, radius = 0.20, JECTag = 'AK2PF', doFlow = False)
+        #process.akCs2PFpatJetCorrFactors.levels = ['L2Relative', 'L2L3Residual']
+        process.akCs2PFJetAnalyzer = process.akCs4PFJetAnalyzer.clone(jetTag = "akCs2PFpatJets", jetName = 'akCs2PF', doHiJetID = doHIJetID, doWTARecluster = doWTARecluster)
+        process.forest += process.extraJetsData * process.jetsR2 * process.akCs2PFJetAnalyzer
 
-    if addR3FlowJets :
-        process.jetsR3flow = cms.Sequence()
-        setupHeavyIonJets('akCs3PFFlow', process.jetsR3flow, process, isMC = 0, radius = 0.30, JECTag = 'AK3PF', doFlow = True)
-        process.akCs3PFFlowpatJetCorrFactors.levels = ['L2Relative', 'L2L3Residual']
-        process.akFlowPuCs3PFJetAnalyzer = process.akCs4PFJetAnalyzer.clone(jetTag = "akCs3PFFlowpatJets", jetName = 'akCs3PFFlow', doHiJetID = doHIJetID, doWTARecluster = doWTARecluster)
-        process.forest += process.extraFlowJetsData * process.jetsR3flow * process.akFlowPuCs3PFJetAnalyzer
+    if addR2FlowJets :
+        process.jetsR2flow = cms.Sequence()
+        setupHeavyIonJets('akCs2PFFlow', process.jetsR2flow, process, isMC = 0, radius = 0.20, JECTag = 'AK2PF', doFlow = True)
+        #process.akCs3PFFlowpatJetCorrFactors.levels = ['L2Relative', 'L2L3Residual']
+        process.akFlowPuCs2PFJetAnalyzer = process.akCs4PFJetAnalyzer.clone(jetTag = "akCs2PFFlowpatJets", jetName = 'akCs2PFFlow', doHiJetID = doHIJetID, doWTARecluster = doWTARecluster)
+        process.forest += process.extraFlowJetsData * process.jetsR2flow * process.akFlowPuCs2PFJetAnalyzer
 
     if addR4Jets :
         # Recluster using an alias "0" in order not to get mixed up with the default AK4 collections
@@ -201,6 +203,20 @@ if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets or addUnsubtractedR4
         process.akFlowPuCs4PFJetAnalyzer.doHiJetID = doHIJetID
         process.akFlowPuCs4PFJetAnalyzer.doWTARecluster = doWTARecluster
         process.forest += process.extraFlowJetsData * process.jetsR4flow * process.akFlowPuCs4PFJetAnalyzer
+
+    if addR2JetsSubstructure :
+        process.jetsR2Substructure = cms.Sequence()
+        setupHeavyIonJets('akCs2PFSubstructure', process.jetsR2Substructure, process, isMC = 0, radius = 0.20, JECTag = 'AK2PF', doFlow = False)
+        #process.akCs2PFpatJetCorrFactors.levels = ['L2Relative', 'L2L3Residual']
+        process.akCs2PFJetAnalyzerSubstructure = process.akCs4PFJetAnalyzerSubstructure.clone(jetTag = "akCs2PFSubstructurepatJets", jetName = 'akCs2PFSubstructure', doHiJetID = doHIJetID, doWTARecluster = doWTARecluster)
+        process.forest += process.extraJetsData * process.jetsR2Substructure * process.akCs2PFJetAnalyzerSubstructure
+
+    if addR2FlowJetsSubstructure :
+        process.jetsR2flowSubstructure = cms.Sequence()
+        setupHeavyIonJets('akCs2PFFlowSubstructure', process.jetsR2flowSubstructure, process, isMC = 0, radius = 0.20, JECTag = 'AK2PF', doFlow = True)
+        #process.akCs3PFFlowpatJetCorrFactors.levels = ['L2Relative', 'L2L3Residual']
+        process.akFlowPuCs2PFJetAnalyzerSubstructure = process.akCs4PFJetAnalyzerSubstructure.clone(jetTag = "akCs2PFFlowSubstructurepatJets", jetName = 'akCs2PFFlowSubstructure', doHiJetID = doHIJetID, doWTARecluster = doWTARecluster)
+        process.forest += process.extraFlowJetsData * process.jetsR2flowSubstructure * process.akFlowPuCs2PFJetAnalyzerSubstructure
 
     if addUnsubtractedR4Jets:
         process.load('HeavyIonsAnalysis.JetAnalysis.ak4PFJetSequence_ppref_data_cff')

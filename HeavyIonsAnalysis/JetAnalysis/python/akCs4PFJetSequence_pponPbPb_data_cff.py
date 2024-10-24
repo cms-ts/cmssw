@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 from HeavyIonsAnalysis.JetAnalysis.inclusiveJetAnalyzer_cff import *
+from HeavyIonsAnalysis.JetAnalysis.inclusiveJetSubstructure_cff import *
 
 akCs4PFJetAnalyzer = inclusiveJetAnalyzer.clone(
     jetTag = cms.InputTag("slimmedJets"),
@@ -11,4 +12,14 @@ akCs4PFJetAnalyzer = inclusiveJetAnalyzer.clone(
     hltTrgResults = cms.untracked.string('TriggerResults::'+'HISIGNAL'),
     )
 
+akCs4PFJetAnalyzerSubstructure = inclusiveJetSubstructure.clone(
+    jetTag = cms.InputTag("slimmedJets"),
+    rParam = 0.4,
+    fillGenJets = False,
+    isMC = False,
+    jetName = cms.untracked.string("akCs4PF"),
+    hltTrgResults = cms.untracked.string('TriggerResults::'+'HISIGNAL'),
+    )
+
 akFlowPuCs4PFJetAnalyzer = akCs4PFJetAnalyzer.clone()
+akFlowPuCs4PFJetAnalyzerSubstructure = akCs4PFJetAnalyzerSubstructure.clone()
