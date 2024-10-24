@@ -18,6 +18,7 @@ process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 132X, mc")
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
     fileNames = cms.untracked.vstring(
+#	'root://eoscms.cern.ch//store/group/phys_heavyions/jviinika/PythiaHydjetRun3_5p36TeV_dijet_ptHat15_100kEvents_miniAOD_2023_08_30/PythiaHydjetDijetRun3/PythiaHydjetRun3_dijet_ptHat15_5p36TeV_miniAOD/230830_165931/0000/pythiaHydjet_miniAOD_11.root'
 #	'root://eoscms.cern.ch//store/mc/HINPbPbSpring23MiniAOD/DYto2E_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/MINIAODSIM/132X_mcRun3_2023_realistic_HI_v9-v3/120000/0057a099-3ad9-4c80-a911-cf686d96f2eb.root',
 	'root://cms-xrd-global.cern.ch//store/mc/HINPbPbSpring23MiniAOD/DYto2Mu_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/MINIAODSIM/132X_mcRun3_2023_realistic_HI_v9-v3/2820000/011a30f6-bf65-4c60-ba97-a97f6fbf9351.root',
     ),
@@ -54,7 +55,7 @@ process.GlobalTag.toGet.extend([
 
 # root output
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string("HiForestMiniAOD.root"))
+    fileName = cms.string("HiForestMiniAOD_MC.root"))
 
 # # edm output for debugging purposes
 # process.output = cms.OutputModule(
@@ -137,35 +138,37 @@ process.forest = cms.Path(
 
 #customisation
 
-addR3Jets = False
-addR3FlowJets = False
-addR4Jets = False
+addR2Jets = True
+addR2FlowJets = True
+addR4Jets = True
 addR4FlowJets = True
+addR2JetsSubstructure = True
+addR2FlowJetsSubstructure = True
 matchJets = True             # Enables q/g and heavy flavor jet identification in MC
 addCandidateTagging = False
 doHIJetID = True             # Fill jet ID and composition information branches
 doWTARecluster = False        # Add jet phi and eta for WTA axis
 
-if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets :
+if addR2Jets or addR2FlowJets or addR4Jets or addR4FlowJets or addR2JetsSubstructure or addR2FlowJetsSubstructure:
     process.load("HeavyIonsAnalysis.JetAnalysis.extraJets_cff")
     from HeavyIonsAnalysis.JetAnalysis.clusterJetsFromMiniAOD_cff import setupHeavyIonJets
     process.load("HeavyIonsAnalysis.JetAnalysis.candidateBtaggingMiniAOD_cff")
 
-    if addR3Jets :
-        process.jetsR3 = cms.Sequence()
-        jetName = 'akCs3PF'
-        setupHeavyIonJets(jetName, process.jetsR3, process, isMC = 1, radius = 0.30, JECTag = 'AK3PF', doFlow = False, matchJets = matchJets)
-        process.akCs3PFpatJetCorrFactors.levels = ['L2Relative', 'L3Absolute']
-        process.akCs3PFJetAnalyzer = process.akCs4PFJetAnalyzer.clone(jetTag = jetName + "patJets", jetName = jetName, genjetTag = "ak3GenJetsNoNu", matchJets = matchJets, matchTag = "ak3PFMatchingFor" + jetName + "patJets", doHiJetID = doHIJetID, doWTARecluster = doWTARecluster)
-        process.forest += process.extraJetsMC * process.jetsR3 * process.akCs3PFJetAnalyzer
+    if addR2Jets :
+        process.jetsR2 = cms.Sequence()
+        jetName = 'akCs2PF'
+        setupHeavyIonJets(jetName, process.jetsR2, process, isMC = 1, radius = 0.20, JECTag = 'AK2PF', doFlow = False, matchJets = matchJets)
+        process.akCs2PFpatJetCorrFactors.levels = ['L2Relative', 'L3Absolute']
+        process.akCs2PFJetAnalyzer = process.akCs4PFJetAnalyzer.clone(jetTag = jetName + "patJets", jetName = jetName, genjetTag = "ak2GenJetsNoNu", matchJets = matchJets, matchTag = "ak2PFMatchingFor" + jetName + "patJets", doHiJetID = doHIJetID, doWTARecluster = doWTARecluster)
+        process.forest += process.extraJetsMC * process.jetsR2 * process.akCs2PFJetAnalyzer
 
-    if addR3FlowJets :
-        process.jetsR3flow = cms.Sequence()
-        jetName = 'akCs3PFFlow'
-        setupHeavyIonJets(jetName, process.jetsR3flow, process, isMC = 1, radius = 0.30, JECTag = 'AK3PF', doFlow = True, matchJets = matchJets)
-        process.akCs3PFFlowpatJetCorrFactors.levels = ['L2Relative', 'L3Absolute']
-        process.akFlowPuCs3PFJetAnalyzer = process.akCs4PFJetAnalyzer.clone(jetTag = jetName + "patJets", jetName = jetName, genjetTag = "ak3GenJetsNoNu", matchJets = matchJets, matchTag = "ak3PFMatchingFor" + jetName + "patJets", doHiJetID = doHIJetID, doWTARecluster = doWTARecluster)
-        process.forest += process.extraFlowJetsMC * process.jetsR3flow * process.akFlowPuCs3PFJetAnalyzer
+    if addR2FlowJets :
+        process.jetsR2flow = cms.Sequence()
+        jetName = 'akCs2PFFlow'
+        setupHeavyIonJets(jetName, process.jetsR2flow, process, isMC = 1, radius = 0.20, JECTag = 'AK2PF', doFlow = True, matchJets = matchJets)
+        process.akCs2PFFlowpatJetCorrFactors.levels = ['L2Relative', 'L3Absolute']
+        process.akFlowPuCs2PFJetAnalyzer = process.akCs4PFJetAnalyzer.clone(jetTag = jetName + "patJets", jetName = jetName, genjetTag = "ak2GenJetsNoNu", matchJets = matchJets, matchTag = "ak2PFMatchingFor" + jetName + "patJets", doHiJetID = doHIJetID, doWTARecluster = doWTARecluster)
+        process.forest += process.extraFlowJetsMC * process.jetsR2flow * process.akFlowPuCs2PFJetAnalyzer
 
     if addR4Jets :
         # Recluster using an alias "0" in order not to get mixed up with the default AK4 collections
@@ -192,7 +195,23 @@ if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets :
         process.akFlowPuCs4PFJetAnalyzer.matchTag = 'ak4PFMatchingFor' + jetName + 'patJets'
         process.akFlowPuCs4PFJetAnalyzer.doHiJetID = doHIJetID
         process.akFlowPuCs4PFJetAnalyzer.doWTARecluster = doWTARecluster
-        process.forest += process.extraFlowJetsMC * process.jetsR4flow * process.akFlowPuCs4PFJetAnalyzer 
+        process.forest += process.extraFlowJetsMC * process.jetsR4flow * process.akFlowPuCs4PFJetAnalyzer
+
+    if addR2JetsSubstructure :
+        process.jetsR2Substructure = cms.Sequence()
+        jetName = 'akCs2PFSubstructure'
+        setupHeavyIonJets(jetName, process.jetsR2Substructure, process, isMC = 1, radius = 0.20, JECTag = 'AK2PF', doFlow = False, matchJets = matchJets)
+        process.akCs2PFpatJetCorrFactors.levels = ['L2Relative', 'L3Absolute']
+        process.akCs2PFJetAnalyzerSubstructure = process.akCs4PFJetAnalyzerSubstructure.clone(jetTag = jetName + "patJets", jetName = jetName, genjetTag = "ak2GenJetsNoNu", matchJets = matchJets, matchTag = "ak2PFMatchingFor" + jetName + "patJets", doHiJetID = doHIJetID, doWTARecluster = doWTARecluster)
+        process.forest += process.extraJetsMC * process.jetsR2Substructure * process.akCs2PFJetAnalyzerSubstructure
+
+    if addR2FlowJetsSubstructure :
+        process.jetsR2flowSubstructure = cms.Sequence()
+        jetName = 'akCs2PFFlowSubstructure'
+        setupHeavyIonJets(jetName, process.jetsR2flowSubstructure, process, isMC = 1, radius = 0.20, JECTag = 'AK2PF', doFlow = True, matchJets = matchJets)
+        process.akCs2PFFlowpatJetCorrFactors.levels = ['L2Relative', 'L3Absolute']
+        process.akFlowPuCs2PFJetAnalyzerSubstructure = process.akCs4PFJetAnalyzerSubstructure.clone(jetTag = jetName + "patJets", jetName = jetName, genjetTag = "ak2GenJetsNoNu", matchJets = matchJets, matchTag = "ak2PFMatchingFor" + jetName + "patJets", doHiJetID = doHIJetID, doWTARecluster = doWTARecluster)
+        process.forest += process.extraFlowJetsMC * process.jetsR2flowSubstructure * process.akFlowPuCs2PFJetAnalyzerSubstructure
 
 
 if addCandidateTagging:
@@ -216,8 +235,9 @@ if addCandidateTagging:
     )
 
     process.akCs4PFJetAnalyzer.jetTag = "updatedPatJets"
+    process.akCs4PFJetAnalyzerSubstructure.jetTag = "updatedPatJetsSubstructure"
 
-    process.forest.insert(1,process.candidateBtagging*process.updatedPatJets)
+    process.forest.insert(1,process.candidateBtagging*process.updatedPatJets+process.updatedPatJets_substructure)
 
 
 #########################
