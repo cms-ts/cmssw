@@ -132,7 +132,7 @@ process.forest = cms.Path(
     process.centralityBin +
     process.hiEvtAnalyzer +
     process.hltanalysis +
-    process.hltobject +
+    #process.hltobject +
     #process.l1object +
     process.trackSequencePbPb +
     #process.particleFlowAnalyser +
@@ -152,8 +152,8 @@ addR2Jets = True
 addR2FlowJets = True
 addR4Jets = True
 addR4FlowJets = True
-addR2JetsSubstructure = True
-addR2FlowJetsSubstructure = True
+addR2JetsSubstructure = False
+addR2FlowJetsSubstructure = False
 addUnsubtractedR4Jets = True
 
 # Choose which additional information is added to jet trees
