@@ -12,28 +12,42 @@
 #include <TCanvas.h>
 #include "TLatex.h"
 
+#include <glob.h>
+
 using namespace std;
 
 void analyze_HI_TTreeReader() {
   //TTrees
   TChain data("data"), EventTree("EventTree") ;
-  data.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0000/HiForestMiniAOD_DATA_*.root/akCs2PFJetAnalyzer/t");
-  data.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0001/HiForestMiniAOD_DATA_*.root/akCs2PFJetAnalyzer/t");
-  data.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0002/HiForestMiniAOD_DATA_*.root/akCs2PFJetAnalyzer/t");
-  data.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0003/HiForestMiniAOD_DATA_*.root/akCs2PFJetAnalyzer/t");
-  data.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0004/HiForestMiniAOD_DATA_*.root/akCs2PFJetAnalyzer/t");
-  data.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0005/HiForestMiniAOD_DATA_*.root/akCs2PFJetAnalyzer/t");
-  EventTree.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0000/HiForestMiniAOD_DATA_*.root/muonAnalyzer/MuonTree");
-  EventTree.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0001/HiForestMiniAOD_DATA_*.root/muonAnalyzer/MuonTree");
-  EventTree.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0002/HiForestMiniAOD_DATA_*.root/muonAnalyzer/MuonTree");
-  EventTree.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0003/HiForestMiniAOD_DATA_*.root/muonAnalyzer/MuonTree");
-  EventTree.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0004/HiForestMiniAOD_DATA_*.root/muonAnalyzer/MuonTree");
-  EventTree.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0005/HiForestMiniAOD_DATA_*.root/muonAnalyzer/MuonTree");
+  //data.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0000/HiForestMiniAOD_DATA_*.root/akCs2PFJetAnalyzer/t");
+  //data.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0001/HiForestMiniAOD_DATA_*.root/akCs2PFJetAnalyzer/t");
+  //data.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0002/HiForestMiniAOD_DATA_*.root/akCs2PFJetAnalyzer/t");
+  //data.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0003/HiForestMiniAOD_DATA_*.root/akCs2PFJetAnalyzer/t");
+  //data.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0004/HiForestMiniAOD_DATA_*.root/akCs2PFJetAnalyzer/t");
+  //data.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0005/HiForestMiniAOD_DATA_*.root/akCs2PFJetAnalyzer/t");
+  //EventTree.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0000/HiForestMiniAOD_DATA_*.root/muonAnalyzer/MuonTree");
+  //EventTree.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0001/HiForestMiniAOD_DATA_*.root/muonAnalyzer/MuonTree");
+  //EventTree.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0002/HiForestMiniAOD_DATA_*.root/muonAnalyzer/MuonTree");
+  //EventTree.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0003/HiForestMiniAOD_DATA_*.root/muonAnalyzer/MuonTree");
+  //EventTree.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0004/HiForestMiniAOD_DATA_*.root/muonAnalyzer/MuonTree");
+  //EventTree.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0005/HiForestMiniAOD_DATA_*.root/muonAnalyzer/MuonTree");
   
   //TChain HiTree("HiTree"), skimanalysis("skimanalysis"),hltanalysis("hltanalysis");
   //HiTree.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0000/HiForestMiniAOD_DATA_99*.root/hiEvtAnalyzer/HiTree");
   //skimanalysis.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0000/HiForestMiniAOD_DATA_99*.root/skimanalysis/HltTree");
   //hltanalysis.Add("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime0/CRAB3_Analysis_test7/241106_164058/0000/HiForestMiniAOD_DATA_99*.root/hltanalysis/HltTree");
+
+  glob_t globlist;
+  //glob("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime*/*/*/*/HiForestMiniAOD_DATA_*.root", GLOB_NOSORT, NULL, &globlist);
+  glob("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime*/*/*/*.root", GLOB_NOSORT, NULL, &globlist);
+
+  cout << "Found " << globlist.gl_pathc << " files"<< endl;
+
+  for (size_t i = 0; i < globlist.gl_pathc; i++) {
+    data.Add(TString(globlist.gl_pathv[i]) + "/akCs2PFJetAnalyzer/t");
+    EventTree.Add(TString(globlist.gl_pathv[i]) + "/muonAnalyzer/MuonTree");
+  }
+  globfree(&globlist);
 
   //To associate additional TTrees with a primary TTree. This allows you to access information from the friend trees while looping over the primary tree
   data.AddFriend("EventTree");
