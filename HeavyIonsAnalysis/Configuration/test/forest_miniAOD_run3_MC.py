@@ -17,11 +17,7 @@ process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 132X, mc")
 # input files
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
-    fileNames = cms.untracked.vstring(
-#	'root://eoscms.cern.ch//store/group/phys_heavyions/jviinika/PythiaHydjetRun3_5p36TeV_dijet_ptHat15_100kEvents_miniAOD_2023_08_30/PythiaHydjetDijetRun3/PythiaHydjetRun3_dijet_ptHat15_5p36TeV_miniAOD/230830_165931/0000/pythiaHydjet_miniAOD_11.root'
-#	'root://eoscms.cern.ch//store/mc/HINPbPbSpring23MiniAOD/DYto2E_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/MINIAODSIM/132X_mcRun3_2023_realistic_HI_v9-v3/120000/0057a099-3ad9-4c80-a911-cf686d96f2eb.root',
-	'root://cms-xrd-global.cern.ch//store/mc/HINPbPbSpring23MiniAOD/DYto2Mu_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/MINIAODSIM/132X_mcRun3_2023_realistic_HI_v9-v3/2820000/011a30f6-bf65-4c60-ba97-a97f6fbf9351.root',
-    ),
+    fileNames = cms.untracked.vstring(),
 )
 
 # number of events to process, set to -1 to process all events
@@ -128,7 +124,7 @@ process.forest = cms.Path(
 #    process.particleFlowAnalyser +
     process.hiEvtAnalyzer +
     process.HiGenParticleAna +
-    process.ggHiNtuplizer +
+#    process.ggHiNtuplizer +
 #    process.zdcdigi +
 #    process.QWzdcreco +
 #    process.zdcanalyzer +
@@ -140,14 +136,14 @@ process.forest = cms.Path(
 
 addR2Jets = True
 addR2FlowJets = True
-addR4Jets = True
-addR4FlowJets = True
+addR4Jets = False
+addR4FlowJets = False
 addR2JetsSubstructure = False
 addR2FlowJetsSubstructure = False
 matchJets = True             # Enables q/g and heavy flavor jet identification in MC
 addCandidateTagging = False
 doHIJetID = True             # Fill jet ID and composition information branches
-doWTARecluster = False        # Add jet phi and eta for WTA axis
+doWTARecluster = True        # Add jet phi and eta for WTA axis
 
 if addR2Jets or addR2FlowJets or addR4Jets or addR4FlowJets or addR2JetsSubstructure or addR2FlowJetsSubstructure:
     process.load("HeavyIonsAnalysis.JetAnalysis.extraJets_cff")
@@ -249,3 +245,48 @@ process.pprimaryVertexFilter = cms.Path(process.primaryVertexFilter)
 process.load('HeavyIonsAnalysis.EventAnalysis.hffilter_cfi')
 process.pphfCoincFilter2Th4 = cms.Path(process.phfCoincFilter2Th4)
 process.pAna = cms.EndPath(process.skimanalysis)
+
+# selection of valid vertex
+process.primaryVertexFilterForZMM = cms.EDFilter("VertexSelector",
+    src = cms.InputTag("offlineSlimmedPrimaryVertices"),
+    cut = cms.string("!isFake && abs(z) <= 25 && position.Rho <= 2"),
+    filter = cms.bool(True),   # otherwise it won't filter the events
+    )
+
+# selection of dimuons (at least STA+STA) with mass in Z range
+process.muonSelector = cms.EDFilter("MuonSelector",
+    src = cms.InputTag("slimmedMuons"),
+    cut = cms.string("(isStandAloneMuon || isGlobalMuon) && pt > 1."),
+    filter = cms.bool(True)
+    )
+
+process.muonFilter = cms.EDFilter("MuonCountFilter",
+    src = cms.InputTag("muonSelector"),
+    minNumber = cms.uint32(1)
+    )
+
+process.dimuonMassCut = cms.EDProducer("CandViewShallowCloneCombiner",
+    checkCharge = cms.bool(True),
+    cut = cms.string("50 < mass < 130"),
+    decay = cms.string("muonSelector@+ muonSelector@-")
+    )
+
+process.dimuonMassCutFilter = cms.EDFilter("CandViewCountFilter",
+    src = cms.InputTag("dimuonMassCut"),
+    minNumber = cms.uint32(1)
+    )
+
+# Z->mumu skim sequence
+process.zMMSkimSequence = cms.Sequence(
+    #process.hltZMMHI *
+    process.primaryVertexFilterForZMM *
+    process.muonSelector *
+    process.muonFilter *
+    process.dimuonMassCut *
+    process.dimuonMassCutFilter
+    )
+
+process.zMMSkimPath = cms.Path(process.zMMSkimSequence)
+
+for path in process.paths:
+    getattr(process, path)._seq = process.zMMSkimSequence * getattr(process,path)._seq

@@ -24,17 +24,15 @@ process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 132X, data")
 # input files
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
-    fileNames = cms.untracked.vstring(
-        'root://xrootd-cms.infn.it//store/hidata/HIRun2023A/HIPhysicsRawPrime0/MINIAOD/PromptReco-v2/000/375/790/00000/56ad580f-b228-4f3c-b8e3-17f9d95c7654.root'
-    ), 
+    fileNames = cms.untracked.vstring(), 
 )
 
 import FWCore.PythonUtilities.LumiList as LumiList
-process.source.lumisToProcess = LumiList.LumiList(filename = '/eos/user/c/cmsdqm/www/CAF/certification/Collisions23HI/Cert_Collisions2023HI_374288_375823_Golden.json').getVLuminosityBlockRange()
+process.source.lumisToProcess = LumiList.LumiList(filename = 'Cert_Collisions2023HI_374288_375823_Golden.json').getVLuminosityBlockRange()
 
 # number of events to process, set to -1 to process all events
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(100)
+    input = cms.untracked.int32(-1)
     )
 
 ###############################################################################
@@ -136,13 +134,13 @@ process.forest = cms.Path(
     #process.l1object +
     process.trackSequencePbPb +
     #process.particleFlowAnalyser +
-    process.ggHiNtuplizer +
+    #process.ggHiNtuplizer +
     #process.zdcdigi +
     #process.QWzdcreco +
     #process.zdcanalyzer +
     process.unpackedMuons +
-    process.muonAnalyzer +
-    process.akPu4CaloJetAnalyzer
+    process.muonAnalyzer #+
+    #process.akPu4CaloJetAnalyzer
     )
 
 #customisation
@@ -150,11 +148,11 @@ process.forest = cms.Path(
 # Select the types of jets filled
 addR2Jets = True
 addR2FlowJets = True
-addR4Jets = True
-addR4FlowJets = True
+addR4Jets = False
+addR4FlowJets = False
 addR2JetsSubstructure = False
 addR2FlowJetsSubstructure = False
-addUnsubtractedR4Jets = True
+addUnsubtractedR4Jets = False
 
 # Choose which additional information is added to jet trees
 doHIJetID = True             # Fill jet ID and composition information branches
@@ -301,3 +299,47 @@ process.pAna = cms.EndPath(process.skimanalysis)
 #for path in process.paths:
 #    getattr(process, path)._seq = process.filterSequence * getattr(process,path)._seq
 
+# selection of valid vertex
+process.primaryVertexFilterForZMM = cms.EDFilter("VertexSelector",
+    src = cms.InputTag("offlineSlimmedPrimaryVertices"),
+    cut = cms.string("!isFake && abs(z) <= 25 && position.Rho <= 2"),
+    filter = cms.bool(True),   # otherwise it won't filter the events
+    )
+
+# selection of dimuons (at least STA+STA) with mass in Z range
+process.muonSelector = cms.EDFilter("MuonSelector",
+    src = cms.InputTag("slimmedMuons"),
+    cut = cms.string("(isStandAloneMuon || isGlobalMuon) && pt > 1."),
+    filter = cms.bool(True)
+    )
+
+process.muonFilter = cms.EDFilter("MuonCountFilter",
+    src = cms.InputTag("muonSelector"),
+    minNumber = cms.uint32(1)
+    )
+
+process.dimuonMassCut = cms.EDProducer("CandViewShallowCloneCombiner",
+    checkCharge = cms.bool(True),
+    cut = cms.string("50 < mass < 130"),
+    decay = cms.string("muonSelector@+ muonSelector@-")
+    )
+
+process.dimuonMassCutFilter = cms.EDFilter("CandViewCountFilter",
+    src = cms.InputTag("dimuonMassCut"),
+    minNumber = cms.uint32(1)
+    )
+
+# Z->mumu skim sequence
+process.zMMSkimSequence = cms.Sequence(
+    #process.hltZMMHI *
+    process.primaryVertexFilterForZMM *
+    process.muonSelector *
+    process.muonFilter *
+    process.dimuonMassCut *
+    process.dimuonMassCutFilter
+    )
+
+process.zMMSkimPath = cms.Path(process.zMMSkimSequence)
+
+for path in process.paths:
+    getattr(process, path)._seq = process.zMMSkimSequence * getattr(process,path)._seq
