@@ -1,0 +1,6 @@
+//--------------------------------
+  Plot data and MC stacks
+//--------------------------------
+
+//To plot all histos defined in histo_par structure
+root -l -b -q h_stack.C

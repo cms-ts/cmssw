@@ -1,0 +1,10 @@
+//--------------------------------
+  Condor jobs for sum weights all
+//--------------------------------
+
+//List of files from dataset
+dasgoclient --query="file dataset=/DYto2Mu_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/HINPbPbSpring23MiniAOD-132X_mcRun3_2023_realistic_HI_v9-v3/MINIAODSIM" > list_MC_ZMM_all
+//Format the list with quotes and commas
+python3  format_dasgo.py
+//Submit the job on condor (outside singularity)
+condor_submit -name sn9 -spool cmsrun_multi_gen_local_container.sub 

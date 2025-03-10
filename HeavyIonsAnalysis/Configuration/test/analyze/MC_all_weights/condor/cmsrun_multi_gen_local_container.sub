@@ -1,0 +1,20 @@
+executable=gen_container.sh
+
+log=job_$(Item).log
+output=job_$(Item).log
+error=job_$(Item).log
+
+notification=never
+notify_user=raffaele.delli.gatti@cern.ch
+
+request_cpus=1
+request_memory=4096
+
+getenv=True
+
+should_transfer_files=Yes
+when_to_transfer_output=ON_EXIT
+
+transfer_input_files = forest_miniAOD_run3_MC_ZMM_all_$(Item).py
+arguments            = $(Item)
+queue from seq 1 1 |
