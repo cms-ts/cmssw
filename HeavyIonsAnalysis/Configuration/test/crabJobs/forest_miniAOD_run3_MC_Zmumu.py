@@ -49,6 +49,13 @@ process.GlobalTag.toGet.extend([
 
 ###############################################################################
 
+# Define centrality binning
+process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
+process.centralityBin.Centrality = cms.InputTag("hiCentrality")
+process.centralityBin.centralityVariable = cms.string("HFtowers")
+
+###############################################################################
+
 # root output
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string("HiForestMiniAOD_MC.root"))
@@ -117,6 +124,7 @@ process.zdcanalyzer.verbose = False
 # main forest sequence
 process.forest = cms.Path(
     process.HiForestInfo +
+    process.centralityBin +
     process.hltanalysis +
 #    process.hltobject +
 #    process.l1object +

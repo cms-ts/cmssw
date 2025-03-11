@@ -206,7 +206,7 @@ if addR2Jets or addR2FlowJets or addR4Jets or addR4FlowJets or addR2JetsSubstruc
         jetName = 'akCs2PFSubstructure'
         setupHeavyIonJets(jetName, process.jetsR2Substructure, process, isMC = 1, radius = 0.20, JECTag = 'AK2PF', doFlow = False, matchJets = matchJets)
         process.akCs2PFpatJetCorrFactors.levels = ['L2Relative', 'L3Absolute']
-        process.akCs2PFJetAnalyzerSubstructure = process.akCs4PFJetAnalyzerSubstructure.clone(jetTag = jetName + "patJets", jetName = jetName, genjetTag = "ak2GenJetsNoNu", matchJets = matchJets, matchTag = "ak2PFMatchingFor" + jetName + "patJets", doHiJetID = doHIJetID, doWTARecluster = doWTARecluster)
+        process.akCs2PFJetAnalyzerSubstructure = process.akCs4PFJetAnalyzerSubstructure.clone(jetTag = jetName + "patJets", jetName = jetName, isMC = False, genjetTag = "ak2GenJetsNoNu", matchJets = False, matchTag = "ak2PFMatchingFor" + jetName + "patJets", doHiJetID = doHIJetID, doWTARecluster = doWTARecluster)
         process.forest += process.extraJetsMC * process.jetsR2Substructure * process.akCs2PFJetAnalyzerSubstructure
 
     if addR2FlowJetsSubstructure :

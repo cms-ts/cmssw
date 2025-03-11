@@ -1,11 +1,11 @@
 from CRABClient.UserUtilities import config
 config = config()
 
-config.General.requestName = 'test12_mc_Zmumu_TT'
+config.General.requestName = 'test12_mc_Zee_TT'
 
 config.JobType.pluginName = 'Analysis'
 # Name of the CMSSW configuration file
-config.JobType.psetName = 'forest_miniAOD_run3_MC_Zmumu.py'
+config.JobType.psetName = 'forest_miniAOD_run3_MC_Zee.py'
 config.JobType.maxMemoryMB = 2500
 config.JobType.maxJobRuntimeMin = 1200
 config.JobType.allowUndistributedCMSSW = True
@@ -16,7 +16,7 @@ config.Data.unitsPerJob = 1
 config.Data.publication = False
 config.Data.inputDBS = 'global'
 # This string is used to construct the output dataset name
-config.Data.outputDatasetTag = 'CRAB3_Analysis_test12_Zmumu_TT'
+config.Data.outputDatasetTag = 'CRAB3_Analysis_test12_Zee_TT'
 
 # These values only make sense for processing data
 #    Select input data based on a lumi mask

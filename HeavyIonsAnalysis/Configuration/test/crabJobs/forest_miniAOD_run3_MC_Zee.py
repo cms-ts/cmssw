@@ -85,6 +85,7 @@ process.load('HeavyIonsAnalysis.EventAnalysis.hievtanalyzer_mc_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.hltobject_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.l1object_cfi')
+process.metFilters = process.skimanalysis.clone(hltresults = "TriggerResults::PAT")
 
 #from HeavyIonsAnalysis.EventAnalysis.hltobject_cfi import trigger_list_mc
 #process.hltobject.triggerNames = trigger_list_mc
@@ -132,12 +133,13 @@ process.forest = cms.Path(
 #    process.particleFlowAnalyser +
     process.hiEvtAnalyzer +
     process.HiGenParticleAna +
-#    process.ggHiNtuplizer +
+    process.ggHiNtuplizer +
+    process.metFilters 
 #    process.zdcdigi +
 #    process.QWzdcreco +
 #    process.zdcanalyzer +
-    process.unpackedMuons +
-    process.muonAnalyzer
+#    process.unpackedMuons +
+#    process.muonAnalyzer
     )
 
 #customisation
@@ -146,7 +148,7 @@ addR2Jets = True
 addR2FlowJets = False
 addR4Jets = False
 addR4FlowJets = False
-addR2JetsSubstructure = True 
+addR2JetsSubstructure = True
 addR2FlowJetsSubstructure = False
 matchJets = True             # Enables q/g and heavy flavor jet identification in MC
 addCandidateTagging = False
@@ -254,51 +256,48 @@ process.load('HeavyIonsAnalysis.EventAnalysis.hffilter_cfi')
 process.pphfCoincFilter2Th4 = cms.Path(process.phfCoincFilter2Th4)
 process.pAna = cms.EndPath(process.skimanalysis)
 
+# HLT trigger
 import HLTrigger.HLTfilters.hltHighLevel_cfi
-process.hltZMMHI = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
-process.hltZMMHI.HLTPaths = ["HLT_HIL2SingleMu7_v3"]
+process.hltZEEHI = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
+process.hltZEEHI.HLTPaths = ["HLT_HIMinimumBiasHF1AND_v3"]
 
 # selection of valid vertex
-process.primaryVertexFilterForZMM = cms.EDFilter("VertexSelector",
-    src = cms.InputTag("offlineSlimmedPrimaryVertices"),
-    cut = cms.string("!isFake && abs(z) <= 25 && position.Rho <= 2"),
-    filter = cms.bool(True),   # otherwise it won't filter the events
-    )
+process.primaryVertexFilterForZEE = cms.EDFilter("VertexSelector",
+                                         src = cms.InputTag("offlineSlimmedPrimaryVertices"),
+                                         cut = cms.string("!isFake && abs(z) <= 25 && position.Rho <= 2"), 
+                                         filter = cms.bool(True),   # otherwise it won't filter the events
+                                         )
+# single lepton selector
+process.goodElectronsForZEE = cms.EDFilter("PATElectronSelector",
+                                   src = cms.InputTag("slimmedElectrons"),
+                                   cut = cms.string("pt > 20")
+                                   )
 
-# selection of dimuons (at least STA+STA) with mass in Z range
-process.muonSelector = cms.EDFilter("MuonSelector",
-    src = cms.InputTag("slimmedMuons"),
-    cut = cms.string("(isStandAloneMuon || isGlobalMuon) && pt > 20."),
-    filter = cms.bool(True)
-    )
+# dilepton selectors
+process.diElectronsForZEE = cms.EDProducer("CandViewShallowCloneCombiner",
+                                   checkCharge = cms.bool(True),
+                                   #checkCharge = cms.bool(False),
+                                   cut = cms.string("50 < mass < 130"),
+                                   decay = cms.string("goodElectronsForZEE@+ goodElectronsForZEE@-"),
+                                   #decay = cms.string("goodElectronsForZEE goodElectronsForZEE"),
+                                   )
 
-process.muonFilter = cms.EDFilter("MuonCountFilter",
-    src = cms.InputTag("muonSelector"),
-    minNumber = cms.uint32(1)
-    )
+# dilepton counter
+process.diElectronsFilterForZEE = cms.EDFilter("CandViewCountFilter",
+                                       src = cms.InputTag("diElectronsForZEE"),
+                                       minNumber = cms.uint32(1)
+                                       )
 
-process.dimuonMassCut = cms.EDProducer("CandViewShallowCloneCombiner",
-    checkCharge = cms.bool(True),
-    cut = cms.string("50 < mass < 130"),
-    decay = cms.string("muonSelector@+ muonSelector@-")
-    )
+# Z->ee skim sequence
+process.zEESkimSequence = cms.Sequence(
+    process.hltZEEHI *
+    process.primaryVertexFilterForZEE *
+    process.goodElectronsForZEE * 
+    process.diElectronsForZEE *
+    process.diElectronsFilterForZEE
+)
 
-process.dimuonMassCutFilter = cms.EDFilter("CandViewCountFilter",
-    src = cms.InputTag("dimuonMassCut"),
-    minNumber = cms.uint32(1)
-    )
-
-# Z->mumu skim sequence
-process.zMMSkimSequence = cms.Sequence(
-    process.hltZMMHI *
-    process.primaryVertexFilterForZMM *
-    process.muonSelector *
-    process.muonFilter *
-    process.dimuonMassCut *
-    process.dimuonMassCutFilter
-    )
-
-process.zMMSkimPath = cms.Path(process.zMMSkimSequence)
+process.zEESkimPath = cms.Path(process.zEESkimSequence)
 
 for path in process.paths:
-    getattr(process, path)._seq = process.zMMSkimSequence * getattr(process,path)._seq
+    getattr(process, path)._seq = process.zEESkimSequence * getattr(process,path)._seq

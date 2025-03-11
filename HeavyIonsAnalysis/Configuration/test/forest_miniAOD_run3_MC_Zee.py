@@ -49,6 +49,13 @@ process.GlobalTag.toGet.extend([
 
 ###############################################################################
 
+# Define centrality binning
+process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi")
+process.centralityBin.Centrality = cms.InputTag("hiCentrality")
+process.centralityBin.centralityVariable = cms.string("HFtowers")
+
+###############################################################################
+
 # root output
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string("HiForestMiniAOD_MC.root"))
@@ -78,6 +85,7 @@ process.load('HeavyIonsAnalysis.EventAnalysis.hievtanalyzer_mc_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.hltobject_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.l1object_cfi')
+process.metFilters = process.skimanalysis.clone(hltresults = "TriggerResults::PAT")
 
 #from HeavyIonsAnalysis.EventAnalysis.hltobject_cfi import trigger_list_mc
 #process.hltobject.triggerNames = trigger_list_mc
@@ -117,6 +125,7 @@ process.zdcanalyzer.verbose = False
 # main forest sequence
 process.forest = cms.Path(
     process.HiForestInfo +
+    process.centralityBin +
     process.hltanalysis +
 #    process.hltobject +
 #    process.l1object +
@@ -124,7 +133,8 @@ process.forest = cms.Path(
 #    process.particleFlowAnalyser +
     process.hiEvtAnalyzer +
     process.HiGenParticleAna +
-    process.ggHiNtuplizer
+    process.ggHiNtuplizer +
+    process.metFilters
 #    process.zdcdigi +
 #    process.QWzdcreco +
 #    process.zdcanalyzer +
@@ -135,10 +145,10 @@ process.forest = cms.Path(
 #customisation
 
 addR2Jets = True
-addR2FlowJets = True
+addR2FlowJets = False
 addR4Jets = False
 addR4FlowJets = False
-addR2JetsSubstructure = False
+addR2JetsSubstructure = True
 addR2FlowJetsSubstructure = False
 matchJets = True             # Enables q/g and heavy flavor jet identification in MC
 addCandidateTagging = False
@@ -246,12 +256,10 @@ process.load('HeavyIonsAnalysis.EventAnalysis.hffilter_cfi')
 process.pphfCoincFilter2Th4 = cms.Path(process.phfCoincFilter2Th4)
 process.pAna = cms.EndPath(process.skimanalysis)
 
-# HLT dimuon trigger
-#import HLTrigger.HLTfilters.hltHighLevel_cfi
-#hltZEEHI = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
-#hltZEEHI.HLTPaths = ["HLT_HIEle*Gsf_v*","HLT_HIDoubleEle*"]
-#hltZEEHI.throw = False
-#hltZEEHI.andOr = True
+# HLT trigger
+import HLTrigger.HLTfilters.hltHighLevel_cfi
+process.hltZEEHI = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
+process.hltZEEHI.HLTPaths = ["HLT_HIMinimumBiasHF1AND_v3"]
 
 # selection of valid vertex
 process.primaryVertexFilterForZEE = cms.EDFilter("VertexSelector",
@@ -282,7 +290,7 @@ process.diElectronsFilterForZEE = cms.EDFilter("CandViewCountFilter",
 
 # Z->ee skim sequence
 process.zEESkimSequence = cms.Sequence(
-    #hltZEEHI *
+    process.hltZEEHI *
     process.primaryVertexFilterForZEE *
     process.goodElectronsForZEE * 
     process.diElectronsForZEE *
