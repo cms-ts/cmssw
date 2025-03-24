@@ -86,6 +86,7 @@ process.load('HeavyIonsAnalysis.EventAnalysis.hievtanalyzer_mc_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.hltobject_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.l1object_cfi')
+process.metFilters = process.skimanalysis.clone(hltresults = "TriggerResults::PAT")
 
 #from HeavyIonsAnalysis.EventAnalysis.hltobject_cfi import trigger_list_mc
 #process.hltobject.triggerNames = trigger_list_mc
@@ -99,6 +100,7 @@ process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 ################################
 # jet reco sequence
 process.load('HeavyIonsAnalysis.JetAnalysis.akCs4PFJetSequence_pponPbPb_mc_cff')
+process.load('HeavyIonsAnalysis.JetAnalysis.hiFJRhoAnalyzer_cff')
 ################################
 # tracks
 process.load("HeavyIonsAnalysis.TrackAnalysis.TrackAnalyzers_cff")
@@ -138,6 +140,8 @@ process.forest = cms.Path(
 #    process.QWzdcreco +
 #    process.akCs4PFJetAnalyzer +
 #    process.zdcanalyzer #+
+    process.rhoSequence +
+    process.metFilters +
     process.unpackedMuons +
     process.muonAnalyzer
     )

@@ -85,6 +85,7 @@ process.load('HeavyIonsAnalysis.EventAnalysis.hltanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.skimanalysis_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.hltobject_cfi')
 process.load('HeavyIonsAnalysis.EventAnalysis.l1object_cfi')
+process.metFilters = process.skimanalysis.clone(hltresults = "TriggerResults::RECO")
 
 #process.hiEvtAnalyzer.doCentrality = cms.bool(False)
 #process.hiEvtAnalyzer.doHFfilters = cms.bool(False)
@@ -102,6 +103,7 @@ process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 # jet reco sequence
 process.load('HeavyIonsAnalysis.JetAnalysis.akCs4PFJetSequence_pponPbPb_data_cff')
 process.load('HeavyIonsAnalysis.JetAnalysis.akPu4CaloJetSequence_pponPbPb_data_cff')
+process.load('HeavyIonsAnalysis.JetAnalysis.hiFJRhoAnalyzer_cff')
 process.akPu4CaloJetAnalyzer.doHiJetID = True
 ################################
 # tracks
@@ -142,7 +144,9 @@ process.forest = cms.Path(
     #process.QWzdcreco +
     #process.zdcanalyzer +
     process.unpackedMuons +
-    process.muonAnalyzer #+
+    process.muonAnalyzer +
+    process.rhoSequence +
+    process.metFilters
     #process.akPu4CaloJetAnalyzer
     )
 
