@@ -1,0 +1,9 @@
+//--------------------------------
+  Plot data and MC signal plots
+//--------------------------------
+
+//To plot one histo, for ex. h_mumu_j
+root -l -b -q 'plot.C("h_mumu_j")'
+//To plot all histo
+chmod +x do_plot_all.sh
+./do_plot_all.sh

@@ -1,0 +1,9 @@
+//--------------------------------
+  Compute sum weights all
+//--------------------------------
+
+//To run analyzer 
+root -l analyze_HI_TTreeReader_ZMM_all.C
+//the output is output_HI_mu_MC_all.root
+//copy in the folders plot/ and stack/
+// for MC normalization 
