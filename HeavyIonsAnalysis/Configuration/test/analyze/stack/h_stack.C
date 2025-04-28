@@ -38,17 +38,10 @@ void h_stack() {
     {"h_cen_j", "cen_j", "Events", 20, 0, 100},
     {"h_deltaPhi_Zj", "#Delta#phi_{Zj}", "Events" , 20, 0, TMath::Pi()},
     {"h_xZj", "x_{Zj}", "Events", 20, 0, 3},
-    {"h_jetgirth", "girth", "Events", 10, 0, 0.2},
-    {"h_jet_deltaR", "R_{g}", "Events", 10, 0, 0.2},
-    {"h_mu_pt", "leading p_{t}^{#mu} [GeV]", "Events", 30, 0, 300},
-    {"h_antimu_pt", "subleading p_{t}^{#mu} [GeV]", "Events", 30, 0, 300},
-    {"h_mu_eta", "leading #eta^{#mu}", "Events", 20, -2.5, 2.5},
-    {"h_antimu_eta", "subleading #eta^{#mu}", "Events", 20, -2.5, 2.5},
-    {"h_mu_phi", "leading #phi^{#mu}", "Events", 20, -TMath::Pi(), TMath::Pi()},
-    {"h_antimu_phi", "subleading #phi^{#mu}", "Events", 20, -TMath::Pi(), TMath::Pi()},
-    {"h_jet_pt_onej", "jet p_{T} [GeV]", "Events", 30, 0, 300},
-    {"h_deltaR_muj", "#Delta R_{#mu^{-}j}", "Events", 20, 0, 2.},
-    {"h_deltaR_antimuj", "#Delta R_{#mu^{+}j}", "Events", 20, 0, 2.}
+    {"h_vz", "vz", "Events", 30, -20, 20},
+    {"h_avg_rho", "<#rho>", "Entries", 50, 0, 400}
+//    {"h_jetgirth", "girth", "Events", 10, 0, 0.2},
+//    {"h_jet_deltaR", "R_{g}", "Events", 10, 0, 0.2},
     };
     setTDRStyle();
 
@@ -56,7 +49,7 @@ void h_stack() {
     double number_A = 208; // Lead
 
     // Get MC all histogram
-    TFile* file_MC_all = TFile::Open("./output_HI_mu_MC_all.root", "READ");
+    TFile* file_MC_all = TFile::Open("../weights_MC/MC_all_weights/output_HI_mu_MC_all.root", "READ");
     TDirectoryFile* dir_Muons_MC_all = (TDirectoryFile*)file_MC_all->Get("HI/Muons");
     TH1D* h_norm = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights");
     TH1D* h_norm_cen = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights_cen");

@@ -2,20 +2,30 @@
   Analyze data and MC
 //--------------------------------
 
+
 //--------------------------------
 //To run analyzer on data
 root -l analyze_HI_TTreeReader_ZMM.C
 //the output is output_HI_mu_data.root
 //already saved in plot/ folder
 //Default is data, for MC 
-root -l 'analyze_HI_TTreeReader_ZMM.C(false)'
+root -l 'analyze_HI_TTreeReader_ZMM.C(false, 4)'
 //the output is output_HI_mu_MC.root
 //already saved in plot/ folder
 //--------------------------------
 
+
+//--------------------------------
+//To run data and MC in order to compute weights
+chmod +x do_analyze_weights.sh
+./do_analyze_stack_weights.sh
+//the output root files are saved in weights_MC/ and plot/ folders
+//--------------------------------
+
+
 //--------------------------------
 //To run over data and all MC in MC_samples.h
-chmod +x do_analyze.sh	
+chmod +x do_analyze_stack.sh	
 ./do_analyze_stack.sh	
 //the output root files are saved in stack/ folder 
 //--------------------------------

@@ -18,8 +18,10 @@ std::map<std::string, std::tuple<const char*, const char*, int, double, double>>
     {"h_cen_j", {"cen_j", "Events", 20, 0, 100}},
     {"h_deltaPhi_Zj", {"#Delta#phi_{Zj}", "Events" , 20, 0, 3.14}},
     {"h_xZj", {"x_{Zj}", "Events", 20, 0, 3}},
-    {"h_jetgirth", {"girth", "Events", 10, 0, 0.2}},
-    {"h_jet_deltaR", {"R_{g}", "Events", 10, 0, 0.2}}
+    {"h_vz", {"vz", "Events", 30, -20, 20}},
+    {"h_avg_rho", {"<#rho>", "Entries", 50, 0, 400}}
+//    {"h_jetgirth", {"girth", "Events", 10, 0, 0.2}},
+//    {"h_jet_deltaR", {"R_{g}", "Events", 10, 0, 0.2}}
 };
 
 void plot(const char* h_n) {
@@ -248,7 +250,7 @@ TCanvas* example_plot( int iPeriod, int iPos, const char * histo_name, const cha
       cout << "Cannot find dir_Muons_data" << endl;
     else cout << "Yes Muons data" << endl;
     
-    TFile* file_MC_all = TFile::Open("./output_HI_mu_MC_all.root", "READ");
+    TFile* file_MC_all = TFile::Open("../weights_MC/MC_all_weights/output_HI_mu_MC_all.root", "READ");
     // and take its directories
     TDirectoryFile* dir_HI_MC_all = (TDirectoryFile*)file_MC_all->Get("HI");
     if (!dir_HI_MC_all)
