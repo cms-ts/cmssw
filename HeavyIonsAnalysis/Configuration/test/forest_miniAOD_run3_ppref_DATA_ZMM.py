@@ -166,7 +166,16 @@ process.primaryVertexFilter = cms.EDFilter("VertexSelector",
     cut = cms.string("!isFake && abs(z) <= 25 && position.Rho <= 2"), #in miniADO trackSize()==0, however there is no influence.
     filter = cms.bool(True), # otherwise it won't filter the event
 )
-process.pprimaryVertexFilter = cms.Path(process.primaryVertexFilter)
+
+process.noscraping = cms.EDFilter("FilterOutScraping",
+    applyfilter = cms.untracked.bool(True),
+    debugOn = cms.untracked.bool(False),
+    numtrack = cms.untracked.uint32(10),
+    thresh = cms.untracked.double(0.25),
+    src = cms.untracked.InputTag("unpackedTracksAndVertices") # generalTracks collection not found
+)
+
+process.goodvertex = cms.Path(process.primaryVertexFilter+process.noscraping)
 
 #####################################################################################
 # Select the types of jets filled
