@@ -20,14 +20,50 @@
 
 #include "JetCorrector.h" // for JEC
 #include "MC_samples.h" // Include the header file for MC samples
-#include "tightID_SF.h" // for tight ID SF
-#include "HLT_HIL2SingleMu7_SF.h" // for trigger SF
 
 using namespace std;
+
+double RelativePhi(double phi_1,double phi_2) {
+  double d_phi =  abs(phi_1 - phi_2);
+  if (d_phi > acos(-1)) d_phi = 2*acos(-1) - d_phi;
+  return d_phi;
+}
 
 //To run on data, root -l 'analyze_HI_TTreeReader_ZMM_stack.C("data")'
 //for MC see MC_samples.h, for ex. root -l 'analyze_HI_TTreeReader_ZMM_stack.C("signal")'
 void analyze_HI_TTreeReader_ZMM_stack(const char * argument_name) {
+
+  // --- Load Muon Scale Factor Histograms ---
+  // TightID SF
+  TFile* tightID_sf_file = TFile::Open("NUM_TightID_DEN_genTracks_abseta1_pt2_cutAndCount.root", "READ");
+  if (!tightID_sf_file) {
+      std::cerr << "Error: Cannot open NUM_TightID_DEN_genTracks_abseta1_pt2_cutAndCount.root file!" << std::endl;
+      return;
+  }
+  TH2F* h_tightID_sf = (TH2F*)tightID_sf_file->Get("NUM_TightID_DEN_genTracks_abseta1_pt2");
+  if (!h_tightID_sf) {
+      std::cerr << "Error: Cannot retrieve NUM_TightID_DEN_genTracks_abseta1_pt2 histogram!" << std::endl;
+      tightID_sf_file->Close();
+      return;
+  }
+  h_tightID_sf->SetDirectory(0); // Detach histogram from file
+  tightID_sf_file->Close();
+
+  // HLT SF
+  TFile* hlt_sf_file = TFile::Open("NUM_HLT_HIL2SingleMu7_v_DEN_TightID_abseta1_pt1_cutAndCount.root", "READ");
+  if (!hlt_sf_file) {
+      std::cerr << "Error: Cannot open NUM_HLT_HIL2SingleMu7_v_DEN_TightID_abseta1_pt1_cutAndCount.root file!" << std::endl;
+      return;
+  }
+  TH2F* h_hlt_sf = (TH2F*)hlt_sf_file->Get("NUM_HLT_HIL2SingleMu7_v_DEN_TightID_abseta1_pt1");
+  if (!h_hlt_sf) {
+      std::cerr << "Error: Cannot retrieve NUM_HLT_HIL2SingleMu7_v_DEN_TightID_abseta1_pt1 histogram!" << std::endl;
+      hlt_sf_file->Close();
+      return;
+  }
+  h_hlt_sf->SetDirectory(0); // Detach histogram from file
+  hlt_sf_file->Close();
+  // --- End Load Muon Scale Factor Histograms ---
 
   // Centrality weights
   const float Ncoll[200] = {1893.13, 1867.0, 1834.16, 1805.64, 1770.84, 1744.49, 1699.76, 1661.52, 1615.89, 1579.59, 1540.62, 1499.14, 1469.01, 1432.18, 1402.8, 1368.39, 1338.12, 1302.26, 1274.91, 1245.56, 1215.28, 1183.76, 1160.61, 1131.12, 1107.67, 1078.54, 1055.72, 1026.72, 1000.57, 980.728, 958.777, 936.515, 911.397, 889.182, 869.677, 853.33, 826.999, 808.145, 792.14, 769.639, 753.513, 732.883, 716.817, 697.168, 679.091, 668.056, 650.114, 631.024, 616.203, 597.835, 583.435, 571.454, 555.478, 543.589, 526.328, 511.657, 497.023, 489.255, 471.52, 461.133, 447.767, 436.993, 426.106, 412.626, 403.224, 389.71, 382.595, 371.48, 358.899, 349.179, 339.387, 330.523, 320.094, 313.254, 302.339, 292.421, 282.594, 274.834, 268.847, 259.463, 252.027, 244.561, 236.738, 229.574, 222.898, 215.138, 207.328, 200.879, 196.592, 190.921, 183.942, 176.685, 170.919, 166.96, 161.057, 154.421, 148.816, 144.84, 139.087, 134.448, 128.72, 124.905, 121.166, 116.648, 112.367, 109.012, 104.33, 100.736, 97.3484, 93.2283, 89.3299, 85.9068, 83.6446, 80.2019, 77.5299, 73.9647, 70.7606, 68.2284, 65.793, 63.4532, 60.4738, 58.2406, 55.063, 53.7287, 51.4638, 49.241, 47.0111, 45.5443, 43.1729, 41.5041, 39.5449, 37.9282, 36.8918, 34.9287, 33.1886, 31.9177, 30.756, 29.0803, 27.6721, 26.42, 25.2678, 24.2585, 23.1429, 22.0138, 21.0169, 19.8203, 19.1043, 18.1478, 17.1715, 16.3605, 15.4763, 14.7973, 14.1594, 13.3927, 12.795, 12.1059, 11.5921, 10.9751, 10.3213, 9.94434, 9.3518, 8.94274, 8.37618, 7.94437, 7.48868, 7.06923, 6.71137, 6.31856, 6.03184, 5.67048, 5.43369, 5.13727, 4.83292, 4.58846, 4.37208, 4.15225, 3.84385, 3.63752, 3.45214, 3.24892, 3.02845, 2.81715, 2.66395, 2.5053, 2.29512, 2.13703, 1.93591, 1.79771, 1.64165, 1.54375, 1.45878, 1.36718, 1.2942, 1.23934, 1.18423, 1.14467, 1.11826, 1.0863, 1.06149, 1.04497 };
@@ -111,6 +147,7 @@ void analyze_HI_TTreeReader_ZMM_stack(const char * argument_name) {
   TTreeReaderValue<Float_t> weight = {fReader, isData ? "hiHF" : "weight"}; // MC event weight, not used in data
   TTreeReaderValue<Float_t> vz = {fReader, "vz"};
   TTreeReaderArray<double> rho = {fReader, "rho"};
+  TTreeReaderValue<Float_t> hiHF = {fReader, "hiHF"};
   //TTreeReaderValue<float> Ncoll = {fReader, "Ncoll"}; // Ncoll
 
   // Filters
@@ -173,6 +210,7 @@ void analyze_HI_TTreeReader_ZMM_stack(const char * argument_name) {
   TH1F *h_Z_pt_j = new TH1F("h_Z_pt_j", "Hist;p_{t}^{Z} [GeV]; Entries", 30, 0, 300);
   TH1F *h_jet_pt_lj = new TH1F("h_jet_pt_lj", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
   TH1F *h_cen_j = new TH1F("h_cen_j", "Hist; centrality bin; Entries", 20, 0, 100);
+  TH1F *h_HF_j = new TH1F("h_HF_j", "Hist; HF; Entries", 80, 0, 8000);
   TH1F *h_deltaPhi_Zj = new TH1F("h_deltaPhi_Zj", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
   TH1F *h_xZj = new TH1F("h_xZj", "Hist;x_{Zj}; Entries", 20, 0, 3);
 
@@ -239,14 +277,17 @@ void analyze_HI_TTreeReader_ZMM_stack(const char * argument_name) {
     double Z_mass = (muPlus + muMinus).M();
     double Z_pt = (muPlus + muMinus).Pt();
     double Z_phi = (muPlus + muMinus).Phi();
-    //Apply scale factors
+    // Apply Muon Scale Factors from TH2F histograms
     if (!isData) {
-      scale *= tightID_SF(recoEta[iHighPtMu], recoPt[iHighPtMu]) * tightID_SF(recoEta[iHighPtAntiMu], recoPt[iHighPtAntiMu]);
-      if (recoPt[iHighPtMu] > recoPt[iHighPtAntiMu]) {
-        scale *= HLT_HIL2SingleMu7_SF(recoEta[iHighPtMu], recoPt[iHighPtMu]);
-      }
-      else
-        scale *= HLT_HIL2SingleMu7_SF(recoEta[iHighPtAntiMu], recoPt[iHighPtAntiMu]);
+      // Apply TightID scale factors for both muons in the Z candidate
+      double sf_id_mu_plus = h_tightID_sf->GetBinContent(h_tightID_sf->FindBin(abs(recoEta[iHighPtAntiMu]), recoPt[iHighPtAntiMu]));
+      double sf_id_mu_minus = h_tightID_sf->GetBinContent(h_tightID_sf->FindBin(abs(recoEta[iHighPtMu]), recoPt[iHighPtMu]));
+      scale *= sf_id_mu_plus * sf_id_mu_minus;
+      // Apply HLT scale factor combining them as SF1 + SF2 - (SF1 * SF2)
+      // For trigger we only need one to lepton to have fired, so we use the addition rule of probability
+      double sf_hlt_mu_plus = h_hlt_sf->GetBinContent(h_hlt_sf->FindBin(abs(recoEta[iHighPtAntiMu]), recoPt[iHighPtAntiMu]));
+      double sf_hlt_mu_minus = h_hlt_sf->GetBinContent(h_hlt_sf->FindBin(abs(recoEta[iHighPtMu]), recoPt[iHighPtMu]));
+      scale *= sf_hlt_mu_plus + sf_hlt_mu_minus - (sf_hlt_mu_plus * sf_hlt_mu_minus);
     }
 
     // Apply mass cut
@@ -304,12 +345,10 @@ void analyze_HI_TTreeReader_ZMM_stack(const char * argument_name) {
       if(jtpt_corr[ijet]<30) continue;
       if(abs(jteta[ijet])>2.5) continue;
       detaMinus = jteta[ijet] - muMinus.Eta();
-      dphiMinus = abs(jtphi[ijet] - muMinus.Phi());
-      if (dphiMinus > acos(-1)) dphiMinus = 2*acos(-1) - dphiMinus;
+      dphiMinus = RelativePhi(jtphi[ijet], muMinus.Phi());
       dRMinus = TMath::Sqrt(detaMinus * detaMinus + dphiMinus * dphiMinus);
       detaPlus = jteta[ijet] - muPlus.Eta();
-      dphiPlus = abs(jtphi[ijet] - muPlus.Phi());
-      if (dphiPlus > acos(-1)) dphiPlus = 2*acos(-1) - dphiPlus;
+      dphiPlus = RelativePhi(jtphi[ijet], muPlus.Phi());
       dRPlus = TMath::Sqrt(detaPlus * detaPlus + dphiPlus * dphiPlus);
       if(dRMinus < 0.2 || dRPlus < 0.2 ) continue;
       njets++;
@@ -325,9 +364,7 @@ void analyze_HI_TTreeReader_ZMM_stack(const char * argument_name) {
     //cout << "ijetLeading = " << ijetLeading << endl;
 
     if (ijetLeading != -1) {
-        double dPhi_Zj = 0;
-        if (abs(Z_phi-jtphi[ijetLeading]) <= TMath::Pi()) dPhi_Zj = abs(Z_phi-jtphi[ijetLeading]);
-        else if (abs(Z_phi-jtphi[ijetLeading]) > TMath::Pi()) dPhi_Zj = 2 * TMath::Pi() - abs(Z_phi-jtphi[ijetLeading]);
+        double dPhi_Zj = RelativePhi(Z_phi, jtphi[ijetLeading]);
         h_deltaPhi_Zj->Fill(dPhi_Zj, scale);
         if (dPhi_Zj > 7 * TMath::Pi() / 8) {
           h_njet->Fill(njets, scale);
@@ -336,6 +373,7 @@ void analyze_HI_TTreeReader_ZMM_stack(const char * argument_name) {
           h_jet_pt_lj->Fill(jtpt_corr[ijetLeading], scale);
           h_xZj->Fill(jtpt_corr[ijetLeading]/Z_pt, scale);
           h_cen_j->Fill((*hiBin)/2, scale);
+          h_HF_j->Fill(*hiHF, scale);
           //h_jetgirth->Fill(jtgirth[ijetLeading], scale);
           //h_jet_deltaR->Fill(jtdyndeltaR[ijetLeading], scale);
           //h_jet_etaphi->Fill(jteta[ijetLeading], jtphi[ijetLeading], scale);

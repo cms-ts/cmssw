@@ -33,7 +33,7 @@ void vz_weight_3() {
         legend->SetBorderSize(0);
 
         // Open MC file
-        TFile* file_ = TFile::Open("./output_HI_mu_MC_final_weights.root", "READ");
+        TFile* file_ = TFile::Open("../../plot/output_HI_mu_MC.root", "READ");
         TDirectoryFile* dir = (TDirectoryFile*)file_->Get("HI/Muons");
         TH1D* h = (TH1D*)dir->Get(histo_name.c_str());
         // Get data histogram

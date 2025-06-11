@@ -39,8 +39,4 @@ cd weights_MC/final_weights_3/
 root -l -b -q vz_weight_3.C
 cd -
 
-echo "Step 4"
-echo "MC"
-root -l -b -q 'analyze_HI_TTreeReader_ZMM.C(false, 4)'
-
 echo "Complete." # Optional: Confirmation message
