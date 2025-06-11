@@ -1,0 +1,26 @@
+//--------------------------------
+  Produce ntuples for MinBias events
+  in order to perform Mixed Event
+  Background Subtraction
+//--------------------------------
+
+//--------------------------------
+//To run analyzer on data
+root -l analyze_HI_MinBias_TTreeReader.C
+//the output is MinBias_leading_jets_data.root
+//Default isData, for MC
+root -l 'analyze_MinBias_TTreeReader.C(false)'
+//the MinBias_leading_jets_MC.root
+//--------------------------------
+
+//--------------------------------
+  Plot Mixed Event Bkg subtraction plots
+//--------------------------------
+
+//To plot one histo, for ex. h_xZj 
+root -l -b -q 'plot_MinBias.C("h_xZj", true)'
+//Default isData, for MC
+root -l -b -q 'plot_MinBias.C("h_xZj", false)'
+//To plot all histograms
+chmod +x do_plot_MinBias.sh
+./do_plot_MinBias.sh
