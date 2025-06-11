@@ -30,7 +30,7 @@ using namespace std;
 
 //To run, root -l analyze_HI_MinBias_TTreeReader.C
 //Default isData, for MC root -l 'analyze_MinBias_TTreeReader.C(false)'
-void analyze_MinBias_TTreeReader(bool isData = true) {
+void analyze_MinBias_TTreeReader(bool isData = true, int use_vz = 0) {
 
   //TTrees
   TChain data("data"), EventTree("EventTree"), HiTree("HiTree"),  skimanalysis("skimanalysis"), hltanalysis("hltanalysis");
@@ -107,38 +107,41 @@ void analyze_MinBias_TTreeReader(bool isData = true) {
   Files.push_back("../ParallelMC_L2Relative_AK2PF_PbPb_Reco_v0_2_13_2024.txt");
   JetCorrector JEC(Files);
 
-  // --- Define HF bins ---
-  std::map<std::string, std::vector<std::pair<double, double>>> leading_jets_by_hf_bin;
+  // --- Define bins ---
+  std::map<std::string, std::vector<std::pair<double, double>>> leading_jets_by_bin;
 
-  std::vector<std::pair<float, float>> hf_bins;
-  const int total_bins = BinningConfig::tot_bins;
-  const int events_per_bin = BinningConfig::ev_per_bin;
-  const float first_bin_min = BinningConfig::frst_bin_min;
+  std::vector<std::pair<float, float>> bins;
+  const int total_bins = (use_vz == 0) ? BinningConfig::tot_bins : BinningConfig_vz::tot_bins;
+  const int events_per_bin = (use_vz == 0) ? BinningConfig::ev_per_bin : BinningConfig_vz::ev_per_bin;
+  const float first_bin_min = (use_vz == 0) ? BinningConfig::frst_bin_min : BinningConfig_vz::frst_bin_min;
 
-  float current_min_hf = first_bin_min;
+  float current_min = first_bin_min;
   for (int i = 0; i < total_bins; ++i) {
-      float current_max_hf = current_min_hf * 1.1;
-      hf_bins.push_back({current_min_hf, current_max_hf});
-      current_min_hf = current_max_hf;
+      float current_max = (use_vz == 0) ? (current_min * 1.1) : (current_min + 10.);
+      bins.push_back({current_min, current_max});
+      current_min = current_max;
   }
 
-  std::cout << "Defined HF bins (" << hf_bins.size() << " total):" << std::endl;
-  for (const auto& bin : hf_bins) {
+  if (use_vz == 0) std::cout << "Defined HF bins (" << bins.size() << " total):" << std::endl;
+  else std::cout << "Defined vz bins (" << bins.size() << " total):" << std::endl;
+  for (const auto& bin : bins) {
       std::cout << "[" << bin.first << ", " << bin.second << ")" << std::endl;
   }
-  // --- End of HF bin definition ---
+  // --- End of bin definition ---
 
   // Save in a ttree
   TTree *jet_tree;
   jet_tree = new TTree("jet_tree","jet_tree");
   Float_t jet_tree_HF = 0;
-  Int_t jet_tree_HF_bin = 0;
+  Float_t jet_tree_vz = 0;
+  Int_t jet_tree_bin = 0;
   Float_t jet_tree_pt = 0;
   Float_t jet_tree_phi = 0;
   Float_t jet_tree_eta = 0;
 
   jet_tree->Branch("HF_MinBias", &jet_tree_HF);
-  jet_tree->Branch("HF_bin_MinBias", &jet_tree_HF_bin);
+  jet_tree->Branch("vz_MinBias", &jet_tree_vz);
+  jet_tree->Branch("bin_MinBias", &jet_tree_bin);
   jet_tree->Branch("jet_pt_MinBias", &jet_tree_pt);
   jet_tree->Branch("jet_phi_MinBias", &jet_tree_phi);
   jet_tree->Branch("jet_eta_MinBias", &jet_tree_eta);
@@ -176,22 +179,23 @@ void analyze_MinBias_TTreeReader(bool isData = true) {
   while (fReader.Next()) {
     // Optional: if all bins are filled, we can stop processing events early
     if (filled_bins_count == total_bins) {
-        std::cout << "All " << total_bins << " HF bins have collected " << events_per_bin << " events. Stopping event loop early." << std::endl;
+        std::cout << "All " << total_bins << " bins have collected " << events_per_bin << " events. Stopping event loop early." << std::endl;
         break;
     }
     if(*pprimaryVertexFilter<=0) continue;
     if(*pclusterCompatibilityFilter<=0) continue;
     if(*pphfCoincFilter2Th4<=0) continue;
      // Selection on centrality bin
-     //if(*hiBin>59) continue;
+     if (use_vz != 0) {
+       if(*hiBin>59) continue;}
 
-     float current_hiHF_val = *hiHF;
+     float current_val = (use_vz == 0) ? *hiHF : *vz;
      std::string current_bin_label = "";
      int bin_n = 0;
      int current_bin_n = 0;
      bool found_bin = false;
-     for (const auto& bin_range : hf_bins) {
-       if (current_hiHF_val >= bin_range.first && current_hiHF_val < bin_range.second) {
+     for (const auto& bin_range : bins) {
+       if (current_val >= bin_range.first && current_val < bin_range.second) {
          current_bin_label = Form("%.0f-%.0f [%d]", bin_range.first, bin_range.second, bin_n);
          found_bin = true;
          current_bin_n = bin_n;
@@ -211,7 +215,7 @@ void analyze_MinBias_TTreeReader(bool isData = true) {
     //cout << "***iEvent = " << iEvent << "\t run = " << run << "\t lumi = " << lumi << "\t evt = " << event << endl;
 
     // Check if this bin already has 100 events
-    if (leading_jets_by_hf_bin[current_bin_label].size() >= events_per_bin) {
+    if (leading_jets_by_bin[current_bin_label].size() >= events_per_bin) {
       continue; // Skip this event, this bin is already full
     }
 
@@ -247,24 +251,26 @@ void analyze_MinBias_TTreeReader(bool isData = true) {
       h_Phi_lj->Fill(jtphi[ijetLeading]);
       h_jet_pt_lj->Fill(jtpt_corr[ijetLeading]);
 
-      leading_jets_by_hf_bin[current_bin_label].push_back({jtpt_corr[ijetLeading], jtphi[ijetLeading]});
+      leading_jets_by_bin[current_bin_label].push_back({jtpt_corr[ijetLeading], jtphi[ijetLeading]});
       jet_tree_HF = *hiHF;
-      jet_tree_HF_bin = current_bin_n;
+      jet_tree_vz = *vz;
+      jet_tree_bin = current_bin_n;
       jet_tree_pt = jtpt_corr[ijetLeading];
       jet_tree_phi = jtphi[ijetLeading];
       jet_tree_eta = jteta[ijetLeading];
       jet_tree->Fill();
 
       // Check if this push_back just filled the bin to 100
-      if (leading_jets_by_hf_bin[current_bin_label].size() == events_per_bin) {
+      if (leading_jets_by_bin[current_bin_label].size() == events_per_bin) {
         filled_bins_count++;
         std::cout << "Bin " << current_bin_label << " is now full with " << events_per_bin << " events. Total filled bins: " << filled_bins_count << std::endl;
       }
     }
   }  // end loop events
 
-  std::cout << "\n--- Finished event collection. Final status of leading jet data per HF bin: ---" << std::endl;
-  for (const auto& pair : leading_jets_by_hf_bin) {
+  if (use_vz == 0) std::cout << "\n--- Finished event collection. Final status of leading jet data per HF bin: ---" << std::endl;
+  else std::cout << "\n--- Finished event collection. Final status of leading jet data per vz bin: ---" << std::endl;
+  for (const auto& pair : leading_jets_by_bin) {
       std::cout << "Bin " << pair.first << ": " << pair.second.size() << " leading jets collected." << std::endl;
       // Optional: Print first few collected events for verification
       // if (pair.second.size() > 0) {
@@ -278,9 +284,11 @@ void analyze_MinBias_TTreeReader(bool isData = true) {
    // --- Store to a ROOT file ---
    TFile *outputFile;
    if (isData) {
-      outputFile = new TFile("./MinBias_leading_jets_data.root", "RECREATE");
+      if (use_vz == 0) outputFile = new TFile("./MinBias_leading_jets_data.root", "RECREATE");
+      else outputFile = new TFile("./MinBias_leading_jets_data_vz.root", "RECREATE");
    } else {
-      outputFile = new TFile("./MinBias_leading_jets_MC.root", "RECREATE");
+      if (use_vz == 0) outputFile = new TFile("./MinBias_leading_jets_MC.root", "RECREATE");
+      else outputFile = new TFile("./MinBias_leading_jets_MC_vz.root", "RECREATE");
    }
    jet_tree->Write("",TObject::kOverwrite);
 

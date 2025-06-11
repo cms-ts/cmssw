@@ -12,4 +12,16 @@ struct BinningConfig {
     static constexpr float frst_bin_min = 700.0f;//200.0f;
 };
 
+struct BinningConfig_vz {
+    // Total number of vz bins you want to define.
+    static const int tot_bins = 3;//38;
+
+    // The maximum number of leading jet events to collect per vz bin.
+    static const int ev_per_bin = 1000;//200;
+
+    // The starting vz value for your very first bin.
+    static constexpr float frst_bin_min = -15.0f;//200.0f;
+};
+
+
 #endif // BINNIN_CONFIG_H

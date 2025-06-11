@@ -287,7 +287,7 @@ void analyze_HI_TTreeReader_ZMM_stack(const char * argument_name) {
       // For trigger we only need one to lepton to have fired, so we use the addition rule of probability
       double sf_hlt_mu_plus = h_hlt_sf->GetBinContent(h_hlt_sf->FindBin(abs(recoEta[iHighPtAntiMu]), recoPt[iHighPtAntiMu]));
       double sf_hlt_mu_minus = h_hlt_sf->GetBinContent(h_hlt_sf->FindBin(abs(recoEta[iHighPtMu]), recoPt[iHighPtMu]));
-      scale *= sf_hlt_mu_plus + sf_hlt_mu_minus - (sf_hlt_mu_plus * sf_hlt_mu_minus);
+      scale *= (sf_hlt_mu_plus + sf_hlt_mu_minus - (sf_hlt_mu_plus * sf_hlt_mu_minus));
     }
 
     // Apply mass cut

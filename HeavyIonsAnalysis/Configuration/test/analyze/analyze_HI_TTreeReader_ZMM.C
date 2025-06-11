@@ -103,17 +103,22 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
 
   glob_t globlist;
 
+  // Use HF binning (use_vz = 0) for mixed event bkg subtraction as default
+  int use_vz = 0; // = 1; for vz matching
+
   // File with MinBias sample
   TFile *inFile_MinBias;
 
   if (isData) {
     glob("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime*/CRAB3_Analysis_test13_ZMM_Prime*/*/*.root", GLOB_NOSORT, NULL, &globlist);
-    inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data.root");
+    if (use_vz == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data.root");
+    else inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_vz.root");
   cout << "This is data" << endl;
   }
   else {
     glob("/eos/infnts/cms/store/user/kdeleo/DYto2Mu_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test13_ZMM_DYto2Mu/250321_154613/0000/HiForestMiniAOD_MC_*.root", GLOB_NOSORT, NULL, &globlist);
-    inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC.root");
+    if (use_vz == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC.root");
+    else inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_vz.root");
     cout << "This is MC" << endl;
   }
   cout << "Found " << globlist.gl_pathc << " files"<< endl;
@@ -203,36 +208,39 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
 
   // Declare variables to hold the branch data
   Float_t HF_MinBias;
-  Int_t HF_bin_MinBias;
+  Float_t vz_MinBias;
+  Int_t bin_MinBias;
   Float_t jet_pt_MinBias;
   Float_t jet_phi_MinBias;
   Float_t jet_eta_MinBias;
 
   // Set branch addresses to link variables to tree branches
   inputTree->SetBranchAddress("HF_MinBias", &HF_MinBias);
-  inputTree->SetBranchAddress("HF_bin_MinBias", &HF_bin_MinBias);
+  inputTree->SetBranchAddress("vz_MinBias", &vz_MinBias);
+  inputTree->SetBranchAddress("bin_MinBias", &bin_MinBias);
   inputTree->SetBranchAddress("jet_pt_MinBias", &jet_pt_MinBias);
   inputTree->SetBranchAddress("jet_phi_MinBias", &jet_phi_MinBias);
   inputTree->SetBranchAddress("jet_eta_MinBias", &jet_eta_MinBias);
 
-  // --- Define HF bins ---
-  std::vector<std::pair<float, float>> hf_bins;
-  const int total_bins = BinningConfig::tot_bins;
-  const int events_per_bin = BinningConfig::ev_per_bin;
-  const float first_bin_min = BinningConfig::frst_bin_min;
+  // --- Define bins for MinBias matching ---
+  std::vector<std::pair<float, float>> bins;
+  const int total_bins = (use_vz == 0) ? BinningConfig::tot_bins : BinningConfig_vz::tot_bins;
+  const int events_per_bin = (use_vz == 0) ? BinningConfig::ev_per_bin : BinningConfig_vz::ev_per_bin;
+  const float first_bin_min = (use_vz == 0) ? BinningConfig::frst_bin_min : BinningConfig_vz::frst_bin_min;
 
-  float current_min_hf = first_bin_min;
+  float current_min = first_bin_min;
   for (int i = 0; i < total_bins; ++i) {
-      float current_max_hf = current_min_hf * 1.1;
-      hf_bins.push_back({current_min_hf, current_max_hf});
-      current_min_hf = current_max_hf;
+      float current_max = (use_vz == 0) ? (current_min * 1.1) : (current_min + 10.);
+      bins.push_back({current_min, current_max});
+      current_min = current_max;
   }
 
-  //std::cout << "Defined HF bins (" << hf_bins.size() << " total):" << std::endl;
-  //for (const auto& bin : hf_bins) {
+  //if (use_vz == 0) std::cout << "Defined HF bins (" << bins.size() << " total):" << std::endl;
+  //else std::cout << "Defined vz bins (" << bins.size() << " total):" << std::endl;
+  //for (const auto& bin : bins) {
   //    std::cout << "[" << bin.first << ", " << bin.second << ")" << std::endl;
   //}
-  // --- End of HF bin definition ---
+  // --- End of bin definition ---
 
   // TTree entries
   Int_t nEntries = inputTree->GetEntries();
@@ -389,7 +397,7 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
       // For trigger we only need one to lepton to have fired, so we use the addition rule of probability
       double sf_hlt_mu_plus = h_hlt_sf->GetBinContent(h_hlt_sf->FindBin(abs(recoEta[iHighPtAntiMu]), recoPt[iHighPtAntiMu]));
       double sf_hlt_mu_minus = h_hlt_sf->GetBinContent(h_hlt_sf->FindBin(abs(recoEta[iHighPtMu]), recoPt[iHighPtMu]));
-      scale *= sf_hlt_mu_plus + sf_hlt_mu_minus - (sf_hlt_mu_plus * sf_hlt_mu_minus);
+      scale *= (sf_hlt_mu_plus + sf_hlt_mu_minus - (sf_hlt_mu_plus * sf_hlt_mu_minus));
     }
 
     // Apply mass cut
@@ -509,12 +517,12 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
         double dPhi_Zj = RelativePhi(Z_phi, jtphi[ijetLeading]);
         h_deltaPhi_Zj->Fill(dPhi_Zj, scale);
 
-        // Check the current bin of HF
-        float current_hiHF_val = *hiHF;
+        // Check the current bin of HF (or vz)
+        float current_val = (use_vz == 0) ? *hiHF : *vz;
         int bin_n = 0;
         int current_bin_n = 0;
-        for (const auto& bin_range : hf_bins) {
-          if (current_hiHF_val >= bin_range.first && current_hiHF_val < bin_range.second) {
+        for (const auto& bin_range : bins) {
+          if (current_val >= bin_range.first && current_val < bin_range.second) {
            current_bin_n = bin_n;
            break;
            }
@@ -522,10 +530,10 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
         }
 
         // Loop over the TTree entries for mixing events with MinBias
-        double check_ev_per_bin = 0; //check if each bin of HF was filled with 100MinBias events
+        double check_ev_per_bin = 0; //check if each bin of HF (or vz) was filled with 100MinBias events
         for(int iEntry=0; iEntry< nEntries; iEntry++){
           inputTree->GetEntry(iEntry); // Read all branch values for the current entry
-          if (current_bin_n == HF_bin_MinBias) {
+          if (current_bin_n == bin_MinBias) {
             if (jet_pt_MinBias >= 30 && abs(jet_eta_MinBias) <= 2.5) {
               double detaMinus_MinBias = jet_eta_MinBias - muMinus.Eta();
               double dphiMinus_MinBias = RelativePhi(jet_phi_MinBias, muMinus.Phi());
@@ -536,8 +544,9 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
               if (dRMinus_MinBias >= 0.2 && dRPlus_MinBias >= 0.2 ) {
                 double dPhi_Zj_MinBias = RelativePhi(Z_phi, jet_phi_MinBias);
                 h_deltaPhi_Zj_MinBias->Fill(dPhi_Zj_MinBias, scale);
-//              std::cout << "current_bin_n: " << current_bin_n << "  current_hiHF_val: " << current_hiHF_val <<
-//                           "  jet_pt_MinBias: " << jet_pt_MinBias << "  HF_MinBias: " << HF_MinBias << std::endl;
+//              std::cout << "current_bin_n: " << current_bin_n << "  current_val: " << current_val <<
+//                           "  jet_pt_MinBias: " << jet_pt_MinBias << "  HF_MinBias: " << HF_MinBias <<
+//                           "  vz_MinBias: " << vz_MinBias << std::endl;
                 if (dPhi_Zj_MinBias> 7 * TMath::Pi() / 8) {
                   h_jet_pt_lj_MinBias->Fill(jet_pt_MinBias, scale);
                   h_xZj_MinBias->Fill(jet_pt_MinBias/Z_pt, scale);
@@ -549,7 +558,7 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
         }
         if (check_ev_per_bin != events_per_bin) std::cout << "--- Warning! There are only " << check_ev_per_bin
                                                           << " events per bin ( < " << events_per_bin << " )"
-                                                          << " current_hiHF_val = " << current_hiHF_val << std::endl;
+                                                          << " current_val = " << current_val << std::endl;
 
         if (!isData) {
             if (isLeadingJetMatched) {
@@ -581,17 +590,21 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
   }  // end loop events
 
   // Finalize histograms for Mixed event subtraction
-  h_deltaPhi_Zj_MinBias->Scale(1./BinningConfig::ev_per_bin);
+  if (use_vz == 0) h_deltaPhi_Zj_MinBias->Scale(1./BinningConfig::ev_per_bin);
+  else h_deltaPhi_Zj_MinBias->Scale(1./BinningConfig_vz::ev_per_bin);
   TH1F* h_deltaPhi_Zj_subtracted = (TH1F*)h_deltaPhi_Zj->Clone("h_deltaPhi_Zj_subtracted");
   h_deltaPhi_Zj_subtracted->SetDirectory(0);
   h_deltaPhi_Zj_subtracted->SetTitle("h_deltaPhi_Zj - h_deltaPhi_Zj_MinBias (rescaled)");
   h_deltaPhi_Zj_subtracted->Add(h_deltaPhi_Zj_MinBias, -1); // The -1 performs the subtraction
 
-  h_jet_pt_lj_MinBias->Scale(1./BinningConfig::ev_per_bin);
+  if (use_vz == 0) h_jet_pt_lj_MinBias->Scale(1./BinningConfig::ev_per_bin);
+  else h_jet_pt_lj_MinBias->Scale(1./BinningConfig_vz::ev_per_bin);
   TH1F* h_jet_pt_lj_subtracted = (TH1F*)h_jet_pt_lj->Clone("h_jet_pt_lj_subtracted");
   h_jet_pt_lj_subtracted->SetDirectory(0);
   h_jet_pt_lj_subtracted->SetTitle("h_jet_pt_lj - h_jet_pt_lj_MinBias (rescaled)");
   h_jet_pt_lj_subtracted->Add(h_jet_pt_lj_MinBias, -1); // The -1 performs the subtraction
+  if (use_vz == 0) cout << "HF matching for mixed event bkg subtraction" << endl;
+  else cout << "vz matching for mixed event bkg subtraction" << endl;
   cout << "Bkg: " << h_jet_pt_lj_MinBias->Integral(0, h_jet_pt_lj_MinBias->GetNbinsX()+1) << " fraction: "
        << h_jet_pt_lj_MinBias->Integral(0, h_jet_pt_lj_MinBias->GetNbinsX()+1)/h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1)
        << endl;
@@ -600,7 +613,8 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
          << " fraction: " << (h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1) - h_jet_pt_lj_matched->Integral(0, h_jet_pt_lj_matched->GetNbinsX()+1))/h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1)
          << endl;
   }
-  h_xZj_MinBias->Scale(1./BinningConfig::ev_per_bin);
+  if (use_vz == 0) h_xZj_MinBias->Scale(1./BinningConfig::ev_per_bin);
+  else h_xZj_MinBias->Scale(1./BinningConfig_vz::ev_per_bin);
   TH1F* h_xZj_subtracted = (TH1F*)h_xZj->Clone("h_xZj_subtracted");
   h_xZj_subtracted->SetDirectory(0);
   h_xZj_subtracted->SetTitle("h_xZj - h_xZj (rescaled)");

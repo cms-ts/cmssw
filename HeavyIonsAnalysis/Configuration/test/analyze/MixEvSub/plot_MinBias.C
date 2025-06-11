@@ -114,7 +114,7 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
   canv->SetBottomMargin( B/H );
   canv->SetTickx(0);
   canv->SetTicky(0);
-  canv->SetLogy();
+  //canv->SetLogy();
   
   TH1* h = new TH1F("h","h",bin,min,max);
   h->GetXaxis()->SetNdivisions(6,5,0);
