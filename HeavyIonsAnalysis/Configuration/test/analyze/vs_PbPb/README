@@ -1,0 +1,21 @@
+//--------------------------------
+  Compare data PbPb vs ppRef
+//--------------------------------
+
+//--------------------------------
+  Before running vs_PbPb.C, run
+  analyze_ppref_TTreeReader_ZMM.C
+  in the previous folder.
+  Moreover, copy inside this folder
+  output_HI_mu_data.root, obtained
+  from PbPb. 
+//--------------------------------
+
+//--------------------------------
+//To run vs_PbPb.C (before mixed 
+//event subtraction)
+  root -l vs_PbPb.C
+//after subtraction
+  root -l 'vs_PbPb.c(true)'
+// inside the macro choose which hist to compare
+//--------------------------------
