@@ -7,16 +7,23 @@
 //--------------------------------
 //To run analyzer on data
 root -l analyze_MinBias_TTreeReader.C
-//the output is MinBias_leading_jets_data.root
+//the output is MinBias_leading_jets_data_HF.root
 //Default isData, for MC
 root -l 'analyze_MinBias_TTreeReader.C(false)'
-//the output is MinBias_leading_jets_MC.root
+//the output is MinBias_leading_jets_MC_HF.root
 
 //To use vz binning instead of HF
 root -l 'analyze_MinBias_TTreeReader.C(true,1)'
-//the output is MinBias_leading_jets_data_vz.root'
+//the output is MinBias_leading_jets_data_VZ.root'
 root -l 'analyze_MinBias_TTreeReader.C(false,1)'
-//the output is MinBias_leading_jets_MC_vz.root
+//the output is MinBias_leading_jets_MC_VZ.root
+//--------------------------------
+
+//To use VZ + Centrality binning 
+root -l 'analyze_MinBias_TTreeReader.C(true,2)'
+//the output is MinBias_leading_jets_data_VZ_Cen_Combined.root'
+root -l 'analyze_MinBias_TTreeReader.C(false,2)'
+//the output is MinBias_leading_jets_MC_VZ_Cen_Combined.root
 //--------------------------------
 
 //--------------------------------

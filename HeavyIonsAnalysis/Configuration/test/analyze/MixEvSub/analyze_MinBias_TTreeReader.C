@@ -4,7 +4,8 @@
 #include <map>        // For std::map to store events per bin
 #include <string>     // For std::string
 #include <utility>    // For std::pair
-#include "binning_config.h"
+#include "binning_config.h" // Custom binning configuration header
+#include <sstream>    // For std::stringstream for string formatting
 
 // Root includes
 #include "TFile.h"
@@ -18,6 +19,7 @@
 #include "TDirectory.h"
 #include "TH1.h"
 #include "TStyle.h"
+#include "TMath.h" // For TMath::Pi()
 
 #include <glob.h>
 #include "TTreeReader.h"
@@ -30,7 +32,11 @@ using namespace std;
 
 //To run, root -l analyze_HI_MinBias_TTreeReader.C
 //Default isData, for MC root -l 'analyze_MinBias_TTreeReader.C(false)'
-void analyze_MinBias_TTreeReader(bool isData = true, int use_vz = 0) {
+void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0) {
+// use_binning_option:
+// 0: HF binning only (existing behavior)
+// 1: VZ binning only (existing behavior)
+// 2: VZ + Centrality binning (new behavior)
 
   //TTrees
   TChain data("data"), EventTree("EventTree"), HiTree("HiTree"),  skimanalysis("skimanalysis"), hltanalysis("hltanalysis");
@@ -110,23 +116,69 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_vz = 0) {
   // --- Define bins ---
   std::map<std::string, std::vector<std::pair<double, double>>> leading_jets_by_bin;
 
-  std::vector<std::pair<float, float>> bins;
-  const int total_bins = (use_vz == 0) ? BinningConfig::tot_bins : BinningConfig_vz::tot_bins;
-  const int events_per_bin = (use_vz == 0) ? BinningConfig::ev_per_bin : BinningConfig_vz::ev_per_bin;
-  const float first_bin_min = (use_vz == 0) ? BinningConfig::frst_bin_min : BinningConfig_vz::frst_bin_min;
+  // These will hold the actual bin ranges for iteration, based on the selected option
+  std::vector<std::pair<float, float>> primary_bins;         // For HF or VZ only
+  std::vector<std::pair<float, float>> vz_bins_combined;     // For combined VZ+Centrality
+  std::vector<std::pair<float, float>> centrality_bins_combined; // For combined VZ+Centrality
 
-  float current_min = first_bin_min;
-  for (int i = 0; i < total_bins; ++i) {
-      float current_max = (use_vz == 0) ? (current_min * 1.1) : (current_min + 10.);
-      bins.push_back({current_min, current_max});
+  int total_bins_count = 0; // Total expected bins for the selected option
+  int events_per_bin_limit = 0; // The maximum number of events to collect per individual bin
+
+  if (use_binning_option == 0) { // HF binning
+    total_bins_count = BinningConfig::tot_bins;
+    events_per_bin_limit = BinningConfig::ev_per_bin;
+    float current_min = BinningConfig::frst_bin_min;
+    for (int i = 0; i < total_bins_count; ++i) {
+      float current_max = (current_min * 1.1);
+      primary_bins.push_back({current_min, current_max});
       current_min = current_max;
+    }
+    std::cout << "Defined HF bins (" << primary_bins.size() << " total):" << std::endl;
+    for (const auto& bin : primary_bins) {
+      std::cout << "[" << bin.first << ", " << bin.second << ")" << std::endl;
+    }
+  } else if (use_binning_option == 1) { // VZ binning only
+    total_bins_count = BinningConfig_vz::tot_bins;
+    events_per_bin_limit = BinningConfig_vz::ev_per_bin;
+    float current_min = BinningConfig_vz::frst_bin_min;
+    for (int i = 0; i < total_bins_count; ++i) {
+      float current_max = (current_min + 10.0f); // Example: 10cm wide vz bins
+      primary_bins.push_back({current_min, current_max});
+      current_min = current_max;
+    }
+    std::cout << "Defined vz bins (" << primary_bins.size() << " total):" << std::endl;
+    for (const auto& bin : primary_bins) {
+      std::cout << "[" << bin.first << ", " << bin.second << ")" << std::endl;
+    }
+  } else if (use_binning_option == 2) { // VZ + Centrality binning
+    // Centrality bins based on hiBin (e.g., 30 bins from 0-30% centrality)
+    float cen_bin_width_hiBin = (BinningConfig_Combined_Vz_Centrality::centrality_max_hiBin - BinningConfig_Combined_Vz_Centrality::centrality_min_hiBin) / BinningConfig_Combined_Vz_Centrality::num_centrality_bins;
+    for (int i = 0; i < BinningConfig_Combined_Vz_Centrality::num_centrality_bins; ++i) {
+      float min_hiBin = BinningConfig_Combined_Vz_Centrality::centrality_min_hiBin + i * cen_bin_width_hiBin;
+      float max_hiBin = min_hiBin + cen_bin_width_hiBin;
+      centrality_bins_combined.push_back({min_hiBin, max_hiBin});
+    }
+
+    // Vz bins based on explicit edges
+    for (int i = 0; i < BinningConfig_Combined_Vz_Centrality::num_vz_bins; ++i) {
+      vz_bins_combined.push_back({BinningConfig_Combined_Vz_Centrality::vz_bin_edges[i], BinningConfig_Combined_Vz_Centrality::vz_bin_edges[i+1]});
+    }
+
+    total_bins_count = BinningConfig_Combined_Vz_Centrality::num_centrality_bins * BinningConfig_Combined_Vz_Centrality::num_vz_bins;
+    events_per_bin_limit = BinningConfig_Combined_Vz_Centrality::ev_per_combined_bin;
+
+    std::cout << "Defined combined Centrality-VZ bins (" << total_bins_count << " total):" << std::endl;
+    for (const auto& cen_bin : centrality_bins_combined) {
+      for (const auto& vz_bin : vz_bins_combined) {
+        // Convert hiBin to % for display: hiBin / 2
+        std::cout << "Centrality [" << cen_bin.first/2 << "-" << cen_bin.second/2 << "]%, VZ [" << vz_bin.first << ", " << vz_bin.second << ")" << std::endl;
+      }
+    }
+  } else {
+    std::cerr << "Invalid use_binning_option: " << use_binning_option << std::endl;
+    return; // Exit if invalid option
   }
 
-  if (use_vz == 0) std::cout << "Defined HF bins (" << bins.size() << " total):" << std::endl;
-  else std::cout << "Defined vz bins (" << bins.size() << " total):" << std::endl;
-  for (const auto& bin : bins) {
-      std::cout << "[" << bin.first << ", " << bin.second << ")" << std::endl;
-  }
   // --- End of bin definition ---
 
   // Save in a ttree
@@ -134,6 +186,7 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_vz = 0) {
   jet_tree = new TTree("jet_tree","jet_tree");
   Float_t jet_tree_HF = 0;
   Float_t jet_tree_vz = 0;
+  Int_t jet_tree_hiBin = 0;
   Int_t jet_tree_bin = 0;
   Float_t jet_tree_pt = 0;
   Float_t jet_tree_phi = 0;
@@ -141,6 +194,7 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_vz = 0) {
 
   jet_tree->Branch("HF_MinBias", &jet_tree_HF);
   jet_tree->Branch("vz_MinBias", &jet_tree_vz);
+  jet_tree->Branch("hiBin_MinBias", &jet_tree_hiBin);
   jet_tree->Branch("bin_MinBias", &jet_tree_bin);
   jet_tree->Branch("jet_pt_MinBias", &jet_tree_pt);
   jet_tree->Branch("jet_phi_MinBias", &jet_tree_phi);
@@ -171,53 +225,107 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_vz = 0) {
   //TH1F *h_jetgirth = new TH1F("h_jetgirth", "Hist;girth; Entries", 10, 0, 0.2);
   //TH1F *h_jet_deltaR = new TH1F("h_jet_deltaR", "Hist; R_{g}; Entries", 10, 0, 0.2);
 
-  // Track how many bins have reached 100 events to potentially stop early
-  int filled_bins_count = 0;
+  // Track how many bins have reached 'events_per_bin_limit' events
+  std::map<std::string, int> bin_event_counts; // Keeps count for each specific bin label
+  int overall_filled_bins_count = 0; // Counts how many distinct bins have reached their limit
 
   // Loop over events to access and analyze the data
   unsigned int iEvent = 0;
   while (fReader.Next()) {
     // Optional: if all bins are filled, we can stop processing events early
-    if (filled_bins_count == total_bins) {
-        std::cout << "All " << total_bins << " bins have collected " << events_per_bin << " events. Stopping event loop early." << std::endl;
-        break;
+    if (overall_filled_bins_count == total_bins_count) {
+      std::cout << "All " << total_bins_count << " bins have collected " << events_per_bin_limit << " events. Stopping event loop early." << std::endl;
+      break;
     }
+
     if(*pprimaryVertexFilter<=0) continue;
     if(*pclusterCompatibilityFilter<=0) continue;
     if(*pphfCoincFilter2Th4<=0) continue;
-     // Selection on centrality bin
-     if (use_vz != 0) {
-       if(*hiBin>59) continue;}
 
-     float current_val = (use_vz == 0) ? *hiHF : *vz;
-     std::string current_bin_label = "";
-     int bin_n = 0;
-     int current_bin_n = 0;
-     bool found_bin = false;
-     for (const auto& bin_range : bins) {
-       if (current_val >= bin_range.first && current_val < bin_range.second) {
-         current_bin_label = Form("%.0f-%.0f [%d]", bin_range.first, bin_range.second, bin_n);
-         found_bin = true;
-         current_bin_n = bin_n;
-         break;
-       }
-     bin_n++;
-     }
+    std::string current_bin_label = "";
+    int current_global_bin_n = -1; // Unique integer ID for the current bin
+    bool found_bin = false;
 
-     if (!found_bin) {
-       continue;
-     }
+    if (use_binning_option == 0) { // HF binning
+      float current_val = *hiHF;
+      int bin_n = 0;
+      for (const auto& bin_range : primary_bins) {
+        if (current_val >= bin_range.first && current_val < bin_range.second) {
+          current_bin_label = Form("HF_%.0f-%.0f [%d]", bin_range.first, bin_range.second, bin_n);
+          current_global_bin_n = bin_n;
+          found_bin = true;
+          break;
+        }
+        bin_n++;
+      }
+    } else if (use_binning_option == 1) { // VZ binning only
+      float current_val = *vz;
+      // Apply centrality cut for VZ only mode (e.g., 0-30%)
+      if(*hiBin > 59) continue; // hiBin is centrality*2, so >59 means >29.5%
+      int bin_n = 0;
+      for (const auto& bin_range : primary_bins) {
+        if (current_val >= bin_range.first && current_val < bin_range.second) {
+          current_bin_label = Form("VZ_%.1f-%.1f [%d]", bin_range.first, bin_range.second, bin_n);
+          current_global_bin_n = bin_n;
+          found_bin = true;
+          break;
+        }
+        bin_n++;
+      }
+    } else if (use_binning_option == 2) { // VZ + Centrality binning
+      // Apply overall centrality cut relevant to the combined binning scheme (e.g., 0-30%)
+      if(*hiBin > 59) continue;
+
+      int cen_bin_idx = -1;
+      int vz_bin_idx = -1;
+
+      // Find Centrality Bin
+      for (size_t c_bin_n = 0; c_bin_n < centrality_bins_combined.size(); ++c_bin_n) {
+        const auto& bin_range = centrality_bins_combined[c_bin_n];
+        if (*hiBin >= bin_range.first && *hiBin < bin_range.second) {
+          cen_bin_idx = c_bin_n;
+          break;
+        }
+      }
+
+      // Find VZ Bin
+      for (size_t v_bin_n = 0; v_bin_n < vz_bins_combined.size(); ++v_bin_n) {
+        const auto& bin_range = vz_bins_combined[v_bin_n];
+        if (*vz >= bin_range.first && *vz < bin_range.second) {
+          vz_bin_idx = v_bin_n;
+          break;
+        }
+      }
+
+      if (cen_bin_idx != -1 && vz_bin_idx != -1) {
+        // Construct a unique bin label for the map key
+        std::stringstream ss;
+        ss << "Cen_" << centrality_bins_combined[cen_bin_idx].first/2 << "-" << centrality_bins_combined[cen_bin_idx].second/2 << "%_VZ_"
+           << vz_bins_combined[vz_bin_idx].first << "-" << vz_bins_combined[vz_bin_idx].second;
+        current_bin_label = ss.str();
+
+        // Calculate a unique global bin number for the TTree
+        // This assumes centrality_bins_combined.size() and vz_bins_combined.size() are constant
+        current_global_bin_n = cen_bin_idx * BinningConfig_Combined_Vz_Centrality::num_vz_bins + vz_bin_idx;
+        found_bin = true;
+      }
+    }
+
+    if (!found_bin) {
+      continue; // Event does not fall into any defined bin for the selected option
+    }
 
     //if(*HLT_HIL2SingleMu7_v3<=0) continue;
 //    bool good_pair = false;
 //    if (*nReco < 2 ) continue;
-    iEvent++;
-    //cout << "***iEvent = " << iEvent << "\t run = " << run << "\t lumi = " << lumi << "\t evt = " << event << endl;
 
-    // Check if this bin already has 100 events
-    if (leading_jets_by_bin[current_bin_label].size() >= events_per_bin) {
+    // Check if this specific bin already has enough events
+    if (bin_event_counts[current_bin_label] >= events_per_bin_limit) {
       continue; // Skip this event, this bin is already full
     }
+
+    iEvent++;
+    //cout << "***iEvent = " << iEvent << "\t run = " << run << "\t lumi = " << lumi << "\t evt = " << event << endl;
 
     // Loop over Jets
     int ijetLeading = -1;
@@ -245,54 +353,60 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_vz = 0) {
     //cout << "ijetLeading = " << ijetLeading << endl;
 
     if (ijetLeading != -1) {
+      // Fill general event histograms
       h_vz->Fill(*vz);
       h_HF->Fill(*hiHF);
       h_cen->Fill((*hiBin)/2);
       h_Phi_lj->Fill(jtphi[ijetLeading]);
       h_jet_pt_lj->Fill(jtpt_corr[ijetLeading]);
-
+      // Store leading jet information for the specific bin
       leading_jets_by_bin[current_bin_label].push_back({jtpt_corr[ijetLeading], jtphi[ijetLeading]});
+      // Fill the output TTree
       jet_tree_HF = *hiHF;
       jet_tree_vz = *vz;
-      jet_tree_bin = current_bin_n;
+      jet_tree_hiBin = *hiBin;
+      jet_tree_bin = current_global_bin_n;
       jet_tree_pt = jtpt_corr[ijetLeading];
       jet_tree_phi = jtphi[ijetLeading];
       jet_tree_eta = jteta[ijetLeading];
       jet_tree->Fill();
-
-      // Check if this push_back just filled the bin to 100
-      if (leading_jets_by_bin[current_bin_label].size() == events_per_bin) {
-        filled_bins_count++;
-        std::cout << "Bin " << current_bin_label << " is now full with " << events_per_bin << " events. Total filled bins: " << filled_bins_count << std::endl;
+      // Increment event count for this specific bin
+      bin_event_counts[current_bin_label]++;
+      // Check if this push_back just filled the bin to 'events_per_bin_limit'
+      if (bin_event_counts[current_bin_label] == events_per_bin_limit) {
+        overall_filled_bins_count++;
+        std::cout << "Bin " << current_bin_label << " is now full with " << events_per_bin_limit << " events. Total filled bins: " << overall_filled_bins_count << std::endl;
       }
     }
   }  // end loop events
 
-  if (use_vz == 0) std::cout << "\n--- Finished event collection. Final status of leading jet data per HF bin: ---" << std::endl;
-  else std::cout << "\n--- Finished event collection. Final status of leading jet data per vz bin: ---" << std::endl;
+  std::cout << "\n--- Finished event collection. Final status of leading jet data per bin: ---" << std::endl;
   for (const auto& pair : leading_jets_by_bin) {
-      std::cout << "Bin " << pair.first << ": " << pair.second.size() << " leading jets collected." << std::endl;
-      // Optional: Print first few collected events for verification
-      // if (pair.second.size() > 0) {
-      //     std::cout << "  First event: Pt = " << pair.second[0].first << ", Phi = " << pair.second[0].second << std::endl;
-      // }
+    std::cout << "Bin " << pair.first << ": " << pair.second.size() << " leading jets collected." << std::endl;
   }
 
-  cout << "N events (h_Phi_lj): " << h_Phi_lj->Integral()
-       << " (h_jet_pt_lj); " << h_jet_pt_lj->Integral() << endl;
+  cout << "Total events processed (approx. based on leading jet finds): " << iEvent << endl;
+  cout << "N events (h_Phi_lj): " << h_Phi_lj->GetEntries()
+       << "; N events (h_jet_pt_lj): " << h_jet_pt_lj->GetEntries() << endl;
 
-   // --- Store to a ROOT file ---
-   TFile *outputFile;
-   if (isData) {
-      if (use_vz == 0) outputFile = new TFile("./MinBias_leading_jets_data.root", "RECREATE");
-      else outputFile = new TFile("./MinBias_leading_jets_data_vz.root", "RECREATE");
-   } else {
-      if (use_vz == 0) outputFile = new TFile("./MinBias_leading_jets_MC.root", "RECREATE");
-      else outputFile = new TFile("./MinBias_leading_jets_MC_vz.root", "RECREATE");
-   }
-   jet_tree->Write("",TObject::kOverwrite);
-
-   outputFile->Close();
+  // --- Store to a ROOT file ---
+  TFile *outputFile;
+  TString output_filename;
+  if (isData) {
+    if (use_binning_option == 0) output_filename = "./MinBias_leading_jets_data_HF.root";
+    else if (use_binning_option == 1) output_filename = "./MinBias_leading_jets_data_VZ.root";
+    else if (use_binning_option == 2) output_filename = "./MinBias_leading_jets_data_VZ_Cen_Combined.root";
+    else output_filename = "./MinBias_leading_jets_data_UnknownOption.root";
+  } else {
+    if (use_binning_option == 0) output_filename = "./MinBias_leading_jets_MC_HF.root";
+    else if (use_binning_option == 1) output_filename = "./MinBias_leading_jets_MC_VZ.root";
+    else if (use_binning_option == 2) output_filename = "./MinBias_leading_jets_MC_VZ_Cen_Combined.root";
+    else output_filename = "./MinBias_leading_jets_MC_UnknownOption.root";
+  }
+  outputFile = new TFile(output_filename, "RECREATE");
+  // Write the TTree
+  jet_tree->Write("",TObject::kOverwrite);
+  outputFile->Close();
 
   c1->cd(1);
   h_cen->Draw();

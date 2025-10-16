@@ -103,22 +103,30 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
 
   glob_t globlist;
 
-  // Use HF binning (use_vz = 0) for mixed event bkg subtraction as default
-  int use_vz = 0; // = 1; for vz matching
+
+  // Binning_option for mixed event background subtraction, Use HF binning as default
+  // 0: HF binning only
+  // 1: VZ binning only
+  // 2: VZ + Centrality binning
+  int binning_option = 2;
 
   // File with MinBias sample
   TFile *inFile_MinBias;
 
   if (isData) {
     glob("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime*/CRAB3_Analysis_test13_ZMM_Prime*/*/*.root", GLOB_NOSORT, NULL, &globlist);
-    if (use_vz == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data.root");
-    else inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_vz.root");
-  cout << "This is data" << endl;
+    if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_HF.root");
+    else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_VZ.root");
+    else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_VZ_Cen_Combined.root");
+    else { cerr << "Invalid binning_option for data MinBias file." << endl; return; }
+    cout << "This is data" << endl;
   }
   else {
     glob("/eos/infnts/cms/store/user/kdeleo/DYto2Mu_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test13_ZMM_DYto2Mu/250321_154613/0000/HiForestMiniAOD_MC_*.root", GLOB_NOSORT, NULL, &globlist);
-    if (use_vz == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC.root");
-    else inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_vz.root");
+    if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_HF.root");
+    else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_VZ.root");
+    else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_VZ_Cen_Combined.root");
+    else { cerr << "Invalid binning_option for MC MinBias file." << endl; return; }
     cout << "This is MC" << endl;
   }
   cout << "Found " << globlist.gl_pathc << " files"<< endl;
@@ -209,7 +217,8 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
   // Declare variables to hold the branch data
   Float_t HF_MinBias;
   Float_t vz_MinBias;
-  Int_t bin_MinBias;
+  Int_t hiBin_MinBias;
+  Int_t bin_MinBias; // Global bin number in MinBias tree
   Float_t jet_pt_MinBias;
   Float_t jet_phi_MinBias;
   Float_t jet_eta_MinBias;
@@ -217,34 +226,66 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
   // Set branch addresses to link variables to tree branches
   inputTree->SetBranchAddress("HF_MinBias", &HF_MinBias);
   inputTree->SetBranchAddress("vz_MinBias", &vz_MinBias);
+  inputTree->SetBranchAddress("hiBin_MinBias", &hiBin_MinBias); // Link new branch
   inputTree->SetBranchAddress("bin_MinBias", &bin_MinBias);
   inputTree->SetBranchAddress("jet_pt_MinBias", &jet_pt_MinBias);
   inputTree->SetBranchAddress("jet_phi_MinBias", &jet_phi_MinBias);
   inputTree->SetBranchAddress("jet_eta_MinBias", &jet_eta_MinBias);
 
-  // --- Define bins for MinBias matching ---
-  std::vector<std::pair<float, float>> bins;
-  const int total_bins = (use_vz == 0) ? BinningConfig::tot_bins : BinningConfig_vz::tot_bins;
-  const int events_per_bin = (use_vz == 0) ? BinningConfig::ev_per_bin : BinningConfig_vz::ev_per_bin;
-  const float first_bin_min = (use_vz == 0) ? BinningConfig::frst_bin_min : BinningConfig_vz::frst_bin_min;
+  // --- Bin definition for MinBias matching (based on selected option) ---
+  std::vector<std::pair<float, float>> primary_bins; // For HF or VZ only
+  std::vector<std::pair<float, float>> vz_bins_combined;     // For combined VZ+Centrality
+  std::vector<std::pair<float, float>> centrality_bins_combined; // For combined VZ+Centrality
 
-  float current_min = first_bin_min;
-  for (int i = 0; i < total_bins; ++i) {
-      float current_max = (use_vz == 0) ? (current_min * 1.1) : (current_min + 10.);
-      bins.push_back({current_min, current_max});
-      current_min = current_max;
+  int total_mixed_bins_expected = 0; // Total expected bins for the selected option in MinBias
+  int events_per_mixed_bin_limit = 0; // The max events collected per bin in MinBias
+
+  if (binning_option == 0) { // HF binning
+      total_mixed_bins_expected = BinningConfig::tot_bins;
+      events_per_mixed_bin_limit = BinningConfig::ev_per_bin;
+      float current_min = BinningConfig::frst_bin_min;
+      for (int i = 0; i < total_mixed_bins_expected; ++i) {
+          float current_max = (current_min * 1.1);
+          primary_bins.push_back({current_min, current_max});
+          current_min = current_max;
+      }
+      std::cout << "Defined HF bins for MinBias matching (" << primary_bins.size() << " total)." << std::endl;
+  } else if (binning_option == 1) { // VZ binning only
+      total_mixed_bins_expected = BinningConfig_vz::tot_bins;
+      events_per_mixed_bin_limit = BinningConfig_vz::ev_per_bin;
+      float current_min = BinningConfig_vz::frst_bin_min;
+      for (int i = 0; i < total_mixed_bins_expected; ++i) {
+          float current_max = (current_min + 10.0f); // 10cm wide vz bins
+          primary_bins.push_back({current_min, current_max});
+          current_min = current_max;
+      }
+      std::cout << "Defined VZ bins for MinBias matching (" << primary_bins.size() << " total)." << std::endl;
+  } else if (binning_option == 2) { // VZ + Centrality binning
+      // Centrality bins based on hiBin
+      float cen_bin_width_hiBin = (BinningConfig_Combined_Vz_Centrality::centrality_max_hiBin - BinningConfig_Combined_Vz_Centrality::centrality_min_hiBin) / BinningConfig_Combined_Vz_Centrality::num_centrality_bins;
+      for (int i = 0; i < BinningConfig_Combined_Vz_Centrality::num_centrality_bins; ++i) {
+          float min_hiBin = BinningConfig_Combined_Vz_Centrality::centrality_min_hiBin + i * cen_bin_width_hiBin;
+          float max_hiBin = min_hiBin + cen_bin_width_hiBin;
+          centrality_bins_combined.push_back({min_hiBin, max_hiBin});
+      }
+
+      // Vz bins based on explicit edges
+      for (int i = 0; i < BinningConfig_Combined_Vz_Centrality::num_vz_bins; ++i) {
+          vz_bins_combined.push_back({BinningConfig_Combined_Vz_Centrality::vz_bin_edges[i], BinningConfig_Combined_Vz_Centrality::vz_bin_edges[i+1]});
+      }
+
+      total_mixed_bins_expected = BinningConfig_Combined_Vz_Centrality::num_centrality_bins * BinningConfig_Combined_Vz_Centrality::num_vz_bins;
+      events_per_mixed_bin_limit = BinningConfig_Combined_Vz_Centrality::ev_per_combined_bin;
+      std::cout << "Defined combined Centrality-VZ bins for MinBias matching (" << total_mixed_bins_expected << " total)." << std::endl;
+  } else {
+      std::cerr << "Invalid binning_option: " << binning_option << std::endl;
+      return;
   }
-
-  //if (use_vz == 0) std::cout << "Defined HF bins (" << bins.size() << " total):" << std::endl;
-  //else std::cout << "Defined vz bins (" << bins.size() << " total):" << std::endl;
-  //for (const auto& bin : bins) {
-  //    std::cout << "[" << bin.first << ", " << bin.second << ")" << std::endl;
-  //}
   // --- End of bin definition ---
 
   // TTree entries
-  Int_t nEntries = inputTree->GetEntries();
-  std::cout << "Reading " << nEntries << " entries from 'jet_tree'..." << std::endl;
+  Int_t nEntries_MinBias = inputTree->GetEntries();
+  std::cout << "Reading " << nEntries_MinBias << " entries from 'jet_tree'..." << std::endl;
   //Canvas
   gStyle->SetOptStat(0);
   TCanvas* c1 = new TCanvas("c1", "c1", 1200, 800);
@@ -517,48 +558,90 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
         double dPhi_Zj = RelativePhi(Z_phi, jtphi[ijetLeading]);
         h_deltaPhi_Zj->Fill(dPhi_Zj, scale);
 
-        // Check the current bin of HF (or vz)
-        float current_val = (use_vz == 0) ? *hiHF : *vz;
-        int bin_n = 0;
-        int current_bin_n = 0;
-        for (const auto& bin_range : bins) {
-          if (current_val >= bin_range.first && current_val < bin_range.second) {
-           current_bin_n = bin_n;
-           break;
-           }
-           bin_n++;
-        }
-
-        // Loop over the TTree entries for mixing events with MinBias
-        double check_ev_per_bin = 0; //check if each bin of HF (or vz) was filled with 100MinBias events
-        for(int iEntry=0; iEntry< nEntries; iEntry++){
-          inputTree->GetEntry(iEntry); // Read all branch values for the current entry
-          if (current_bin_n == bin_MinBias) {
-            if (jet_pt_MinBias >= 30 && abs(jet_eta_MinBias) <= 2.5) {
-              double detaMinus_MinBias = jet_eta_MinBias - muMinus.Eta();
-              double dphiMinus_MinBias = RelativePhi(jet_phi_MinBias, muMinus.Phi());
-              double dRMinus_MinBias = TMath::Sqrt(detaMinus_MinBias * detaMinus_MinBias + dphiMinus_MinBias * dphiMinus_MinBias);
-              double detaPlus_MinBias = jet_eta_MinBias - muPlus.Eta();
-              double dphiPlus_MinBias = RelativePhi(jet_phi_MinBias,muPlus.Phi());
-              double dRPlus_MinBias = TMath::Sqrt(detaPlus_MinBias * detaPlus_MinBias + dphiPlus_MinBias * dphiPlus_MinBias);
-              if (dRMinus_MinBias >= 0.2 && dRPlus_MinBias >= 0.2 ) {
-                double dPhi_Zj_MinBias = RelativePhi(Z_phi, jet_phi_MinBias);
-                h_deltaPhi_Zj_MinBias->Fill(dPhi_Zj_MinBias, scale);
-//              std::cout << "current_bin_n: " << current_bin_n << "  current_val: " << current_val <<
-//                           "  jet_pt_MinBias: " << jet_pt_MinBias << "  HF_MinBias: " << HF_MinBias <<
-//                           "  vz_MinBias: " << vz_MinBias << std::endl;
-                if (dPhi_Zj_MinBias> 7 * TMath::Pi() / 8) {
-                  h_jet_pt_lj_MinBias->Fill(jet_pt_MinBias, scale);
-                  h_xZj_MinBias->Fill(jet_pt_MinBias/Z_pt, scale);
+        // --- Determine the current bin number for MinBias matching ---
+        int current_global_bin_n = -1;
+        
+        if (binning_option == 0) { // HF binning
+            float current_val = *hiHF;
+            int bin_n = 0;
+            for (const auto& bin_range : primary_bins) {
+                if (current_val >= bin_range.first && current_val < bin_range.second) {
+                    current_global_bin_n = bin_n;
+                    break;
                 }
-              }
+                bin_n++;
             }
-            check_ev_per_bin++;
-          }
+        } else if (binning_option == 1) { // VZ binning only
+            float current_val = *vz;
+            int bin_n = 0;
+            for (const auto& bin_range : primary_bins) {
+                if (current_val >= bin_range.first && current_val < bin_range.second) {
+                    current_global_bin_n = bin_n;
+                    break;
+                }
+                bin_n++;
+            }
+        } else if (binning_option == 2) { // VZ + Centrality binning
+            int cen_bin_idx = -1;
+            int vz_bin_idx = -1;
+
+            for (size_t c_bin_n = 0; c_bin_n < centrality_bins_combined.size(); ++c_bin_n) {
+                const auto& bin_range = centrality_bins_combined[c_bin_n];
+                if (*hiBin >= bin_range.first && *hiBin < bin_range.second) {
+                    cen_bin_idx = c_bin_n;
+                    break;
+                }
+            }
+
+            for (size_t v_bin_n = 0; v_bin_n < vz_bins_combined.size(); ++v_bin_n) {
+                const auto& bin_range = vz_bins_combined[v_bin_n];
+                if (*vz >= bin_range.first && *vz < bin_range.second) {
+                    vz_bin_idx = v_bin_n;
+                    break;
+                }
+            }
+            if (cen_bin_idx != -1 && vz_bin_idx != -1) {
+                current_global_bin_n = cen_bin_idx * BinningConfig_Combined_Vz_Centrality::num_vz_bins + vz_bin_idx;
+            } else {
+                // This event doesn't fall into a defined combined bin, skip background subtraction for it
+                current_global_bin_n = -1; 
+            }
         }
-        if (check_ev_per_bin != events_per_bin) std::cout << "--- Warning! There are only " << check_ev_per_bin
-                                                          << " events per bin ( < " << events_per_bin << " )"
-                                                          << " current_val = " << current_val << std::endl;
+        // --- End of bin determination ---
+
+        if (current_global_bin_n != -1) { // Only proceed with MinBias matching if a valid bin was found
+            // Loop over the TTree entries for mixing events with MinBias
+            // This assumes the MinBias tree 'bin_MinBias' corresponds to 'current_global_bin_n'
+            // and contains 'events_per_mixed_bin_limit' events for each of these bins.
+            double events_filled_for_this_bin_in_MinBias = 0; 
+            for(int iEntry=0; iEntry< nEntries_MinBias; iEntry++){
+                inputTree->GetEntry(iEntry); // Read all branch values for the current entry
+                if (current_global_bin_n == bin_MinBias) { // Match by global bin number
+                    // Apply same jet cuts as for signal jets
+                    if (jet_pt_MinBias >= 30 && abs(jet_eta_MinBias) <= 2.5) {
+                        double detaMinus_MinBias = jet_eta_MinBias - muMinus.Eta();
+                        double dphiMinus_MinBias = RelativePhi(jet_phi_MinBias, muMinus.Phi());
+                        double dRMinus_MinBias = TMath::Sqrt(detaMinus_MinBias * detaMinus_MinBias + dphiMinus_MinBias * dphiMinus_MinBias);
+                        double detaPlus_MinBias = jet_eta_MinBias - muPlus.Eta();
+                        double dphiPlus_MinBias = RelativePhi(jet_phi_MinBias,muPlus.Phi());
+                        double dRPlus_MinBias = TMath::Sqrt(detaPlus_MinBias * detaPlus_MinBias + dphiPlus_MinBias * dphiPlus_MinBias);
+                        if (dRMinus_MinBias >= 0.2 && dRPlus_MinBias >= 0.2 ) {
+                            double dPhi_Zj_MinBias = RelativePhi(Z_phi, jet_phi_MinBias);
+                            h_deltaPhi_Zj_MinBias->Fill(dPhi_Zj_MinBias, scale);
+                            if (dPhi_Zj_MinBias > 7 * TMath::Pi() / 8) {
+                                h_jet_pt_lj_MinBias->Fill(jet_pt_MinBias, scale);
+                                h_xZj_MinBias->Fill(jet_pt_MinBias/Z_pt, scale);
+                            }
+                        }
+                    }
+                    events_filled_for_this_bin_in_MinBias++;
+                }
+            }
+            if (events_filled_for_this_bin_in_MinBias != events_per_mixed_bin_limit) {
+                std::cout << "--- Warning! MinBias bin " << current_global_bin_n << " has only " << events_filled_for_this_bin_in_MinBias
+                          << " events (expected " << events_per_mixed_bin_limit << "). ---" << std::endl;
+            }
+        }
 
         if (!isData) {
             if (isLeadingJetMatched) {
@@ -590,34 +673,47 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
   }  // end loop events
 
   // Finalize histograms for Mixed event subtraction
-  if (use_vz == 0) h_deltaPhi_Zj_MinBias->Scale(1./BinningConfig::ev_per_bin);
-  else h_deltaPhi_Zj_MinBias->Scale(1./BinningConfig_vz::ev_per_bin);
+  // Scale by the number of events per bin that were collected in the MinBias file
+  if (binning_option == 0) h_deltaPhi_Zj_MinBias->Scale(1. / BinningConfig::ev_per_bin);
+  else if (binning_option == 1) h_deltaPhi_Zj_MinBias->Scale(1. / BinningConfig_vz::ev_per_bin);
+  else if (binning_option == 2) h_deltaPhi_Zj_MinBias->Scale(1. / BinningConfig_Combined_Vz_Centrality::ev_per_combined_bin);
+
   TH1F* h_deltaPhi_Zj_subtracted = (TH1F*)h_deltaPhi_Zj->Clone("h_deltaPhi_Zj_subtracted");
   h_deltaPhi_Zj_subtracted->SetDirectory(0);
   h_deltaPhi_Zj_subtracted->SetTitle("h_deltaPhi_Zj - h_deltaPhi_Zj_MinBias (rescaled)");
   h_deltaPhi_Zj_subtracted->Add(h_deltaPhi_Zj_MinBias, -1); // The -1 performs the subtraction
 
-  if (use_vz == 0) h_jet_pt_lj_MinBias->Scale(1./BinningConfig::ev_per_bin);
-  else h_jet_pt_lj_MinBias->Scale(1./BinningConfig_vz::ev_per_bin);
+  if (binning_option == 0) h_jet_pt_lj_MinBias->Scale(1. / BinningConfig::ev_per_bin);
+  else if (binning_option == 1) h_jet_pt_lj_MinBias->Scale(1. / BinningConfig_vz::ev_per_bin);
+  else if (binning_option == 2) h_jet_pt_lj_MinBias->Scale(1. / BinningConfig_Combined_Vz_Centrality::ev_per_combined_bin);
+
   TH1F* h_jet_pt_lj_subtracted = (TH1F*)h_jet_pt_lj->Clone("h_jet_pt_lj_subtracted");
   h_jet_pt_lj_subtracted->SetDirectory(0);
   h_jet_pt_lj_subtracted->SetTitle("h_jet_pt_lj - h_jet_pt_lj_MinBias (rescaled)");
   h_jet_pt_lj_subtracted->Add(h_jet_pt_lj_MinBias, -1); // The -1 performs the subtraction
-  if (use_vz == 0) cout << "HF matching for mixed event bkg subtraction" << endl;
-  else cout << "vz matching for mixed event bkg subtraction" << endl;
-  cout << "Bkg: " << h_jet_pt_lj_MinBias->Integral(0, h_jet_pt_lj_MinBias->GetNbinsX()+1) << " fraction: "
+
+  if (binning_option == 0) cout << "HF matching for mixed event bkg subtraction" << endl;
+  else if (binning_option == 1) cout << "vz matching for mixed event bkg subtraction" << endl;
+  else if (binning_option == 2) cout << "Combined vz + Centrality matching for mixed event bkg subtraction" << endl;
+  
+  cout << "Bkg Integral (dPhi): " << h_deltaPhi_Zj_MinBias->Integral(0, h_deltaPhi_Zj_MinBias->GetNbinsX()+1) << endl;
+  cout << "Bkg Integral (pT): " << h_jet_pt_lj_MinBias->Integral(0, h_jet_pt_lj_MinBias->GetNbinsX()+1) << " fraction: "
        << h_jet_pt_lj_MinBias->Integral(0, h_jet_pt_lj_MinBias->GetNbinsX()+1)/h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1)
        << endl;
+
   if (!isData) {
-    cout << "Raw - True: " << h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1) - h_jet_pt_lj_matched->Integral(0, h_jet_pt_lj_matched->GetNbinsX()+1)
+    cout << "Raw - True (pT): " << h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1) - h_jet_pt_lj_matched->Integral(0, h_jet_pt_lj_matched->GetNbinsX()+1)
          << " fraction: " << (h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1) - h_jet_pt_lj_matched->Integral(0, h_jet_pt_lj_matched->GetNbinsX()+1))/h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1)
          << endl;
   }
-  if (use_vz == 0) h_xZj_MinBias->Scale(1./BinningConfig::ev_per_bin);
-  else h_xZj_MinBias->Scale(1./BinningConfig_vz::ev_per_bin);
+
+  if (binning_option == 0) h_xZj_MinBias->Scale(1. / BinningConfig::ev_per_bin);
+  else if (binning_option == 1) h_xZj_MinBias->Scale(1. / BinningConfig_vz::ev_per_bin);
+  else if (binning_option == 2) h_xZj_MinBias->Scale(1. / BinningConfig_Combined_Vz_Centrality::ev_per_combined_bin);
+
   TH1F* h_xZj_subtracted = (TH1F*)h_xZj->Clone("h_xZj_subtracted");
   h_xZj_subtracted->SetDirectory(0);
-  h_xZj_subtracted->SetTitle("h_xZj - h_xZj (rescaled)");
+  h_xZj_subtracted->SetTitle("h_xZj - h_xZj_MinBias (rescaled)");
   h_xZj_subtracted->Add(h_xZj_MinBias, -1); // The -1 performs the subtraction
 
   cout << "Number of events = " << h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1)
