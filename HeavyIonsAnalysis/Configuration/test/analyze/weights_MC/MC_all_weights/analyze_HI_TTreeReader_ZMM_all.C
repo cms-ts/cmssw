@@ -30,7 +30,7 @@ void analyze_HI_TTreeReader_ZMM_all() {
   TChain  HiTree("HiTree");
 
   glob_t globlist;
-  glob("condor/HiForestMiniAOD_MC_all.root", GLOB_NOSORT, NULL, &globlist);
+  glob("condor/signal/HiForestMiniAOD_MC_all_1.root", GLOB_NOSORT, NULL, &globlist);
   //glob("/eos/infnts/cms/store/user/kdeleo/TT_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test11_Zmumu_TT/250114_143300/0000.root", GLOB_NOSORT, NULL, &globlist);
   cout << "This is a MC" << endl;
   cout << "Found " << globlist.gl_pathc << " files"<< endl;
