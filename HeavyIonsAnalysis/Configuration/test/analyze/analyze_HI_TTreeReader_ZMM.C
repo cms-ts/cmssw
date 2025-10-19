@@ -122,7 +122,7 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
     cout << "This is data" << endl;
   }
   else {
-    glob("/eos/infnts/cms/store/user/kdeleo/DYto2Mu_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test13_ZMM_DYto2Mu/250321_154613/0000/HiForestMiniAOD_MC_*.root", GLOB_NOSORT, NULL, &globlist);
+    glob("/eos/infnts/cms/store/user/kdeleo/DYto2Mu_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test17_ZMM_DYto2Mu/250625_144848/0000/HiForestMiniAOD_MC_*.root", GLOB_NOSORT, NULL, &globlist);
     if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_HF.root");
     else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_VZ.root");
     else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_VZ_Cen_Combined.root");
@@ -205,6 +205,13 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
   TTreeReaderArray<Float_t> genpt = {fReader, isData ? "rawpt" : "genpt"};
   TTreeReaderArray<Float_t> geneta = {fReader, isData ? "jteta" : "geneta"};
   TTreeReaderArray<Float_t> genphi = {fReader, isData ? "jtphi" : "genphi"};
+
+  // Gen Muon
+  TTreeReaderValue<Int_t> ngenMu = {fReader, isData ? "nReco" : "nGen"};
+  TTreeReaderArray<Float_t> genMuPt = {fReader, isData ? "recoPt" : "genPt"};
+  TTreeReaderArray<Float_t> genMuEta = {fReader, isData ? "recoEta" : "genEta"};
+  TTreeReaderArray<Float_t> genMuPhi = {fReader, isData ? "recoPhi" : "genPhi"};
+  TTreeReaderArray<Int_t> genMuPID = {fReader, isData ? "recoCharge" : "genPID"};
 
   // Access MinBias sample
   TTree *inputTree = (TTree*)inFile_MinBias->Get("jet_tree");
@@ -304,6 +311,13 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
   c7->Divide(1,1);
 
   //Histograms
+
+  // Define binning for xZj unfolding.
+  const int nbins_xZj = 5; // Number of bins (number of edges - 1)
+  const int nbins_xZj_meas = nbins_xZj-1;
+  double xZj_bins[nbins_xZj + 1] = {0., 0.4, 0.8, 1.2, 1.6, 2.};
+  double xZj_bins_meas[nbins_xZj_meas + 1] = {0., 0.4, 0.8, 1.2, 1.6};
+
   TH1F *h_mumu = new TH1F("h_mumu", "Hist;m_{#mu#mu} [GeV]; Entries", 20, 60, 120);
   TH1F *h_Z_pt = new TH1F("h_Z_pt", "Hist;p_{t}^{Z} [GeV]; Entries", 30, 0, 300);
   TH1F *h_njet = new TH1F("h_njet", "Hist;Number of jets; Entries", 10, 0, 10);
@@ -315,7 +329,7 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
   TH1F *h_cen_j = new TH1F("h_cen_j", "Hist; centrality bin; Entries", 20, 0, 100);
   TH1F *h_HF_j = new TH1F("h_HF_j", "Hist; HF; Entries", 80, 0, 8000);
   TH1F *h_deltaPhi_Zj = new TH1F("h_deltaPhi_Zj", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
-  TH1F *h_xZj = new TH1F("h_xZj", "Hist;x_{Zj}; Entries", 20, 0, 3);
+  TH1F *h_xZj = new TH1F("h_xZj", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
 
   TH1F *h_vz = new TH1F("h_vz", "Hist; vz; Entries", 30, -20, 20);
   TH1F *h_avg_rho = new TH1F("h_avg_rho", "Hist; <#rho>; Entries", 50, 0, 400);
@@ -323,11 +337,31 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
 
   TH1F *h_deltaPhi_Zj_MinBias = new TH1F("h_deltaPhi_Zj_MinBias", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
   TH1F *h_jet_pt_lj_MinBias = new TH1F("h_jet_pt_lj_MinBias", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
-  TH1F *h_xZj_MinBias = new TH1F("h_xZj_MinBias", "Hist;x_{Zj}; Entries", 20, 0, 3);
+  TH1F *h_xZj_MinBias = new TH1F("h_xZj_MinBias", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
 
   TH1F *h_deltaPhi_Zj_matched = new TH1F("h_deltaPhi_Zj_matched", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
   TH1F *h_jet_pt_lj_matched = new TH1F("h_jet_pt_lj_matched", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
-  TH1F *h_xZj_matched = new TH1F("h_xZj_matched", "Hist;x_{Zj}; Entries", 20, 0, 3);
+  TH1F *h_xZj_matched = new TH1F("h_xZj_matched", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+
+  // --- RooUnfold Histograms ---
+
+  TH1F* h_xZj_true = new TH1F("h_xZj_true", "True x_{Zj};x_{Zj};Entries", nbins_xZj, xZj_bins);     // For true MC
+  TH1F* h_xZj_reco = new TH1F("h_xZj_reco", "Reco x_{Zj};x_{Zj};Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH2F* h_response = new TH2F("h_response", "Response Matrix;Reco x_{Zj};True x_{Zj}", nbins_xZj_meas, xZj_bins_meas, nbins_xZj, xZj_bins);
+  TH2F* h_response_MinBias = new TH2F("h_response_MinBias", "Response Matrix;Reco x_{Zj};True x_{Zj}", nbins_xZj_meas, xZj_bins_meas, nbins_xZj, xZj_bins);
+
+  TH1F *h_xZj_train_closure = new TH1F("h_xZj_train_closure", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1F *h_xZj_train_closure_matched = new TH1F("h_xZj_train_closure_matched", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1F *h_xZj_test_closure = new TH1F("h_xZj_test_closure", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1F *h_xZj_test_closure_matched = new TH1F("h_xZj_test_closure_matched", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1F *h_xZj_MinBias_train_closure = new TH1F("h_xZj_MinBias_train_closure", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1F *h_xZj_MinBias_test_closure = new TH1F("h_xZj_MinBias_test_closure", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1F* h_xZj_true_train_closure = new TH1F("h_xZj_true_train_closure", "True x_{Zj};x_{Zj};Entries", nbins_xZj, xZj_bins);
+  TH1F* h_xZj_true_test_closure = new TH1F("h_xZj_true_test_closure", "True x_{Zj};x_{Zj};Entries", nbins_xZj, xZj_bins);
+  TH2F* h_response_closure = new TH2F("h_response_closure", "Response Matrix;Reco x_{Zj};True x_{Zj}", nbins_xZj_meas, xZj_bins_meas, nbins_xZj, xZj_bins);
+  TH2F* h_response_MinBias_closure = new TH2F("h_response_MinBias_closure", "Response Matrix;Reco x_{Zj};True x_{Zj}", nbins_xZj_meas, xZj_bins_meas, nbins_xZj, xZj_bins);
+
+  // --- End RooUnfold Histograms ---
 
   //TH1F *h_jetgirth = new TH1F("h_jetgirth", "Hist;girth; Entries", 10, 0, 0.2);
   //TH1F *h_jet_deltaR = new TH1F("h_jet_deltaR", "Hist; R_{g}; Entries", 10, 0, 0.2);
@@ -369,7 +403,9 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
 
   // Loop over events to access and analyze the data
   unsigned int iEvent = 0;
+  unsigned int itotev = 0;
   while (fReader.Next()) {
+    itotev++;
     if(*pprimaryVertexFilter<=0) continue;
     if(*pclusterCompatibilityFilter<=0) continue;
     if(*pphfCoincFilter2Th4<=0) continue;
@@ -395,6 +431,98 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
         if(*hiBin>59) continue;
       }
     }
+
+    // Calculate average rho
+    double sum_rho = 0;
+    for (unsigned int i = 0; i < rho.GetSize(); i++) {
+      sum_rho += rho[i];
+    }
+    double avg_rho = 0;
+    if (rho.GetSize() > 0) {
+      avg_rho = sum_rho / rho.GetSize();
+    }
+    // use binning to get the value of the weight
+    int bin_rho = h_weight_rho->FindBin(avg_rho);
+
+    if (!isData) {
+      if (weight_phase == 2) {
+        // Apply rho weight
+        scale*=h_weight_rho->GetBinContent(bin_rho);
+      }
+      if (weight_phase == 3) {
+       // Apply rho and vz weight
+       int bin_vz = h_weight_vz->FindBin(*vz);
+       scale*=h_weight_rho->GetBinContent(bin_rho)*h_weight_vz->GetBinContent(bin_vz);
+      }
+    }
+
+    // --- Fill information for unfolding ---
+    double gen_Z_pt = 0;
+    double gen_Z_phi = 0;
+    double dPhi_Zj_Gen = 0;
+    double true_xZj = 0;
+    int ijetGenLeading_unfold = -1;
+    if (!isData) {
+      // TLorentzVectors for the gen muons
+      TLorentzVector genmuPlus, genmuMinus;
+      // Loop over muons, save indices of most energetic muon and antimuon pairs
+      int iHighPtgenMu = -1;
+      int iHighPtgenAntiMu = -1;
+      for (unsigned int igenMu = 0; igenMu < *ngenMu; ++igenMu) {
+        if (iHighPtgenMu == -1 || genMuPt[igenMu] > genMuPt[iHighPtgenMu]) {
+          if (genMuPID[igenMu] == 13) iHighPtgenMu = igenMu;
+        }
+        if (iHighPtgenAntiMu == -1 || genMuPt[igenMu] > genMuPt[iHighPtgenAntiMu]) {
+          if (genMuPID[igenMu] == -13) iHighPtgenAntiMu = igenMu;
+        }
+      }
+      // Z from gen muon-antimuon pairs
+      if (iHighPtgenMu != -1 && iHighPtgenAntiMu != -1) {
+        genmuMinus.SetPtEtaPhiM(genMuPt[iHighPtgenMu], genMuEta[iHighPtgenMu], genMuPhi[iHighPtgenMu], muonMass);
+        genmuPlus.SetPtEtaPhiM(genMuPt[iHighPtgenAntiMu], genMuEta[iHighPtgenAntiMu], genMuPhi[iHighPtgenAntiMu], muonMass);
+        double gen_Z_mass = (genmuPlus + genmuMinus).M();
+        gen_Z_pt = (genmuPlus + genmuMinus).Pt();
+        gen_Z_phi = (genmuPlus + genmuMinus).Phi();
+        // Apply mass cut
+        if (gen_Z_mass >= 60 && gen_Z_mass <= 120) {
+          if (genMuPt[iHighPtgenMu] > 20 && abs(genMuEta[iHighPtgenMu]) < 2.4 && genMuPt[iHighPtgenAntiMu] > 20 && abs(genMuEta[iHighPtgenAntiMu]) < 2.4) {
+            // Cut on pt(Z)
+            if (gen_Z_pt > 40 ) {
+              // Loop over gen jets
+              for (int ijetGen = 0; ijetGen < *ngen; ++ijetGen) {
+                // Apply truth-level cuts
+                if (genpt[ijetGen] < 30 || abs(geneta[ijetGen]) > 2.5) continue;
+                double detaMinusGen = geneta[ijetGen] - genmuMinus.Eta();
+                double dphiMinusGen = RelativePhi(genphi[ijetGen], genmuMinus.Phi());
+                double dRMinusGen = TMath::Sqrt(detaMinusGen * detaMinusGen + dphiMinusGen * dphiMinusGen);
+                double detaPlusGen = geneta[ijetGen] - genmuPlus.Eta();
+                double dphiPlusGen = RelativePhi(genphi[ijetGen], genmuPlus.Phi());
+                double dRPlusGen = TMath::Sqrt(detaPlusGen * detaPlusGen + dphiPlusGen * dphiPlusGen);
+                if(dRMinusGen < 0.2 || dRPlusGen < 0.2 ) continue;
+                if (ijetGenLeading_unfold == -1 || genpt[ijetGen] > genpt[ijetGenLeading_unfold]) {
+                  ijetGenLeading_unfold = ijetGen;
+                }
+              }
+              if (ijetGenLeading_unfold != -1) {
+                dPhi_Zj_Gen = RelativePhi(gen_Z_phi, genphi[ijetGenLeading_unfold]);
+                if (dPhi_Zj_Gen > 7 * TMath::Pi() / 8) {
+                  // Calculate true x_Zj
+                  true_xZj = genpt[ijetGenLeading_unfold] / gen_Z_pt;
+                  // Scale MC to data for check unfolding dependance on shape
+                  //if (true_xZj>0.4 && true_xZj<0.8) scale*=2;
+                  //if (true_xZj>0.8 && true_xZj<1.2) scale*=0.5;
+                  h_xZj_true->Fill(true_xZj, scale);
+                  if (itotev < 0.7*9560121) h_xZj_true_train_closure->Fill(true_xZj, scale);
+                  else h_xZj_true_test_closure->Fill(true_xZj, scale);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    // --- End fill information for unfolding ---
+
     //if(*HLT_HIL2SingleMu7_v3<=0) continue;
     bool good_pair = false;
     if (*nReco < 2 ) continue;
@@ -452,30 +580,6 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
     // Cut on pt(Z)
     if (Z_pt < 40 ) continue;
 
-    // Calculate average rho
-    double sum_rho = 0;
-    for (unsigned int i = 0; i < rho.GetSize(); i++) {
-      sum_rho += rho[i];
-    }
-    double avg_rho = 0;
-    if (rho.GetSize() > 0) {
-      avg_rho = sum_rho / rho.GetSize();
-    }
-    // use binning to get the value of the weight
-    int bin_rho = h_weight_rho->FindBin(avg_rho);
-
-    if (!isData) {
-      if (weight_phase == 2) {
-        // Apply rho weight
-        scale*=h_weight_rho->GetBinContent(bin_rho);
-      }
-      if (weight_phase == 3) {
-       // Apply rho and vz weight
-       int bin_vz = h_weight_vz->FindBin(*vz);
-       scale*=h_weight_rho->GetBinContent(bin_rho)*h_weight_vz->GetBinContent(bin_vz);
-      }
-    }
-
     h_vz->Fill(*vz, scale);
     h_avg_rho->Fill(avg_rho, scale);
     h_avg_rho_vs_cen->Fill(*hiBin, avg_rho, scale);
@@ -488,6 +592,7 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
     double detaMinus = 0, dphiMinus = 0, dRMinus = 0;
     double detaPlus = 0, dphiPlus = 0, dRPlus = 0;
     int ijetLeading = -1;
+    int iGenjetMatchedtoLeadingReco = -1;
     bool isLeadingJetMatched = false;
     double jtpt_corr[20000];
     for(int ijet=0; ijet<*nref; ijet++){
@@ -547,8 +652,12 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
           if (!isData) {
             if (min_dR < 0.1) {
               isLeadingJetMatched = true;
+              iGenjetMatchedtoLeadingReco = matched_gen_jet_idx;
             }
-            else {isLeadingJetMatched = false;}
+            else {
+              isLeadingJetMatched = false;
+              iGenjetMatchedtoLeadingReco = -1; // Reset if no match
+            }
           }
       }
     } //end loop over jets
@@ -631,6 +740,18 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
                             if (dPhi_Zj_MinBias > 7 * TMath::Pi() / 8) {
                                 h_jet_pt_lj_MinBias->Fill(jet_pt_MinBias, scale);
                                 h_xZj_MinBias->Fill(jet_pt_MinBias/Z_pt, scale);
+                                if (itotev < 0.7*9560121) h_xZj_MinBias_train_closure->Fill(jet_pt_MinBias/Z_pt, scale);
+                                else h_xZj_MinBias_test_closure->Fill(jet_pt_MinBias/Z_pt, scale);
+                                if (!isData) {
+                                  if (ijetGenLeading_unfold != -1) {
+                                    if (dPhi_Zj_Gen > 7 * TMath::Pi() / 8) {
+                                      if (ijetGenLeading_unfold == iGenjetMatchedtoLeadingReco) {
+                                        h_response_MinBias->Fill(jet_pt_MinBias/Z_pt, true_xZj, scale);
+                                        if (itotev < 0.7*9560121) h_response_MinBias_closure->Fill(jet_pt_MinBias/Z_pt, true_xZj, scale);
+                                      }
+                                    }
+                                  }
+                                }
                             }
                         }
                     }
@@ -656,6 +777,8 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
           h_Z_pt_j->Fill(Z_pt, scale);
           h_jet_pt_lj->Fill(jtpt_corr[ijetLeading], scale);
           h_xZj->Fill(jtpt_corr[ijetLeading]/Z_pt, scale);
+          if (itotev < 0.7*9560121) h_xZj_train_closure->Fill(jtpt_corr[ijetLeading]/Z_pt, scale);
+          else h_xZj_test_closure->Fill(jtpt_corr[ijetLeading]/Z_pt, scale);
           h_cen_j->Fill((*hiBin)/2, scale);
           h_HF_j->Fill(*hiHF, scale);
 
@@ -669,33 +792,53 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
           //h_jetgirth->Fill(jtgirth[ijetLeading], scale);
           //h_jet_deltaR->Fill(jtdyndeltaR[ijetLeading], scale);
         }
+    }  // end reco leading jet selection
+
+    // --- Fill information for unfolding ---
+    if (ijetLeading != -1 && RelativePhi(Z_phi, jtphi[ijetLeading]) > 7 * TMath::Pi() / 8) {
+      if (!isData) {
+        if (ijetGenLeading_unfold != -1) {
+          if (dPhi_Zj_Gen > 7 * TMath::Pi() / 8) {
+            // Calculate true x_Zj
+            // Check if the leading gen jet is matched to leading reconstructed jet
+            if (ijetGenLeading_unfold == iGenjetMatchedtoLeadingReco) {
+              h_response->Fill(jtpt_corr[ijetLeading] / Z_pt, true_xZj, scale);
+              h_xZj_reco->Fill(jtpt_corr[ijetLeading] / Z_pt, scale);
+              if (itotev < 0.7*9560121) {
+                h_response_closure->Fill(jtpt_corr[ijetLeading] / Z_pt, true_xZj, scale);
+                h_xZj_train_closure_matched->Fill(jtpt_corr[ijetLeading] / Z_pt, scale);
+              }
+              else h_xZj_test_closure_matched->Fill(jtpt_corr[ijetLeading] / Z_pt, scale);
+            }
+          }
+        }
+      }
     }
+    // --- end filling information for unfolding ---
+
   }  // end loop events
 
   // Finalize histograms for Mixed event subtraction
   // Scale by the number of events per bin that were collected in the MinBias file
-  if (binning_option == 0) h_deltaPhi_Zj_MinBias->Scale(1. / BinningConfig::ev_per_bin);
-  else if (binning_option == 1) h_deltaPhi_Zj_MinBias->Scale(1. / BinningConfig_vz::ev_per_bin);
-  else if (binning_option == 2) h_deltaPhi_Zj_MinBias->Scale(1. / BinningConfig_Combined_Vz_Centrality::ev_per_combined_bin);
+  int scale_binning = 1;
+  if (binning_option == 0) {scale_binning = BinningConfig::ev_per_bin; cout << "HF matching for mixed event bkg subtraction" << endl;}
+  else if (binning_option == 1) {scale_binning = BinningConfig_vz::ev_per_bin; cout << "vz matching for mixed event bkg subtraction" << endl;}
+  else if (binning_option == 2) {scale_binning = BinningConfig_Combined_Vz_Centrality::ev_per_combined_bin; cout << "Combined vz + Centrality matching for mixed event bkg subtraction" << endl;}
+
+  h_deltaPhi_Zj_MinBias->Scale(1. / scale_binning);
 
   TH1F* h_deltaPhi_Zj_subtracted = (TH1F*)h_deltaPhi_Zj->Clone("h_deltaPhi_Zj_subtracted");
   h_deltaPhi_Zj_subtracted->SetDirectory(0);
   h_deltaPhi_Zj_subtracted->SetTitle("h_deltaPhi_Zj - h_deltaPhi_Zj_MinBias (rescaled)");
   h_deltaPhi_Zj_subtracted->Add(h_deltaPhi_Zj_MinBias, -1); // The -1 performs the subtraction
 
-  if (binning_option == 0) h_jet_pt_lj_MinBias->Scale(1. / BinningConfig::ev_per_bin);
-  else if (binning_option == 1) h_jet_pt_lj_MinBias->Scale(1. / BinningConfig_vz::ev_per_bin);
-  else if (binning_option == 2) h_jet_pt_lj_MinBias->Scale(1. / BinningConfig_Combined_Vz_Centrality::ev_per_combined_bin);
+  h_jet_pt_lj_MinBias->Scale(1. / scale_binning);
 
   TH1F* h_jet_pt_lj_subtracted = (TH1F*)h_jet_pt_lj->Clone("h_jet_pt_lj_subtracted");
   h_jet_pt_lj_subtracted->SetDirectory(0);
   h_jet_pt_lj_subtracted->SetTitle("h_jet_pt_lj - h_jet_pt_lj_MinBias (rescaled)");
   h_jet_pt_lj_subtracted->Add(h_jet_pt_lj_MinBias, -1); // The -1 performs the subtraction
 
-  if (binning_option == 0) cout << "HF matching for mixed event bkg subtraction" << endl;
-  else if (binning_option == 1) cout << "vz matching for mixed event bkg subtraction" << endl;
-  else if (binning_option == 2) cout << "Combined vz + Centrality matching for mixed event bkg subtraction" << endl;
-  
   cout << "Bkg Integral (dPhi): " << h_deltaPhi_Zj_MinBias->Integral(0, h_deltaPhi_Zj_MinBias->GetNbinsX()+1) << endl;
   cout << "Bkg Integral (pT): " << h_jet_pt_lj_MinBias->Integral(0, h_jet_pt_lj_MinBias->GetNbinsX()+1) << " fraction: "
        << h_jet_pt_lj_MinBias->Integral(0, h_jet_pt_lj_MinBias->GetNbinsX()+1)/h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1)
@@ -707,17 +850,43 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
          << endl;
   }
 
-  if (binning_option == 0) h_xZj_MinBias->Scale(1. / BinningConfig::ev_per_bin);
-  else if (binning_option == 1) h_xZj_MinBias->Scale(1. / BinningConfig_vz::ev_per_bin);
-  else if (binning_option == 2) h_xZj_MinBias->Scale(1. / BinningConfig_Combined_Vz_Centrality::ev_per_combined_bin);
+  h_xZj_MinBias->Scale(1. / scale_binning);
 
   TH1F* h_xZj_subtracted = (TH1F*)h_xZj->Clone("h_xZj_subtracted");
   h_xZj_subtracted->SetDirectory(0);
   h_xZj_subtracted->SetTitle("h_xZj - h_xZj_MinBias (rescaled)");
   h_xZj_subtracted->Add(h_xZj_MinBias, -1); // The -1 performs the subtraction
 
+  h_response_MinBias->Scale(1. / scale_binning);
+
+  TH2F* h_response_subtracted = (TH2F*)h_response->Clone("h_response_subtracted");
+  h_response_subtracted->SetDirectory(0);
+  h_response_subtracted->SetTitle("h_response - h_response_MinBias (rescaled)");
+  h_response_subtracted->Add(h_response_MinBias, -1); // The -1 performs the subtraction
+
+  h_xZj_MinBias_train_closure->Scale(1. / scale_binning);
+  h_xZj_MinBias_test_closure->Scale(1. / scale_binning);
+
+  TH1F* h_xZj_subtracted_train_closure = (TH1F*)h_xZj_train_closure->Clone("h_xZj_subtracted_train_closure");
+  h_xZj_subtracted_train_closure->SetDirectory(0);
+  h_xZj_subtracted_train_closure->SetTitle("h_xZj_train_closure - h_xZj_MinBias_train_closure (rescaled)");
+  h_xZj_subtracted_train_closure->Add(h_xZj_MinBias_train_closure, -1); // The -1 performs the subtraction
+
+  TH1F* h_xZj_subtracted_test_closure = (TH1F*)h_xZj_test_closure->Clone("h_xZj_subtracted_test_closure");
+  h_xZj_subtracted_test_closure->SetDirectory(0);
+  h_xZj_subtracted_test_closure->SetTitle("h_xZj_test_closure - h_xZj_MinBias_test_closure (rescaled)");
+  h_xZj_subtracted_test_closure->Add(h_xZj_MinBias_test_closure, -1); // The -1 performs the subtraction
+
+  h_response_MinBias_closure->Scale(1. / scale_binning);
+
+  TH2F* h_response_subtracted_closure = (TH2F*)h_response_closure->Clone("h_response_subtracted_closure");
+  h_response_subtracted_closure->SetDirectory(0);
+  h_response_subtracted_closure->SetTitle("h_response_closure - h_response_MinBias_closure (rescaled)");
+  h_response_subtracted_closure->Add(h_response_MinBias_closure, -1); // The -1 performs the subtraction
+
   cout << "Number of events = " << h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1)
        << ", if Z_pt>80: " << h_Z_pt_j->Integral(h_Z_pt->FindBin(80), h_Z_pt->GetNbinsX()+1) << endl;
+  cout << "tot ev = " << itotev << endl;
 
   c1->cd(1);
   h_mumu->Draw();
@@ -730,9 +899,12 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
   c4->cd(1);
   h_jet_pt_lj->Draw();
   c5->cd(1);
-  h_cen->Draw();
+//  h_cen->Draw();
+  h_xZj->Draw();
+  if (!isData) h_xZj_true->SetLineColor(3); h_xZj_true->Draw("same");
   c6->cd(1);
-  h_vz->Draw();
+  //h_vz->Draw();
+  if (!isData) h_response->Draw("COLZTEXT");
   c7->cd(1);
   h_avg_rho->Draw();
   //c1->SaveAs("h_mumu_j.pdf");
@@ -769,5 +941,27 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
   //h_jetgirth->Write();
   //h_jet_deltaR->Write();
 
+  // Write unfolding specific histograms - NEW
+  if (!isData) {
+    h_xZj_true->Write();
+    h_xZj_reco->Write();
+    h_response->Write();
+    h_response_MinBias->Write();
+    h_response_subtracted->Write();
+    h_xZj_train_closure->Write();
+    h_xZj_train_closure_matched->Write();
+    h_xZj_test_closure->Write();
+    h_xZj_test_closure_matched->Write();
+    h_xZj_true_train_closure->Write();
+    h_xZj_true_test_closure->Write();
+    h_response_closure->Write();
+    h_response_MinBias_closure->Write();
+    h_response_subtracted_closure->Write();
+    h_xZj_MinBias_train_closure->Write();
+    h_xZj_MinBias_test_closure->Write();
+    h_xZj_subtracted_train_closure->Write();
+    h_xZj_subtracted_test_closure->Write();
+  }
   file_output_HI_mu->Close();
 }
+
