@@ -9,7 +9,7 @@ root -l analyze_HI_TTreeReader_ZMM.C
 //the output is output_HI_mu_data.root
 //already saved in plot/ folder
 //Default is data, for MC 
-root -l 'analyze_HI_TTreeReader_ZMM.C(false, 3)'
+root -l 'analyze_HI_TTreeReader_ZMM.C(false, 3, 0)'
 //the output is output_HI_mu_MC.root
 //already saved in plot/ folder
 //--------------------------------
@@ -29,3 +29,8 @@ chmod +x do_analyze_stack.sh
 ./do_analyze_stack.sh	
 //the output root files are saved in stack/ folder 
 //--------------------------------
+
+//--------------------------------
+//To run over data and all MC for systematics
+chmod +x do_analyze_syst.sh
+./do_analyze_syst.sh
