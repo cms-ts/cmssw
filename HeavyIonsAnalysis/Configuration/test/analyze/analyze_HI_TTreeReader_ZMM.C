@@ -72,27 +72,7 @@ int getHiBin(float hiHF, const std::vector<double>& table) {
 
 //To run, root -l analyze_HI_TTreeReader_ZMM.C
 //Default isData, for MC root -l 'analyze_HI_TTreeReader_ZMM.C(false, 3)'
-void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 1, int systFlag = 0) {
-
-  //MC normalization
-  double Lumi = 1.64; // nb-1
-  double number_A = 208; // Lead
-  // Get MC all histogram
-    TFile* file_MC_all = TFile::Open("./weights_MC/MC_all_weights/output_HI_mu_MC_all.root", "READ");
-    TDirectoryFile* dir_Muons_MC_all = (TDirectoryFile*)file_MC_all->Get("HI/Muons");
-    TH1D* h_norm = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights");
-    TH1D* h_norm_cen = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights_cen");
-    TH1D* h_nev = (TH1D*)dir_Muons_MC_all->Get("h_n_events");
-    TH1D* h_cen_after = (TH1D*)dir_Muons_MC_all->Get("h_cen_after");
-    double n_ev = h_nev->Integral(0, h_nev->GetNbinsX()+1);
-    double sum_w = h_norm->Integral(0, h_norm->GetNbinsX()+1);
-    double sum_ncoll = h_norm_cen->Integral(0, h_norm_cen->GetNbinsX()+1);
-    double sum_w_and_ncoll = h_cen_after->Integral(0, h_cen_after->GetNbinsX()+1);
-    std::cout << "n_ev = " << n_ev << " sum_w = " << sum_w << " sum_ncoll = " << sum_ncoll << std::endl;
-    double Xsec = 5.595 * 100 / 1000;
-    double Ngen = 9560121;
-    double norm_signal = number_A*number_A*Lumi*Xsec*(n_ev/sum_ncoll)/sum_w;
-    //double norm_signal = (n_ev/sum_ncoll)/sum_w;
+void analyze_HI_TTreeReader_ZMM(const char * sample_name, unsigned int weight_phase = 1, int systFlag = 0) {
 
   // --- Centrality Tables from TWiki ---
   // (Note: The last value 8171.19 is the 100% boundary)
@@ -226,7 +206,14 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
   // File with MinBias sample
   TFile *inFile_MinBias;
 
-  if (isData) {
+  TString file_name = sample_name;
+  bool isData = false;
+
+  double Xsec = 5.595 * 100 / 1000;
+  double Ngen = 9560121;
+
+  if (file_name.Contains("data")) {
+    isData = true;
     glob("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime*/CRAB3_Analysis_test13_ZMM_Prime*/*/*.root", GLOB_NOSORT, NULL, &globlist);
     if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_HF.root");
     else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_VZ.root");
@@ -235,14 +222,41 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
     cout << "This is data" << endl;
   }
   else {
-    glob("/eos/infnts/cms/store/user/kdeleo/DYto2Mu_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test17_ZMM_DYto2Mu/250625_144848/0000/HiForestMiniAOD_MC_*.root", GLOB_NOSORT, NULL, &globlist);
-    if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_HF.root");
-    else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_VZ.root");
-    else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_VZ_Cen_Combined.root");
-    else { cerr << "Invalid binning_option for MC MinBias file." << endl; return; }
-    cout << "This is MC" << endl;
+    // Loop over files
+    for (const auto& file : files) {
+      if (file_name.Contains(file.label)) {
+        glob(file.path_miniaod, GLOB_NOSORT, NULL, &globlist);
+        if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_HF.root");
+        else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_VZ.root");
+        else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_VZ_Cen_Combined.root");
+        else { cerr << "Invalid binning_option for MC MinBias file." << endl; return; }
+        Xsec = file.xsec;
+        Ngen = file.ngen;
+        cout << "This is MC " << file.label << ": ngen = " << Ngen << " xsec = " << Xsec << endl;
+      }
+    }
   }
   cout << "Found " << globlist.gl_pathc << " files"<< endl;
+
+  //MC normalization
+  double Lumi = 1.64; // nb-1
+  double number_A = 208; // Lead
+  // Get MC all histogram
+  TFile* file_MC_all = TFile::Open("./weights_MC/MC_all_weights/output_HI_mu_MC_all.root", "READ");
+  TDirectoryFile* dir_Muons_MC_all = (TDirectoryFile*)file_MC_all->Get("HI/Muons");
+  TH1D* h_norm = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights");
+  TH1D* h_norm_cen = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights_cen");
+  TH1D* h_nev = (TH1D*)dir_Muons_MC_all->Get("h_n_events");
+  TH1D* h_cen_after = (TH1D*)dir_Muons_MC_all->Get("h_cen_after");
+  double n_ev = h_nev->Integral(0, h_nev->GetNbinsX()+1);
+  double sum_w = h_norm->Integral(0, h_norm->GetNbinsX()+1);
+  double sum_ncoll = h_norm_cen->Integral(0, h_norm_cen->GetNbinsX()+1);
+  double sum_w_and_ncoll = h_cen_after->Integral(0, h_cen_after->GetNbinsX()+1);
+  std::cout << "n_ev = " << n_ev << " sum_w = " << sum_w << " sum_ncoll = " << sum_ncoll << std::endl;
+
+  double norm_MC = number_A*number_A*Lumi*Xsec*(n_ev/sum_ncoll)/sum_w;
+  if (!file_name.Contains("signal")) norm_MC = number_A*number_A*Lumi*Xsec*n_ev/sum_ncoll/Ngen;
+  if (!isData) std::cout << "norm_MC = " << norm_MC << std::endl;
 
   if (!inFile_MinBias || inFile_MinBias->IsZombie()) {
         std::cerr << "Error: Could not open input file! Check path and file existence." << std::endl;
@@ -538,7 +552,7 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
 
   else if (weight_phase == 3) {
     if (!isData) {
-      if (systFlag == 0) file_output_HI_mu = new TFile("./plot/output_HI_mu_MC.root", "RECREATE");
+      if (systFlag == 0) file_output_HI_mu = new TFile("./plot/output_HI_mu_MC_"+file_name+".root", "RECREATE");
       else if (systFlag == 1) {
         cout << "Running Systematic (SF muon) - DOWN variation (systFlag = 1)" << endl;
         file_output_HI_mu = new TFile("./syst_SF_muon/output_HI_mu_MC_SF_down.root", "RECREATE");
@@ -592,7 +606,7 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
     float weight_cent = Ncoll[hiBin_to_use];
     // Scale MC
     float scale = 1;
-    if (!isData) scale*=norm_signal;
+    if (!isData) scale*=norm_MC;
     if (weight_phase == 0) {
       if (!isData) {
         scale*=(*weight);
@@ -600,7 +614,8 @@ void analyze_HI_TTreeReader_ZMM(bool isData = true, unsigned int weight_phase = 
     }
     else if (weight_phase != 0) {
       if (!isData) {
-        scale*=weight_cent*(*weight);
+        if (file_name.Contains("signal")) scale*=weight_cent*(*weight);
+        else scale*=weight_cent;
       }
     }
     // Selection on centrality bin

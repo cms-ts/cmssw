@@ -24,9 +24,10 @@ const std::vector<FileInfo> files = {
     {"/eos/infnts/cms/store/user/kdeleo/WminusToMuminusNu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test13_ZMM_WminusToM/250403_134642/0000.root", "output_HI_mu_MC_WminusToMuminusNu.root", "WminusToMuminusNu", 2.957 * 1000 / 1000, 9981603},
     {"/eos/infnts/cms/store/user/kdeleo/WZto3LNu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test13_ZMM_WZ/250402_075217/0000.root", "output_HI_mu_MC_WZto3LNu.root", "WZto3LNu", 1.325 / 1000, 975408},
     {"/eos/infnts/cms/store/user/kdeleo/ZZto2L2Q_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test13_ZMM_ZZ2L2Q/250401_134408/0000.root", "output_HI_mu_MC_ZZto2L2Q.root", "ZZto2L2Q", 1.881 / 1000, 975640},
+    {"/eos/infnts/cms/store/user/kdeleo/ZZto2L2Nu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test13_ZMM_ZZ2L2Nu/250417_083046/0000.root", "output_HI_mu_MC_ZZto2L2Nu.root", "ZZto2L2Nu", 2.66 / 10/ 1000, 987950},
     {"/eos/infnts/cms/store/user/kdeleo/WZto2L2Q_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test13_ZMM_WZ2L2Q/250402_122759/0000.root", "output_HI_mu_MC_WZto2L2Q.root", "WZto2L2Q", 1.941 / 1000, 1000000},
     {"/eos/infnts/cms/store/user/kdeleo/TT_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test13_ZMM_TT/250402_140227/0000.root", "output_HI_mu_MC_TT.root", "TT", 6.927 * 10 / 1000, 9977614},
-    {"/eos/infnts/cms/store/user/kdeleo/DYto2Mu_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test13_ZMM_DYto2Mu/250321_154613/0000/HiForestMiniAOD_MC_*.root", "output_HI_mu_MC_signal.root", "signal", 5.595 * 100 / 1000, 9560121}
+    {"/eos/infnts/cms/store/user/kdeleo/DYto2Mu_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test17_ZMM_DYto2Mu/250625_144848/0000/HiForestMiniAOD_MC_*.root", "output_HI_mu_MC_signal.root", "signal", 5.595 * 100 / 1000, 9560121}
 };
 
 #endif // MC_SAMPLES_H

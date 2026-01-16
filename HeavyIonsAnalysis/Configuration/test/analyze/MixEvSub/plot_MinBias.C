@@ -125,7 +125,7 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
 
   //h->SetMaximum( 900 );
   //h->SetMaximum( 20000 );
-  h->SetMinimum( 1.0 );
+  //h->SetMinimum( 1.0 );
   //h->SetAxisRange(-1., 1., "X");
   //if( iPos==1 ) h->SetMaximum( 300 );
   h->Draw();
@@ -135,7 +135,7 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
   float markerSize  = 0.8;
 
   {
-    const char* data_or_MC = isData ? "../plot/output_HI_mu_data.root" : "../plot/output_HI_mu_MC.root";
+    const char* data_or_MC = isData ? "../plot/output_HI_mu_data.root" : "../plot/output_HI_mu_MC_signal.root";
 
     TFile* file = TFile::Open(data_or_MC, "READ");
     // and take its directories
@@ -147,18 +147,7 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
       cout << "Cannot find dir_Muons" << endl;
     else cout << "Yes Muons";
     if (isData) cout << " data" << endl; else cout << " MC" << endl;
-    
-    TFile* file_MC_all = TFile::Open("../weights_MC/MC_all_weights/output_HI_mu_MC_all.root", "READ");
-    // and take its directories
-    TDirectoryFile* dir_HI_MC_all = (TDirectoryFile*)file_MC_all->Get("HI");
-    if (!dir_HI_MC_all)
-      cout << "Cannot find dir_HI_MC_all" << endl;
-    TDirectoryFile* dir_Muons_MC_all = (TDirectoryFile*)dir_HI_MC_all->Get("Muons");
-    if (!dir_Muons_MC_all)
-      cout << "Cannot find dir_Muons_MC_all" << endl;
-    else cout << "Yes Muons MC all" << endl;
-   
-  
+
     // Take the trees with the method Get()
     TH1D* h_ = (TH1D*)dir_Muons->Get(histo_name);
     std::string bkg_name = std::string(histo_name) + "_MinBias";
@@ -168,15 +157,8 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
     TH1D* h_subtracted = (TH1D*)dir_Muons->Get(subtracted_name.c_str());
     TH1D* h_matched = (TH1D*)dir_Muons->Get(matched_name.c_str());
 
-    TH1D* h_norm = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights");
-    TH1D* h_norm_cen = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights_cen");
-    TH1D* h_nev = (TH1D*)dir_Muons_MC_all->Get("h_n_events");
-    TH1D* h_cen_after = (TH1D*)dir_Muons_MC_all->Get("h_cen_after");
-    
-    
-    
+
     //TFile file_("histo.root","READ");
-      
     //Int_t c_blue = my_color("blue");
     //Int_t c_red = my_color("red");
  
@@ -218,36 +200,7 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
     //h_data->SetLineColor(histLineColor);
     //h_data->SetFillColor(histFillColor);
     
-    //Normalization
-    double Ngen_mu = 9560121;
-    //double Ngen_ee = 9984268;
-    double Lumi = 1.64; // nb-1
-    double Xsec_mumu = 5.595*100/1000; // nb
-    double number_A = 208; //Lead
-    //double Ngen = 0;
-    //if (lepton == "mu") Ngen = Ngen_mu;
-    //else if (lepton == "ee") Ngen = Ngen_ee;
-    //double norm = number_A*number_A*Lumi*Xsec_mumu/h_norm->Integral(0, h_norm->GetNbinsX()+1)/h_norm_cen->Integral(0, h_norm_cen->GetNbinsX()+1); 
-    double n_ev = h_nev->Integral(0, h_nev->GetNbinsX()+1);
-    double sum_w = h_norm->Integral(0, h_norm->GetNbinsX()+1);
-    double sum_ncoll = h_norm_cen->Integral(0, h_norm_cen->GetNbinsX()+1);
-    double sum_w_and_ncoll = h_cen_after->Integral(0, h_cen_after->GetNbinsX()+1);
-    double norm = number_A*number_A*Lumi*Xsec_mumu*(n_ev/sum_ncoll)/sum_w;
-    //double norm = number_A*number_A*Lumi*Xsec_mumu/sum_w_and_ncoll;
-
-    //double norm_fact = ( 0.001715 * 559.5) / 1000000;
-    //h[0][ih]->Scale(1.0 / h[0][ih]->Integral());
-    cout << "before norm: " << h_->Integral(0, h_->GetNbinsX()+1) << endl;
-    //h_MC->Scale(h_nev->Integral(0, h_MC->GetNbinsX()+1)/h_norm->Integral(0, h_MC->GetNbinsX()+1));
-    //h_MC->Scale(norm*h_nev->Integral(0, h_MC->GetNbinsX()+1)/h_norm->Integral(0, h_MC->GetNbinsX()+1));
-    if (!isData) {
-      h_->Scale(norm);
-      h_MinBias->Scale(norm);
-      h_subtracted->Scale(norm);
-      h_matched->Scale(norm);
-    }
-    cout << "after norm: " << h_->Integral(0, h_->GetNbinsX()+1) << endl;
-    cout << "N_events = " << h_nev->Integral(0, h_nev->GetNbinsX()+1) << endl;
+    cout << "Events : " << h_->Integral(0, h_->GetNbinsX()+1) << endl;
 
     
     if (isData) h_->Draw("esame"); else h_->Draw("histsame");

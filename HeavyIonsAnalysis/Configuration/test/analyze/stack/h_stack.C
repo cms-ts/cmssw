@@ -120,7 +120,7 @@ void h_stack() {
               h_TT->SetLineColor(h_TT->GetFillColor());
               h_TT->Add(h);
             }
-            else if (label=="WWto2L2Nu" || label=="WZto2L2Q" || label=="WZto3LNu" || label=="ZZto2L2Q" || label=="ZZto4L") {
+            else if (label=="WWto2L2Nu" || label=="WZto2L2Q" || label=="WZto3LNu" || label=="ZZto2L2Q" || label=="ZZto2L2Nu" || label=="ZZto4L") {
               h_diboson->SetFillColor(my_color_six(5)); // Simple color assignment
               h_diboson->SetLineColor(h_diboson->GetFillColor());
               h_diboson->Add(h);

@@ -2,9 +2,9 @@
 
 echo "Nominal MC and data"
 
-root -l -b -q 'analyze_HI_TTreeReader_ZMM.C(true, 1, 0)'
+root -l -b -q 'analyze_HI_TTreeReader_ZMM.C("data", 1, 0)'
 
-root -l -b -q 'analyze_HI_TTreeReader_ZMM.C(false, 3, 0)'
+root -l -b -q 'analyze_HI_TTreeReader_ZMM.C("signal", 3, 0)'
 
 echo "Systematics"
 
@@ -21,13 +21,13 @@ echo "MC"
 # Loop through each number in the list
 for i in $numbers_MC
 do
-  root -l -b -q "analyze_HI_TTreeReader_ZMM.C(false, 3, $i)"
+  root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"signal\", 3, $i)"
 done
 
 echo "data"
 for k in $numbers_data
 do
-  root -l -b -q "analyze_HI_TTreeReader_ZMM.C(true, 1, $k)"
+  root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"data\", 1, $k)"
 done
 
 echo "--- All processing finished ---"
