@@ -14,7 +14,7 @@ root -l -b -q JEWEL_weight_3.C
 cd -
 
 # Define the specific list of numbers
-numbers_MC="1 2 4 8 9 10"
+numbers_MC="1 2 4 8 9 10 11 12"
 numbers_data="6 7 8"
 
 echo "MC"

@@ -22,15 +22,25 @@ chmod +x do_analyze_weights.sh
 //the output root files are saved in weights_MC/ and plot/ folders
 //--------------------------------
 
+//--------------------------------
+//To run over bkg MCs
+chmod +x do_analyze_bkg.sh
+./do_analyze_bkg.sh
+//the output root files are saved in plot/ folder
+//--------------------------------
 
 //--------------------------------
-//To run over data and all MC in MC_samples.h
-chmod +x do_analyze_stack.sh	
-./do_analyze_stack.sh	
-//the output root files are saved in stack/ folder 
-//--------------------------------
-
-//--------------------------------
-//To run over data and all MC for systematics
+//To run over data and signal MC for systematics
 chmod +x do_analyze_syst.sh
 ./do_analyze_syst.sh
+//the output root files are saved in plot/ and /syst_* folders
+//--------------------------------
+
+// --- Deprecated ---
+//--------------------------------
+//To run over data and all MC in MC_samples.h
+chmod +x do_analyze_stack.sh
+./do_analyze_stack.sh
+//the output root files are saved in stack/ folder
+//--------------------------------
+

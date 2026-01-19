@@ -37,7 +37,7 @@ void h_stack() {
     {"h_jet_pt_lj", "leading jet p_{T} [GeV]", "Events", 30, 0, 300},
     {"h_cen_j", "cen_j", "Events", 20, 0, 100},
     {"h_deltaPhi_Zj", "#Delta#phi_{Zj}", "Events" , 20, 0, TMath::Pi()},
-    {"h_xZj", "x_{Zj}", "Events", 20, 0, 3},
+    {"h_xZj_fixbinw", "x_{Zj}", "Events", 30, 0., 3.},
     {"h_vz", "vz", "Events", 30, -20, 20},
     {"h_avg_rho", "<#rho>", "Entries", 50, 0, 400}
 //    {"h_jetgirth", "girth", "Events", 10, 0, 0.2},
@@ -47,20 +47,6 @@ void h_stack() {
 
     double Lumi = 1.64; // nb-1
     double number_A = 208; // Lead
-
-    // Get MC all histogram
-    TFile* file_MC_all = TFile::Open("../weights_MC/MC_all_weights/output_HI_mu_MC_all.root", "READ");
-    TDirectoryFile* dir_Muons_MC_all = (TDirectoryFile*)file_MC_all->Get("HI/Muons");
-    TH1D* h_norm = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights");
-    TH1D* h_norm_cen = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights_cen");
-    TH1D* h_nev = (TH1D*)dir_Muons_MC_all->Get("h_n_events");
-    TH1D* h_cen_after = (TH1D*)dir_Muons_MC_all->Get("h_cen_after");
-
-    double n_ev = h_nev->Integral(0, h_nev->GetNbinsX()+1);
-    double sum_w = h_norm->Integral(0, h_norm->GetNbinsX()+1);
-    double sum_ncoll = h_norm_cen->Integral(0, h_norm_cen->GetNbinsX()+1);
-    double sum_w_and_ncoll = h_cen_after->Integral(0, h_cen_after->GetNbinsX()+1);
-    std::cout << "n_ev = " << n_ev << " sum_w = " << sum_w << " sum_ncoll = " << sum_ncoll << std::endl;
 
     TCanvas *c[20];
 
@@ -96,18 +82,10 @@ void h_stack() {
         for (const auto& file : files) {
             const std::string& file_name = file.out_filename;
             const std::string& label = file.label;
-            TFile* file_ = TFile::Open(file_name.c_str(), "READ");
+            TFile* file_ = TFile::Open(Form("../plot/%s", file_name.c_str()), "READ");
             TDirectoryFile* dir = (TDirectoryFile*)file_->Get("HI/Muons");
             TH1D* h = (TH1D*)dir->Get(histo_name.c_str());
 
-            // Calculate normalization
-            double Xsec = file.xsec;
-            double Ngen = file.ngen;
-            double norm_signal = number_A*number_A*Lumi*Xsec*(n_ev/sum_ncoll)/sum_w;
-            double norm_others = number_A*number_A*Lumi*Xsec*n_ev/sum_ncoll/Ngen;
-            //double norm_others = number_A * number_A * Lumi * Xsec / Ngen;
-            if (label=="signal") h->Scale(norm_signal);
-            else h->Scale(norm_others);
             std::cout << file_name << " " << std::fixed << std::setprecision(2) << h->Integral(0, h->GetNbinsX()+1) << std::endl;
 
             if (label=="signal") {
@@ -144,7 +122,7 @@ void h_stack() {
         h_MC_tot->SetLineColor(h_DYMM->GetFillColor());
 
         // Get data histogram
-        TFile* file_data = TFile::Open("./output_HI_mu_data.root", "READ");
+        TFile* file_data = TFile::Open("../plot/output_HI_mu_data.root", "READ");
         TDirectoryFile* dir_data = (TDirectoryFile*)file_data->Get("HI/Muons");
         TH1D* h_data = (TH1D*)dir_data->Get(histo_name.c_str());
 

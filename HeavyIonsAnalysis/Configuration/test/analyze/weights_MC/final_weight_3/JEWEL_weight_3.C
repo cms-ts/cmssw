@@ -34,7 +34,7 @@ void JEWEL_weight_3(int after_flag  = 0) {
         legend->SetBorderSize(0);
 
         // Open MC file
-        std::string MC_file_name = "../../plot/output_HI_mu_MC.root";
+        std::string MC_file_name = "../../plot/output_HI_mu_MC_signal.root";
         if (after_flag == 1) MC_file_name = "../../syst_prior_model/output_HI_mu_MC_prior_model.root";
         TFile* file_ = TFile::Open(MC_file_name.c_str(), "READ");
         TDirectoryFile* dir = (TDirectoryFile*)file_->Get("HI/Muons");
