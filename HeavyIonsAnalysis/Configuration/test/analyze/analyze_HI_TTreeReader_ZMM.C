@@ -31,10 +31,53 @@
 #include <limits>       // For std::numeric_limits
 #include <nlohmann/json.hpp> // For JSON parsing
 #include "CorrectionSF.h"
+#include <cstdlib>
+
 // Use the nlohmann::json namespace
 using json = nlohmann::json;
 
 using namespace std;
+
+// ---------------------------------------------------------------------------------------------------------
+// Function to find the total recorded lumi from the summary line
+// ---------------------------------------------------------------------------------------------------------
+double getLumiFromSummary(const std::string& filename) {
+  std::ifstream file(filename);
+  std::string line;
+  double totalRecorded = 0.0;
+  std::string searchKey = "#Sum recorded :";
+
+  if (!file.is_open()) {
+    std::cerr << "Error: Could not open file " << filename << std::endl;
+    return 0.0;
+  }
+
+  while (std::getline(file, line)) {
+    // Check if the line starts with "#Sum recorded :"
+    if (line.find(searchKey) != std::string::npos) {
+      // Find the position of the colon to split the key from the value
+      size_t colonPos = line.find(':');
+      if (colonPos != std::string::npos) {
+        // Extract everything after the colon
+        std::string numberString = line.substr(colonPos + 1);
+        // std::stod automatically handles leading whitespace
+        try {
+          totalRecorded = std::stod(numberString);
+        } catch (const std::exception& e) {
+          std::cerr << "Error parsing number: " << numberString << std::endl;
+        }
+        // Once found, we can stop reading the file
+        break;
+      }
+    }
+  }
+  file.close();
+  // Fallback warning if 0.0 is returned (optional)
+  if (totalRecorded == 0.0) {
+    std::cout << "Warning: Luminosity not found or zero in " << filename << std::endl;
+  }
+  return totalRecorded;
+}
 
 // ---------------------------------------------------------------------------------------------------------
 // JER PROVIDER CLASS (Updated for Autumn18 Resolution Files)
@@ -270,7 +313,7 @@ int getHiBin(float hiHF, const std::vector<double>& table) {
 
 //To run, root -l analyze_HI_TTreeReader_ZMM.C
 //Default isData, for MC root -l 'analyze_HI_TTreeReader_ZMM.C(false, 3)'
-void analyze_HI_TTreeReader_ZMM(const char * sample_name, unsigned int weight_phase = 1, int systFlag = 0) {
+void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", unsigned int weight_phase = 1, int systFlag = 0) {
 
   // --- Centrality Tables from TWiki ---
   // (Note: The last value 8171.19 is the 100% boundary)
@@ -450,8 +493,10 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name, unsigned int weight_ph
   // --------------------------------
 
   //MC normalization
-  double Lumi = 1.64; // nb-1
   double number_A = 208; // Lead
+  // --- Read Lumi Automatically ---
+  double Lumi = getLumiFromSummary("brilcalc_Collisions2023HI.csv"); // nb-1
+  std::cout << "Parsed Lumi  : " << Lumi << " nb^-1" << std::endl;
   // Get MC all histogram
   TFile* file_MC_all = TFile::Open("./weights_MC/MC_all_weights/output_HI_mu_MC_all.root", "READ");
   TDirectoryFile* dir_Muons_MC_all = (TDirectoryFile*)file_MC_all->Get("HI/Muons");
