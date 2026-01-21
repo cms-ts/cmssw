@@ -450,8 +450,8 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", unsigned int 
   TString file_name = sample_name;
   bool isData = false;
 
-  double Xsec = 5.595 * 100 / 1000;
-  double Ngen = 9560121;
+  double Xsec = 1;
+  double Ngen = 1;
 
   if (file_name.Contains("data")) {
     isData = true;
@@ -491,6 +491,21 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", unsigned int 
     // unless specifically required, so we only load PtResolution.
   }
   // --------------------------------
+
+  // --- Load Jet Veto Map ---
+  TFile* f_veto = TFile::Open("Summer23BPixPrompt23_RunD_v1.root");
+  if (!f_veto || f_veto->IsZombie()) {
+      std::cerr << "Error: Cannot open Jet Veto file Summer23BPixPrompt23_RunD_v1.root!" << std::endl;
+      return;
+  }
+  TH2D* h_jet_veto_map = (TH2D*)f_veto->Get("jetvetomap_all");
+  if (!h_jet_veto_map) {
+      std::cerr << "Error: Cannot retrieve jetvetomap_all from file!" << std::endl;
+      return;
+  }
+  h_jet_veto_map->SetDirectory(0); // Detach from file so it stays in memory
+  f_veto->Close();
+  std::cout << "Loaded Jet Veto Map: jetvetomap_all" << std::endl;
 
   //MC normalization
   double number_A = 208; // Lead
@@ -726,6 +741,8 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", unsigned int 
   TH1F *h_deltaPhi_Zj = new TH1F("h_deltaPhi_Zj", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
   TH1F *h_xZj = new TH1F("h_xZj", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
   TH1F *h_xZj_fixbinw = new TH1F("h_xZj_fixbinw", "Hist;x_{Zj}; Entries", 30, 0., 3.);
+  TH2F *h_jet_etaphi_before = new TH2F("h_jet_etaphi_before", "Jets Before Veto;#eta;#phi", 50, -2.5, 2.5, 60, -3.15, 3.15);
+  TH2F *h_jet_etaphi_after  = new TH2F("h_jet_etaphi_after",  "Jets After Veto;#eta;#phi",  50, -2.5, 2.5, 60, -3.15, 3.15);
 
   TH1F *h_vz = new TH1F("h_vz", "Hist; vz; Entries", 30, -20, 20);
   TH1F *h_avg_rho = new TH1F("h_avg_rho", "Hist; <#rho>; Entries", 50, 0, 400);
@@ -1117,6 +1134,10 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", unsigned int 
       // Selections and Z-Jet dR Cleaning
       if(jtpt_corr[ijet]<30) continue;
       if(abs(jteta[ijet])>2.5) continue;
+      h_jet_etaphi_before->Fill(jteta[ijet], jtphi[ijet], scale);
+      // Check Jet Veto Map: if bin content > 0, the jet is in a vetoed region
+      if (h_jet_veto_map->GetBinContent(h_jet_veto_map->FindBin(jteta[ijet], jtphi[ijet])) > 0) continue;
+      h_jet_etaphi_after->Fill(jteta[ijet], jtphi[ijet], scale);
       detaMinus = jteta[ijet] - muMinus.Eta();
       dphiMinus = RelativePhi(jtphi[ijet], muMinus.Phi());
       dRMinus = TMath::Sqrt(detaMinus * detaMinus + dphiMinus * dphiMinus);
@@ -1240,34 +1261,37 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", unsigned int 
                 if (current_global_bin_n == bin_MinBias) { // Match by global bin number
                     // Apply same jet cuts as for signal jets
                     if (jet_pt_MinBias >= 30 && abs(jet_eta_MinBias) <= 2.5) {
-                        double detaMinus_MinBias = jet_eta_MinBias - muMinus.Eta();
-                        double dphiMinus_MinBias = RelativePhi(jet_phi_MinBias, muMinus.Phi());
-                        double dRMinus_MinBias = TMath::Sqrt(detaMinus_MinBias * detaMinus_MinBias + dphiMinus_MinBias * dphiMinus_MinBias);
-                        double detaPlus_MinBias = jet_eta_MinBias - muPlus.Eta();
-                        double dphiPlus_MinBias = RelativePhi(jet_phi_MinBias,muPlus.Phi());
-                        double dRPlus_MinBias = TMath::Sqrt(detaPlus_MinBias * detaPlus_MinBias + dphiPlus_MinBias * dphiPlus_MinBias);
-                        if (dRMinus_MinBias >= 0.2 && dRPlus_MinBias >= 0.2 ) {
-                            double dPhi_Zj_MinBias = RelativePhi(Z_phi, jet_phi_MinBias);
-                            double xZj_MinBias = jet_pt_MinBias/Z_pt;
-                            //Remove overflow and put it in the last bin
-                            //if (xZj_MinBias > xZj_max) xZj_MinBias = xZj_max - 0.01;
-                            h_deltaPhi_Zj_MinBias->Fill(dPhi_Zj_MinBias, scale);
-                            if (dPhi_Zj_MinBias > 7 * TMath::Pi() / 8) {
-                                h_jet_pt_lj_MinBias->Fill(jet_pt_MinBias, scale);
-                                h_xZj_MinBias->Fill(xZj_MinBias, scale);
-                                if (itotev < 0.7*Ngen) h_xZj_MinBias_train_closure->Fill(xZj_MinBias, scale);
-                                else h_xZj_MinBias_test_closure->Fill(xZj_MinBias, scale);
-                                if (!isData) {
-                                  if (ijetGenLeading_unfold != -1) {
-                                    if (dPhi_Zj_Gen > 7 * TMath::Pi() / 8) {
-                                      //if (ijetGenLeading_unfold == iGenjetMatchedtoLeadingReco) {
-                                        h_response_MinBias->Fill(xZj_MinBias, true_xZj, scale);
-                                        if (itotev < 0.7*Ngen) h_response_MinBias_closure->Fill(xZj_MinBias, true_xZj, scale);
-                                      //}
+                        // Ensure background is not estimated from the bad detector region
+                        if (h_jet_veto_map->GetBinContent(h_jet_veto_map->FindBin(jet_eta_MinBias, jet_phi_MinBias)) == 0) {
+                          double detaMinus_MinBias = jet_eta_MinBias - muMinus.Eta();
+                          double dphiMinus_MinBias = RelativePhi(jet_phi_MinBias, muMinus.Phi());
+                          double dRMinus_MinBias = TMath::Sqrt(detaMinus_MinBias * detaMinus_MinBias + dphiMinus_MinBias * dphiMinus_MinBias);
+                          double detaPlus_MinBias = jet_eta_MinBias - muPlus.Eta();
+                          double dphiPlus_MinBias = RelativePhi(jet_phi_MinBias,muPlus.Phi());
+                          double dRPlus_MinBias = TMath::Sqrt(detaPlus_MinBias * detaPlus_MinBias + dphiPlus_MinBias * dphiPlus_MinBias);
+                          if (dRMinus_MinBias >= 0.2 && dRPlus_MinBias >= 0.2 ) {
+                              double dPhi_Zj_MinBias = RelativePhi(Z_phi, jet_phi_MinBias);
+                              double xZj_MinBias = jet_pt_MinBias/Z_pt;
+                              //Remove overflow and put it in the last bin
+                              //if (xZj_MinBias > xZj_max) xZj_MinBias = xZj_max - 0.01;
+                              h_deltaPhi_Zj_MinBias->Fill(dPhi_Zj_MinBias, scale);
+                              if (dPhi_Zj_MinBias > 7 * TMath::Pi() / 8) {
+                                  h_jet_pt_lj_MinBias->Fill(jet_pt_MinBias, scale);
+                                  h_xZj_MinBias->Fill(xZj_MinBias, scale);
+                                  if (itotev < 0.7*Ngen) h_xZj_MinBias_train_closure->Fill(xZj_MinBias, scale);
+                                  else h_xZj_MinBias_test_closure->Fill(xZj_MinBias, scale);
+                                  if (!isData) {
+                                    if (ijetGenLeading_unfold != -1) {
+                                      if (dPhi_Zj_Gen > 7 * TMath::Pi() / 8) {
+                                        //if (ijetGenLeading_unfold == iGenjetMatchedtoLeadingReco) {
+                                          h_response_MinBias->Fill(xZj_MinBias, true_xZj, scale);
+                                          if (itotev < 0.7*Ngen) h_response_MinBias_closure->Fill(xZj_MinBias, true_xZj, scale);
+                                        //}
+                                      }
                                     }
                                   }
-                                }
-                            }
+                              }
+                          }
                         }
                     }
                     events_filled_for_this_bin_in_MinBias++;
@@ -1456,6 +1480,8 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", unsigned int 
   h_deltaPhi_Zj_matched->Write();
   h_xZj->Write();
   h_xZj_fixbinw->Write();
+  h_jet_etaphi_before->Write();
+  h_jet_etaphi_after->Write();
   h_xZj_MinBias->Write();
   h_xZj_subtracted->Write();
   h_xZj_matched->Write();
