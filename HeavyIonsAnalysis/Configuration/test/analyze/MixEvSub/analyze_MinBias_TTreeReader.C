@@ -27,6 +27,7 @@
 #include "TTreeReaderArray.h"
 
 #include "../JetCorrector.h" // for JEC
+#include "../JERProvider.h"     // Include JER Provider
 
 using namespace std;
 
@@ -39,7 +40,7 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
 // 2: VZ + Centrality binning (new behavior)
 
   //TTrees
-  TChain data("data"), EventTree("EventTree"), HiTree("HiTree"),  skimanalysis("skimanalysis"), hltanalysis("hltanalysis");
+  TChain data("data"), EventTree("EventTree"), HiTree("HiTree"),  skimanalysis("skimanalysis"), hltanalysis("hltanalysis"), hiFJRhoAnalyzerFinerBins("hiFJRhoAnalyzerFinerBins");
 
   glob_t globlist;
   if (isData) {
@@ -58,6 +59,7 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
     EventTree.Add(TString(globlist.gl_pathv[i]) + "/muonAnalyzer/MuonTree");
     HiTree.Add(TString(globlist.gl_pathv[i]) + "/hiEvtAnalyzer/HiTree");
     skimanalysis.Add(TString(globlist.gl_pathv[i]) + "/skimanalysis/HltTree");
+    hiFJRhoAnalyzerFinerBins.Add(TString(globlist.gl_pathv[i]) + "/hiFJRhoAnalyzerFinerBins/t");
     //hltanalysis.Add(TString(globlist.gl_pathv[i]) + "/hltanalysis/HltTree");
 
   }
@@ -67,6 +69,7 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
   data.AddFriend("EventTree");
   data.AddFriend("HiTree");
   data.AddFriend("skimanalysis");
+  data.AddFriend("hiFJRhoAnalyzerFinerBins");
   //data.AddFriend("hltanalysis");
 
   TTreeReader fReader(&data);
@@ -80,6 +83,8 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
   TTreeReaderValue<Float_t> hiHF = {fReader, "hiHF"};
 
   //TTreeReaderValue<float> Ncoll = {fReader, "Ncoll"}; // Ncoll
+
+  TTreeReaderArray<double> rho = {fReader, "rho"};
 
   // Filters
   TTreeReaderValue<int> pprimaryVertexFilter = {fReader, "pprimaryVertexFilter"};
@@ -108,10 +113,26 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
   TTreeReaderArray<Float_t> rawpt = {fReader, "rawpt"};
   //TTreeReaderArray<Float_t> jtm = {fReader, "jtm"};
 
+  // Gen Jets (for hybrid JER smearing in MC)
+  // We use "rawpt" as dummy for data to avoid crash, but logic inside loop handles isData check
+  TTreeReaderValue<Int_t> ngen = {fReader, isData ? "nref" : "ngen"}; 
+  TTreeReaderArray<Float_t> genpt = {fReader, isData ? "rawpt" : "genpt"};
+  TTreeReaderArray<Float_t> geneta = {fReader, isData ? "jteta" : "geneta"};
+  TTreeReaderArray<Float_t> genphi = {fReader, isData ? "jtphi" : "genphi"};
+
   // To apply corrections on jets
   vector<string> Files;
   Files.push_back("../ParallelMC_L2Relative_AK2PF_PbPb_Reco_v0_2_13_2024.txt");
   JetCorrector JEC(Files);
+
+  // Initialize JER Provider
+  JERProvider jer;
+  if (!isData) {
+    cout << "Initializing JER..." << endl;
+    // Ensure these text files exist in the path or update path accordingly
+    jer.LoadSF("../Autumn18_RunD_V7b_MC_SF_AK4PF.txt");
+    jer.LoadResolution("../Autumn18_RunD_V7b_MC_PtResolution_AK4PF.txt");
+  }
 
   // --- Define bins ---
   std::map<std::string, std::vector<std::pair<double, double>>> leading_jets_by_bin;
@@ -327,6 +348,21 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
     iEvent++;
     //cout << "***iEvent = " << iEvent << "\t run = " << run << "\t lumi = " << lumi << "\t evt = " << event << endl;
 
+    // Calculate average rho for JER
+    double sum_rho = 0;
+    for (unsigned int i = 0; i < rho.GetSize(); i++) sum_rho += rho[i];
+    double avg_rho = (rho.GetSize() > 0) ? sum_rho / rho.GetSize() : 0;
+
+    // Pre-calculate GenJet Vectors for JER
+    std::vector<float> v_gen_pts, v_gen_etas, v_gen_phis;
+    if (!isData) {
+        for (int i = 0; i < *ngen; i++) {
+            v_gen_pts.push_back(genpt[i]);
+            v_gen_etas.push_back(geneta[i]);
+            v_gen_phis.push_back(genphi[i]);
+        }
+    }
+
     // Loop over Jets
     int ijetLeading = -1;
     double jtpt_corr[20000];
@@ -336,7 +372,13 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
       JEC.SetJetPhi(jtphi[ijet]);
       double Correction = JEC.GetCorrection();
       double CorrectedPT = JEC.GetCorrectedPT();
-      jtpt_corr[ijet] = CorrectedPT;
+      // Apply JER if MC
+      double pt_final = CorrectedPT;
+      if (!isData) {
+        pt_final = jer.GetSmearedPt(CorrectedPT, jteta[ijet], jtphi[ijet], avg_rho, v_gen_pts, v_gen_etas, v_gen_phis, 0);
+      }
+      jtpt_corr[ijet] = pt_final;
+
       //jtpt_corr[ijet] = rawpt[ijet];
       //cout << "after JEC: jtpt_corr = " << jtpt_corr[ijet] << " CorrectedPT = " << CorrectedPT << endl;
       //if(jtpt_corr[ijet]<30) continue;
