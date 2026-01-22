@@ -13,7 +13,6 @@
 #include "TGraph.h"
 #include "../MC_samples.h" // Include the header file
 #include "tdrstyle.C"
-#include "mycolor.h"
 
 //to store histogram parameters
 struct histoPar {
@@ -89,22 +88,22 @@ void h_stack() {
             std::cout << file_name << " " << std::fixed << std::setprecision(2) << h->Integral(0, h->GetNbinsX()+1) << std::endl;
 
             if (label=="signal") {
-              h_DYMM->SetFillColor(my_color_six(3)); // Simple color assignment
+              h_DYMM->SetFillColor(TColor::GetColor("#e42536")); // Simple color assignment
               h_DYMM->SetLineColor(h_DYMM->GetFillColor());
               h_DYMM->Add(h);
             }
             else if (label=="TT") {
-              h_TT->SetFillColor(my_color_six(1)); // Simple color assignment
+              h_TT->SetFillColor(TColor::GetColor("#5790fc")); // Simple color assignment
               h_TT->SetLineColor(h_TT->GetFillColor());
               h_TT->Add(h);
             }
             else if (label=="WWto2L2Nu" || label=="WZto2L2Q" || label=="WZto3LNu" || label=="ZZto2L2Q" || label=="ZZto2L2Nu" || label=="ZZto4L") {
-              h_diboson->SetFillColor(my_color_six(5)); // Simple color assignment
+              h_diboson->SetFillColor(TColor::GetColor("#9c9ca1")); // Simple color assignment
               h_diboson->SetLineColor(h_diboson->GetFillColor());
               h_diboson->Add(h);
             }
             else {
-              h_others->SetFillColor(my_color_six(2)); // Simple color assignment
+              h_others->SetFillColor(TColor::GetColor("#f89c20")); // Simple color assignment
               h_others->SetLineColor(h_others->GetFillColor());
               h_others->Add(h);
             }
@@ -118,7 +117,7 @@ void h_stack() {
         h_MC_tot->Add(h_TT);
         h_MC_tot->Add(h_diboson);
         h_MC_tot->Add(h_DYMM);
-        h_MC_tot->SetFillColor(my_color_six(3)); // Simple color assignment
+        h_MC_tot->SetFillColor(TColor::GetColor("#e42536")); // Simple color assignment
         h_MC_tot->SetLineColor(h_DYMM->GetFillColor());
 
         // Get data histogram

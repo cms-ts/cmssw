@@ -11,9 +11,8 @@
 #include "TGraph.h"
 //#include "../MC_samples.h" // Include the header file
 #include "../tdrstyle.C"
-#include "../mycolor.h"
 
-void rho_weight_1() {
+void rho_weight_1(int after_flag  = 0) {
 
         //histogram parameters
         std::string histo_name = "h_avg_rho";
@@ -33,7 +32,9 @@ void rho_weight_1() {
         legend->SetBorderSize(0);
 
         // Open MC file
-        TFile* file_ = TFile::Open("./output_HI_mu_MC_rho_weights.root", "READ");
+        std::string MC_file_name = "./output_HI_mu_MC_rho_weights.root";
+        if (after_flag == 1) MC_file_name = "../vz_weights_2/output_HI_mu_MC_rho_weights_after.root";
+        TFile* file_ = TFile::Open(MC_file_name.c_str(), "READ");
         TDirectoryFile* dir = (TDirectoryFile*)file_->Get("HI/Muons");
         TH1D* h = (TH1D*)dir->Get(histo_name.c_str());
         // Get data histogram
@@ -49,7 +50,7 @@ void rho_weight_1() {
         h_data->Scale(1./norm_data);
         cout << "after norm MC: " << h->Integral(0, h->GetNbinsX()+1) << " data: " << h_data->Integral(0, h_data->GetNbinsX()+1) << endl;
 
-        h->SetFillColor(my_color_six(3)); // Simple color assignment
+        h->SetFillColor(TColor::GetColor("#e42536")); // Simple color assignment
         h->SetLineColor(h->GetFillColor());
 
         // Create canvas
@@ -83,8 +84,8 @@ void rho_weight_1() {
         h_ratio->SetH2DrawOpt("HIST");
         h_ratio->Draw();
         h_ratio->GetLowerRefGraph()->SetMarkerStyle(20);
-        h_ratio->GetLowerRefGraph()->SetMinimum(-1.2);
-        h_ratio->GetLowerRefGraph()->SetMaximum(5.2);
+        h_ratio->GetLowerRefGraph()->SetMinimum(0.4);
+        h_ratio->GetLowerRefGraph()->SetMaximum(2.0);
         // Draw MC and data
         double y_max=0;
         //y_max=h_data->GetBinContent(h_data->GetMaximumBin());
@@ -145,11 +146,15 @@ void rho_weight_1() {
         h_weight_rho->SetMinimum(-1.2);
         h_weight_rho->SetMaximum(5.2);
 
-        TFile* file_weight_rho = new TFile("weight_rho.root", "RECREATE");
-        h_weight_rho->Write("h_weight_rho");
-        file_weight_rho->Close();
+        if (after_flag == 0) {
+          TFile* file_weight_rho = new TFile("weight_rho.root", "RECREATE");
+          h_weight_rho->Write("h_weight_rho");
+          file_weight_rho->Close();
+        }
 
         // Print the canvas
-        c->Print((histo_name + "_before.pdf").c_str());
+        std::string is_bef_or_aft = "_before.pdf";
+        if (after_flag == 1) is_bef_or_aft = "_after.pdf";
+        c->Print((histo_name + is_bef_or_aft).c_str());
 }
 

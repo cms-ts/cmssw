@@ -2,7 +2,6 @@
 #include "CMS_lumi.C"
 #include "TH1.h"
 #include "TH1F.h"
-#include "mycolor.h"
 
 TCanvas* example_plot( int iPeriod, int iPos, const char * histo_name, const char * x_title, const char * y_title, int bin, double min, double max);
 
@@ -16,8 +15,8 @@ std::map<std::string, std::tuple<const char*, const char*, int, double, double>>
     {"h_Z_pt_j", {"p_{T}^{Z} [GeV]", "Events", 30, 0, 300}},
     {"h_jet_pt_lj", {"leading jet p_{T} [GeV]", "Events", 30, 0, 300}},
     {"h_cen_j", {"cen_j", "Events", 20, 0, 100}},
-    {"h_deltaPhi_Zj", {"#Delta#phi_{Zj}", "Events" , 20, 0, 3.14}},
-    {"h_xZj", {"x_{Zj}", "Events", 20, 0, 3}},
+    {"h_deltaPhi_Zj", {"#Delta#phi_{Zj}", "Events" , 20, 0, TMath::Pi()}},
+    {"h_xZj_fixbinw", {"x_{Zj}", "Events", 30, 0, 3.}},
     {"h_vz", {"vz", "Events", 30, -20, 20}},
     {"h_avg_rho", {"<#rho>", "Entries", 50, 0, 400}}
 //    {"h_jetgirth", {"girth", "Events", 10, 0, 0.2}},
@@ -139,8 +138,8 @@ TCanvas* example_plot( int iPeriod, int iPos, const char * histo_name, const cha
   //if( iPos==1 ) h->SetMaximum( 300 );
   h->Draw();
 
-  int histLineColor = my_color_six(3);
-  int histFillColor = my_color_six(3);
+  int histLineColor = TColor::GetColor("#e42536");
+  int histFillColor = TColor::GetColor("#e42536");
   float markerSize  = 0.8;
 
   {
@@ -207,8 +206,8 @@ TCanvas* example_plot( int iPeriod, int iPos, const char * histo_name, const cha
     /*TGraph* gr_MC = new TGraphErrors(1, x_l, y_l, ex_l, ey_l );
     gr_MC->SetMarkerSize(markerSize);
     gr_MC->SetMarkerStyle(23);
-    gr_MC->SetLineColor(my_color(3));
-    gr_MC->SetMarkerColor(my_color(3));
+    gr_MC->SetLineColor(TColor::GetColor("#e42536"));
+    gr_MC->SetMarkerColor(TColor::GetColor("#e42536"));
     gr_MC->Draw("0P");*/
     
     TLine line_;
@@ -257,8 +256,8 @@ TCanvas* example_plot( int iPeriod, int iPos, const char * histo_name, const cha
 
     //TFile file_("histo.root","READ");
 
-    //Int_t c_blue = my_color("blue");
-    //Int_t c_red = my_color("red");
+    //Int_t c_blue = TColor::GetColor("#5790fc");
+    //Int_t c_red = TColor::GetColor("#e42536");
  
     h_MC->SetDirectory(0);
     //h_MC->SetMarkerStyle(23);
@@ -266,7 +265,7 @@ TCanvas* example_plot( int iPeriod, int iPos, const char * histo_name, const cha
     h_MC->SetLineColor(histLineColor);
     h_MC->SetFillColor(histFillColor); // Choose a suitable color
     h_MC->SetFillStyle(1001); // Choose a fill style (solid)
-    //h_MC->SetMarkerColor(my_color(3));
+    //h_MC->SetMarkerColor(TColor::GetColor("#e42536"));
 
 
     //TH1F *MC   = static_cast<TH1F*>(file_.Get("MC")->Clone());

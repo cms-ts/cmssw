@@ -11,9 +11,8 @@
 #include "TGraph.h"
 //#include "../MC_samples.h" // Include the header file
 #include "../tdrstyle.C"
-#include "../mycolor.h"
 
-void Ncoll_weight_0() {
+void Ncoll_weight_0(int after_flag  = 0) {
 
         //histogram parameters
         std::string histo_name = "h_cen";
@@ -35,7 +34,9 @@ void Ncoll_weight_0() {
         legend->SetBorderSize(0);
 
         // Open MC file
-        TFile* file_ = TFile::Open("./output_HI_mu_MC_Ncoll_weights.root", "READ");
+        std::string MC_file_name = "./output_HI_mu_MC_Ncoll_weights.root";
+        if (after_flag == 1) MC_file_name = "../rho_weights_1/output_HI_mu_MC_rho_weights.root";
+        TFile* file_ = TFile::Open(MC_file_name.c_str(), "READ");
         TDirectoryFile* dir = (TDirectoryFile*)file_->Get("HI/Muons");
         TH1D* h = (TH1D*)dir->Get(histo_name.c_str());
         // Get data histogram
@@ -43,32 +44,9 @@ void Ncoll_weight_0() {
         TDirectoryFile* dir_data = (TDirectoryFile*)file_data->Get("HI/Muons");
         TH1D* h_data = (TH1D*)dir_data->Get(histo_name.c_str());
 
-        TFile* file_MC_all = TFile::Open("../MC_all_weights/output_HI_mu_MC_all.root", "READ");
-        // and take its directories
-        TDirectoryFile* dir_HI_MC_all = (TDirectoryFile*)file_MC_all->Get("HI");
-        if (!dir_HI_MC_all)
-          cout << "Cannot find dir_HI_MC_all" << endl;
-        TDirectoryFile* dir_Muons_MC_all = (TDirectoryFile*)dir_HI_MC_all->Get("Muons");
-        if (!dir_Muons_MC_all)
-          cout << "Cannot find dir_Muons_MC_all" << endl;
-        else cout << "Yes Muons MC all" << endl;
-        // Take the trees with the method Get()
-        TH1D* h_norm = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights");
-        TH1D* h_norm_cen = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights_cen");
-        TH1D* h_nev = (TH1D*)dir_Muons_MC_all->Get("h_n_events");
-        TH1D* h_cen_after = (TH1D*)dir_Muons_MC_all->Get("h_cen_after");
+        cout << "Integral MC: " << h->Integral(0, h->GetNbinsX()+1) << " data: " << h_data->Integral(0, h_data->GetNbinsX()+1) << endl;
 
-        // Calculate normalization
-        cout << "before norm MC: " << h->Integral(0, h->GetNbinsX()+1) << " data: " << h_data->Integral(0, h_data->GetNbinsX()+1) << endl; 
-        double n_ev = h_nev->Integral(0, h_nev->GetNbinsX()+1);
-        double sum_w = h_norm->Integral(0, h_norm->GetNbinsX()+1);
-        double sum_ncoll = h_norm_cen->Integral(0, h_norm_cen->GetNbinsX()+1);
-        double sum_w_and_ncoll = h_cen_after->Integral(0, h_cen_after->GetNbinsX()+1);
-        double norm = number_A*number_A*Lumi*Xsec_mumu/sum_w;
-        h->Scale(norm);
-        cout << "after norm MC: " << h->Integral(0, h->GetNbinsX()+1) << " data: " << h_data->Integral(0, h_data->GetNbinsX()+1) << endl;
-
-        h->SetFillColor(my_color_six(3)); // Simple color assignment
+        h->SetFillColor(TColor::GetColor("#e42536")); // Simple color assignment
         h->SetLineColor(h->GetFillColor());
 
         // Create canvas
@@ -103,7 +81,7 @@ void Ncoll_weight_0() {
         h_ratio->Draw();
         h_ratio->GetLowerRefGraph()->SetMarkerStyle(20);
         h_ratio->GetLowerRefGraph()->SetMinimum(0.2);
-        h_ratio->GetLowerRefGraph()->SetMaximum(3.2);
+        h_ratio->GetLowerRefGraph()->SetMaximum(1.8);
         // Draw MC and data
         double y_max=0;
         //y_max=h_data->GetBinContent(h_data->GetMaximumBin());
@@ -159,6 +137,8 @@ void Ncoll_weight_0() {
         c->Update();
 
         // Print the canvas
-        c->Print((histo_name + "_before.pdf").c_str());
+        std::string is_bef_or_aft = "_before.pdf";
+        if (after_flag == 1) is_bef_or_aft = "_after.pdf";
+        c->Print((histo_name + is_bef_or_aft).c_str());
 }
 

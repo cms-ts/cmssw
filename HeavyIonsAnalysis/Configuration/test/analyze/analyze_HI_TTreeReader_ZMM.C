@@ -313,7 +313,7 @@ int getHiBin(float hiHF, const std::vector<double>& table) {
 
 //To run, root -l analyze_HI_TTreeReader_ZMM.C
 //Default isData, for MC root -l 'analyze_HI_TTreeReader_ZMM.C(false, 3)'
-void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", unsigned int weight_phase = 1, int systFlag = 0) {
+void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_phase = 1, int systFlag = 0) {
 
   // --- Centrality Tables from TWiki ---
   // (Note: The last value 8171.19 is the 100% boundary)
@@ -525,9 +525,10 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", unsigned int 
   double sum_w_and_ncoll = h_cen_after->Integral(0, h_cen_after->GetNbinsX()+1);
   std::cout << "n_ev = " << n_ev << " sum_w = " << sum_w << " sum_ncoll = " << sum_ncoll << std::endl;
 
-  double norm_MC = number_A*number_A*Lumi*Xsec*(n_ev/sum_ncoll)/sum_w;
-  if (!file_name.Contains("signal")) norm_MC = number_A*number_A*Lumi*Xsec*n_ev/sum_ncoll/Ngen;
-  if (!isData) std::cout << "norm_MC = " << norm_MC << std::endl;
+  double norm_MC_w_ncoll = number_A*number_A*Lumi*Xsec*(n_ev/sum_ncoll)/sum_w;
+  double norm_MC_w = number_A*number_A*Lumi*Xsec/sum_w;
+  if (!file_name.Contains("signal")) norm_MC_w_ncoll = number_A*number_A*Lumi*Xsec*n_ev/sum_ncoll/Ngen;
+  if (!isData) std::cout << " norm_MC_w = " << norm_MC_w << "norm_MC_w_ncoll = " << norm_MC_w_ncoll << std::endl;
 
   if (!inFile_MinBias || inFile_MinBias->IsZombie()) {
         std::cerr << "Error: Could not open input file! Check path and file existence." << std::endl;
@@ -817,10 +818,16 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", unsigned int 
     }
   }
 
+  // This is just for plotting rho distributions after reweighting
+  else if (weight_phase == -1) {
+    if (!isData) {
+      file_output_HI_mu = new TFile("./weights_MC/vz_weights_2/output_HI_mu_MC_rho_weights_after.root", "RECREATE");
+    }
+  }
+
   else if (weight_phase == 2) {
     if (!isData) {
       file_output_HI_mu = new TFile("./weights_MC/vz_weights_2/output_HI_mu_MC_vz_weights.root", "RECREATE");
-//      file_output_HI_mu = new TFile("./weights_MC/vz_weights_2/output_HI_mu_MC_rho_weights_after.root", "RECREATE");
     }
   }
 
@@ -888,23 +895,18 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", unsigned int 
     float weight_cent = Ncoll[hiBin_to_use];
     // Scale MC
     float scale = 1;
-    if (!isData) scale*=norm_MC;
-    if (weight_phase == 0) {
-      if (!isData) {
-        scale*=(*weight);
-      }
+    if (!isData && weight_phase == 0) {
+      scale*=norm_MC_w*(*weight);
     }
-    else if (weight_phase != 0) {
-      if (!isData) {
-        if (file_name.Contains("signal")) scale*=weight_cent*(*weight);
-        else scale*=weight_cent;
-      }
+    if (!isData && weight_phase != 0) {
+      if (file_name.Contains("signal")) scale*=norm_MC_w_ncoll*weight_cent*(*weight);
+      else scale*=norm_MC_w_ncoll*weight_cent;
     }
     // Selection on centrality bin
-    if (weight_phase != 0 && weight_phase != 1) {
+    if (weight_phase > 1 ) {
       if(hiBin_to_use>59) continue;
     }
-    if (weight_phase == 1) {
+    if (weight_phase == 1 || weight_phase == - 1) {
       if (isData) {
         if(hiBin_to_use>59) continue;
       }
@@ -923,7 +925,7 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", unsigned int 
     int bin_rho = h_weight_rho->FindBin(avg_rho);
 
     if (!isData) {
-      if (weight_phase == 2) {
+      if (weight_phase == 2 || weight_phase == -1) {
         // Apply rho weight
         scale*=h_weight_rho->GetBinContent(bin_rho);
       }

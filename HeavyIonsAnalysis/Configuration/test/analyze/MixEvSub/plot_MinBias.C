@@ -2,15 +2,14 @@
 #include "CMS_lumi.C"
 #include "TH1.h"
 #include "TH1F.h"
-#include "../plot/mycolor.h"
 
 TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_name, const char * x_title, const char * y_title, int bin, double min, double max);
 
 // Use a map to store histogram parameters
 std::map<std::string, std::tuple<const char*, const char*, int, double, double>> histo_params = {
     {"h_jet_pt_lj", {"leading jet p_{T} [GeV]", "Events", 30, 0, 300}},
-    {"h_deltaPhi_Zj", {"#Delta#phi_{Zj}", "Events" , 20, 0, 3.14}},
-    {"h_xZj", {"x_{Zj}", "Events", 20, 0, 3}},
+    {"h_deltaPhi_Zj", {"#Delta#phi_{Zj}", "Events" , 20, 0, TMath::Pi()}},
+    {"h_xZj", {"x_{Zj}", "Events", 5, 0, 2}},
 };
 
 void plot_MinBias(const char* h_n, bool isData = true) {
@@ -130,8 +129,8 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
   //if( iPos==1 ) h->SetMaximum( 300 );
   h->Draw();
 
-  int histLineColor = my_color_six(6);
-  int histFillColor = my_color_six(6);
+  int histLineColor = TColor::GetColor("#7a21dd");
+  int histFillColor = TColor::GetColor("#7a21dd");
   float markerSize  = 0.8;
 
   {
@@ -159,8 +158,8 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
 
 
     //TFile file_("histo.root","READ");
-    //Int_t c_blue = my_color("blue");
-    //Int_t c_red = my_color("red");
+    //Int_t c_blue = TColor::GetColor("#5790fc");
+    //Int_t c_red = TColor::GetColor("#e42536");
  
     h_->SetDirectory(0);
     h_MinBias->SetDirectory(0);
@@ -170,9 +169,9 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
     //h_MC->SetMarkerSize(markerSize);
     h_->SetLineColor(kBlack);
     h_MinBias->SetLineColor(histLineColor);
-    h_subtracted->SetLineColor(my_color_six(3));
+    h_subtracted->SetLineColor(TColor::GetColor("#e42536"));
     h_subtracted->SetMarkerStyle(20);
-    h_subtracted->SetMarkerColor(my_color_six(3));
+    h_subtracted->SetMarkerColor(TColor::GetColor("#e42536"));
     h_subtracted->SetMarkerSize(markerSize);
     if (isData) {
       h_->SetMarkerStyle(20);
@@ -182,13 +181,13 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
       h_MinBias->SetMarkerColor(histLineColor);
       h_MinBias->SetMarkerSize(markerSize);
     }
-    h_matched->SetLineColor(my_color_six(3));
+    h_matched->SetLineColor(TColor::GetColor("#e42536"));
     h_matched->SetMarkerStyle(20);
-    h_matched->SetMarkerColor(my_color_six(3));
+    h_matched->SetMarkerColor(TColor::GetColor("#e42536"));
     h_matched->SetMarkerSize(markerSize);
     //h_->SetFillColor(histFillColor); // Choose a suitable color
     //h_->SetFillStyle(1001); // Choose a fill style (solid)
-    //h_MC->SetMarkerColor(my_color(3));
+    //h_MC->SetMarkerColor(TColor::GetColor("#e42536"));
 
 
     //TH1F *MC   = static_cast<TH1F*>(file_.Get("MC")->Clone());
@@ -212,15 +211,17 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
     double y_max = h_->GetBinContent(h_->GetMaximumBin());
     h->SetMaximum(1.2*y_max);
 
+    double x_min = 0.59;
+    if (!canvName.Contains("delta")) x_min = 0.69;
     TLatex* latex1 = new TLatex();
     latex1->SetTextFont(42);
     latex1->SetTextSize(0.036); // Set text size (adjust as needed)
-    latex1->DrawLatexNDC(0.59,0.6,"Centrality: 0-30%");
-    latex1->DrawLatexNDC(0.59,0.55,"p_{T}^{Z} > 40 GeV");
-    latex1->DrawLatexNDC(0.59,0.49,"p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.5");
-    if (!canvName.Contains("delta")) latex1->DrawLatexNDC(0.59,0.44,"#Delta#phi_{Zj} > 7#pi/8"); // Use normalized device coordinates NDC (0-1)
+    latex1->DrawLatexNDC(x_min,0.6,"Centrality: 0-30%");
+    latex1->DrawLatexNDC(x_min,0.55,"p_{T}^{Z} > 40 GeV");
+    latex1->DrawLatexNDC(x_min,0.49,"p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.5");
+    if (!canvName.Contains("delta")) latex1->DrawLatexNDC(x_min,0.44,"#Delta#phi_{Zj} > 7#pi/8"); // Use normalized device coordinates NDC (0-1)
 
-    TLegend* legend = new TLegend(0.58, 0.7, 0.8, 0.86); // Example: Top-right corner
+    TLegend* legend = new TLegend(x_min-0.01, 0.7, x_min+0.21, 0.86); // Example: Top-right corner
     legend->SetBorderSize(0);
     if (isData) legend->AddEntry(h_, "Raw", "epl"); else legend->AddEntry(h_, "Raw", "l"); // "l" for line
     if (isData) legend->AddEntry(h_MinBias, "Bkg", "epl"); else legend->AddEntry(h_MinBias, "Bkg", "l");
