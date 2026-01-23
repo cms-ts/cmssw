@@ -105,17 +105,13 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
 
   // Jet
   TTreeReaderValue<Int_t> nref = {fReader, "nref"};
-  //TTreeReaderArray<Float_t> rawpt = {fReader, "jtptUncorrected"};
   TTreeReaderArray<Float_t> jteta = {fReader, "jteta"};
   TTreeReaderArray<Float_t> jtphi = {fReader, "jtphi"};
-  //TTreeReaderArray<Float_t> jtgirth = {fReader, "jt_girth"};
-  //TTreeReaderArray<Float_t> jtdyndeltaR = {fReader, "jtdyn_deltaR"};
   TTreeReaderArray<Float_t> rawpt = {fReader, "rawpt"};
-  //TTreeReaderArray<Float_t> jtm = {fReader, "jtm"};
 
   // Gen Jets (for hybrid JER smearing in MC)
   // We use "rawpt" as dummy for data to avoid crash, but logic inside loop handles isData check
-  TTreeReaderValue<Int_t> ngen = {fReader, isData ? "nref" : "ngen"}; 
+  TTreeReaderValue<Int_t> ngen = {fReader, isData ? "nref" : "ngen"};
   TTreeReaderArray<Float_t> genpt = {fReader, isData ? "rawpt" : "genpt"};
   TTreeReaderArray<Float_t> geneta = {fReader, isData ? "jteta" : "geneta"};
   TTreeReaderArray<Float_t> genphi = {fReader, isData ? "jtphi" : "genphi"};
@@ -133,6 +129,21 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
     jer.LoadSF("../Autumn18_RunD_V7b_MC_SF_AK4PF.txt");
     jer.LoadResolution("../Autumn18_RunD_V7b_MC_PtResolution_AK4PF.txt");
   }
+
+  // --- Load Jet Veto Map ---
+  TFile* f_veto = TFile::Open("../Summer23BPixPrompt23_RunD_v1.root");
+  if (!f_veto || f_veto->IsZombie()) {
+      std::cerr << "Error: Cannot open Jet Veto file Summer23BPixPrompt23_RunD_v1.root!" << std::endl;
+      return;
+  }
+  TH2D* h_jet_veto_map = (TH2D*)f_veto->Get("jetvetomap_all");
+  if (!h_jet_veto_map) {
+      std::cerr << "Error: Cannot retrieve jetvetomap_all from file!" << std::endl;
+      return;
+  }
+  h_jet_veto_map->SetDirectory(0); // Detach from file so it stays in memory
+  f_veto->Close();
+  std::cout << "Loaded Jet Veto Map: jetvetomap_all" << std::endl;
 
   // --- Define bins ---
   std::map<std::string, std::vector<std::pair<double, double>>> leading_jets_by_bin;
@@ -210,8 +221,8 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
   Int_t jet_tree_hiBin = 0;
   Int_t jet_tree_bin = 0;
   Float_t jet_tree_pt = 0;
-  Float_t jet_tree_phi = 0;
-  Float_t jet_tree_eta = 0;
+  Float_t jet_tree_phi = -999.0;
+  Float_t jet_tree_eta = -999.0;
 
   jet_tree->Branch("HF_MinBias", &jet_tree_HF);
   jet_tree->Branch("vz_MinBias", &jet_tree_vz);
@@ -242,9 +253,6 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
   TH1F *h_Phi_lj = new TH1F("h_Phi_lj", "Hist;#phi_{lj}; Entries", 20, -TMath::Pi(),TMath::Pi());
 
   TH1F *h_vz = new TH1F("h_vz", "Hist; vz; Entries", 30, -20, 20);
-
-  //TH1F *h_jetgirth = new TH1F("h_jetgirth", "Hist;girth; Entries", 10, 0, 0.2);
-  //TH1F *h_jet_deltaR = new TH1F("h_jet_deltaR", "Hist; R_{g}; Entries", 10, 0, 0.2);
 
   // Track how many bins have reached 'events_per_bin_limit' events
   std::map<std::string, int> bin_event_counts; // Keeps count for each specific bin label
@@ -281,7 +289,7 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
       }
     } else if (use_binning_option == 1) { // VZ binning only
       float current_val = *vz;
-      // Apply centrality cut for VZ only mode (e.g., 0-30%)
+      // Apply centrality cut for VZ only (e.g., 0-30%)
       if(*hiBin > 59) continue; // hiBin is centrality*2, so >59 means >29.5%
       int bin_n = 0;
       for (const auto& bin_range : primary_bins) {
@@ -336,10 +344,6 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
       continue; // Event does not fall into any defined bin for the selected option
     }
 
-    //if(*HLT_HIL2SingleMu7_v3<=0) continue;
-//    bool good_pair = false;
-//    if (*nReco < 2 ) continue;
-
     // Check if this specific bin already has enough events
     if (bin_event_counts[current_bin_label] >= events_per_bin_limit) {
       continue; // Skip this event, this bin is already full
@@ -378,58 +382,65 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
         pt_final = jer.GetSmearedPt(CorrectedPT, jteta[ijet], jtphi[ijet], avg_rho, v_gen_pts, v_gen_etas, v_gen_phis, 0);
       }
       jtpt_corr[ijet] = pt_final;
-
-      //jtpt_corr[ijet] = rawpt[ijet];
-      //cout << "after JEC: jtpt_corr = " << jtpt_corr[ijet] << " CorrectedPT = " << CorrectedPT << endl;
-      //if(jtpt_corr[ijet]<30) continue;
-      //if(abs(jteta[ijet])>2.5) continue;
-      //cout << "-----------------------------" << endl;
-      //cout << "ijet: " << ijet << " pt = " << jtpt_corr[ijet] << " eta = " << jteta[ijet] << " phi = " << jtphi[ijet] << " m = " << jtm[ijet] << endl;
-      //cout << "muMinus pt = " << muMinus.Pt() << " eta = " << muMinus.Eta() << " phi = " << muMinus.Phi() << endl;
-      //cout << "muPlus pt = " << muPlus.Pt() << " eta = " << muPlus.Eta() << " phi = " << muPlus.Phi() << endl;
-      //cout << "dRMinus = " << dRMinus << " dRPlus = " << dRPlus << endl;
+      // Selections
+      if(jtpt_corr[ijet]<30) continue;
+      if(abs(jteta[ijet])>2.5) continue;
+      // Check Jet Veto Map: if bin content > 0, the jet is in a vetoed region
+      if (h_jet_veto_map->GetBinContent(h_jet_veto_map->FindBin(jteta[ijet], jtphi[ijet])) > 0) continue;
       if (ijetLeading == -1 || jtpt_corr[ijet] > jtpt_corr[ijetLeading]) {
           ijetLeading = ijet;
       }
     } //end loop over jets
-    //cout << "ijetLeading = " << ijetLeading << endl;
 
     if (ijetLeading != -1) {
-      // Fill general event histograms
-      h_vz->Fill(*vz);
-      h_HF->Fill(*hiHF);
-      h_cen->Fill((*hiBin)/2);
+      jet_tree_pt = jtpt_corr[ijetLeading];
+      jet_tree_phi = jtphi[ijetLeading];
+      jet_tree_eta = jteta[ijetLeading];
+      // Fill histograms only if you have a jet
       h_Phi_lj->Fill(jtphi[ijetLeading]);
       h_jet_pt_lj->Fill(jtpt_corr[ijetLeading]);
       // Store leading jet information for the specific bin
       leading_jets_by_bin[current_bin_label].push_back({jtpt_corr[ijetLeading], jtphi[ijetLeading]});
-      // Fill the output TTree
-      jet_tree_HF = *hiHF;
-      jet_tree_vz = *vz;
-      jet_tree_hiBin = *hiBin;
-      jet_tree_bin = current_global_bin_n;
-      jet_tree_pt = jtpt_corr[ijetLeading];
-      jet_tree_phi = jtphi[ijetLeading];
-      jet_tree_eta = jteta[ijetLeading];
-      jet_tree->Fill();
-      // Increment event count for this specific bin
-      bin_event_counts[current_bin_label]++;
-      // Check if this push_back just filled the bin to 'events_per_bin_limit'
+    }
+    // Fill general event histograms, ALWAYS Fill the Tree (Even if jet_tree_pt is 0)
+    jet_tree_HF = *hiHF;
+    jet_tree_vz = *vz;
+    jet_tree_hiBin = *hiBin;
+    jet_tree_bin = current_global_bin_n;
+    // Fill global histograms
+    h_vz->Fill(*vz);
+    h_HF->Fill(*hiHF);
+    h_cen->Fill((*hiBin)/2.0);
+
+    jet_tree->Fill();
+
+    // Increment event count for this specific bin
+    bin_event_counts[current_bin_label]++;
+    // Check if this push_back just filled the bin to 'events_per_bin_limit'
       if (bin_event_counts[current_bin_label] == events_per_bin_limit) {
         overall_filled_bins_count++;
         std::cout << "Bin " << current_bin_label << " is now full with " << events_per_bin_limit << " events. Total filled bins: " << overall_filled_bins_count << std::endl;
-      }
     }
   }  // end loop events
+
+  // We iterate over bin_event_counts to tracks bins not completely full
+  for (const auto& pair : bin_event_counts) {
+      std::string label = pair.first;
+      int count = pair.second;
+
+      if (count < events_per_bin_limit) {
+          std::cout << "Bin " << label << " only reached: "
+                    << count << " / " << events_per_bin_limit << " events. [INCOMPLETE]" << std::endl;
+      }
+  }
 
   std::cout << "\n--- Finished event collection. Final status of leading jet data per bin: ---" << std::endl;
   for (const auto& pair : leading_jets_by_bin) {
     std::cout << "Bin " << pair.first << ": " << pair.second.size() << " leading jets collected." << std::endl;
   }
 
-  cout << "Total events processed (approx. based on leading jet finds): " << iEvent << endl;
-  cout << "N events (h_Phi_lj): " << h_Phi_lj->GetEntries()
-       << "; N events (h_jet_pt_lj): " << h_jet_pt_lj->GetEntries() << endl;
+  cout << "Total events saved : " << iEvent << endl;
+  cout << "N leading jets (h_jet_pt_lj integral): " << h_Phi_lj->GetEntries() << endl;
 
   // --- Store to a ROOT file ---
   TFile *outputFile;
