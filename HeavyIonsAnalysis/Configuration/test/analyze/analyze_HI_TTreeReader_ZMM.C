@@ -397,7 +397,15 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
 
   // To apply corrections on jets
   vector<string> Files;
-  Files.push_back("ParallelMC_L2Relative_AK2PF_PbPb_Reco_v0_2_13_2024.txt");
+  // L2Relative is applied to BOTH Data and MC (the two files are actually identical)
+  // L2Residual applied only to Data
+  if (isData) {
+    Files.push_back("Spring23Prompt23_PbPb_V1_DATA_L2Relative_AK2PF.txt");
+    Files.push_back("Spring23Prompt23_PbPb_V1_DATA_L2Residual_AK2PF.txt");
+
+  } else {
+    Files.push_back("Spring23Prompt23_PbPb_V1_MC_L2Relative_AK2PF.txt");
+  }
   JetCorrector JEC(Files);
   JetUncertainty JEU("Autumn18_HI_V8_MC_Uncertainty_AK2PF.txt"); //!!! Old, update
 
