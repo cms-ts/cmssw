@@ -28,6 +28,7 @@
 
 #include "../JetCorrector.h" // for JEC
 #include "../JERProvider.h"     // Include JER Provider
+#include "../JetSelection_PbPb.h" // For Id selection + jet veto map in PbPb
 
 using namespace std;
 
@@ -108,6 +109,9 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
   TTreeReaderArray<Float_t> jteta = {fReader, "jteta"};
   TTreeReaderArray<Float_t> jtphi = {fReader, "jtphi"};
   TTreeReaderArray<Float_t> rawpt = {fReader, "rawpt"};
+  TTreeReaderArray<Float_t> jtPfCEF = {fReader, "jtPfCEF"};
+  TTreeReaderArray<Float_t> jtPfNEF = {fReader, "jtPfNEF"};
+  TTreeReaderArray<Float_t> jtPfMUF = {fReader, "jtPfMUF"};
 
   // Gen Jets (for hybrid JER smearing in MC)
   // We use "rawpt" as dummy for data to avoid crash, but logic inside loop handles isData check
@@ -128,6 +132,11 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
     Files.push_back("../Spring23Prompt23_PbPb_V1_MC_L2Relative_AK2PF.txt");
   }
   JetCorrector JEC(Files);
+  // For debugging
+  cout << "Initializing JEC..." << endl;
+  for (const auto& file : Files) {
+      cout << "  Loaded JEC File: " << file << endl;
+  }
 
   // Initialize JER Provider
   JERProvider jer;
@@ -138,20 +147,8 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
     jer.LoadResolution("../Autumn18_RunD_V7b_MC_PtResolution_AK4PF.txt");
   }
 
-  // --- Load Jet Veto Map ---
-  TFile* f_veto = TFile::Open("../Summer23BPixPrompt23_RunD_v1.root");
-  if (!f_veto || f_veto->IsZombie()) {
-      std::cerr << "Error: Cannot open Jet Veto file Summer23BPixPrompt23_RunD_v1.root!" << std::endl;
-      return;
-  }
-  TH2D* h_jet_veto_map = (TH2D*)f_veto->Get("jetvetomap_all");
-  if (!h_jet_veto_map) {
-      std::cerr << "Error: Cannot retrieve jetvetomap_all from file!" << std::endl;
-      return;
-  }
-  h_jet_veto_map->SetDirectory(0); // Detach from file so it stays in memory
-  f_veto->Close();
-  std::cout << "Loaded Jet Veto Map: jetvetomap_all" << std::endl;
+  // Initialize Jet Selector with your specific 2024 map file
+  JetSelect js("../Winter24Prompt24_2024BCDEFGHI.root");
 
   // --- Define bins ---
   std::map<std::string, std::vector<std::pair<double, double>>> leading_jets_by_bin;
@@ -393,8 +390,9 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
       // Selections
       if(jtpt_corr[ijet]<30) continue;
       if(abs(jteta[ijet])>2.5) continue;
-      // Check Jet Veto Map: if bin content > 0, the jet is in a vetoed region
-      if (h_jet_veto_map->GetBinContent(h_jet_veto_map->FindBin(jteta[ijet], jtphi[ijet])) > 0) continue;
+      // Apply Combined Jet ID and Veto Map
+      // Pass the current jet index [ijet] to the arrays
+      if (!js.JetSelection(jteta[ijet], jtphi[ijet], jtPfCEF[ijet], jtPfNEF[ijet], jtPfMUF[ijet])) continue;
       if (ijetLeading == -1 || jtpt_corr[ijet] > jtpt_corr[ijetLeading]) {
           ijetLeading = ijet;
       }

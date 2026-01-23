@@ -7,3 +7,12 @@ root -l -b -q 'plot.C("h_mumu_j")'
 //To plot all histo
 chmod +x do_plot_all.sh
 ./do_plot_all.sh
+
+//--------------------------------
+  Plot veto check
+//--------------------------------
+
+//For data
+root -l -b -q plot_veto_check.C
+//For MC
+root -l -b -q 'plot_veto_check.C("output_HI_mu_MC_signal.root")'

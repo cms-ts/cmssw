@@ -24,6 +24,7 @@
 #include "JetCorrector.h" // for JEC
 #include "JetUncertainty.h" // for up and down var on JEC
 #include "JERProvider.h"     // Include JER Provider
+#include "JetSelection_PbPb.h" // For Id selection + jet veto map in PbPb
 #include "MC_samples.h" // Include the header file for MC samples
 
 #include <fstream>      // For std::ifstream
@@ -294,20 +295,8 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
   }
   // --------------------------------
 
-  // --- Load Jet Veto Map ---
-  TFile* f_veto = TFile::Open("Summer23BPixPrompt23_RunD_v1.root");
-  if (!f_veto || f_veto->IsZombie()) {
-      std::cerr << "Error: Cannot open Jet Veto file Summer23BPixPrompt23_RunD_v1.root!" << std::endl;
-      return;
-  }
-  TH2D* h_jet_veto_map = (TH2D*)f_veto->Get("jetvetomap_all");
-  if (!h_jet_veto_map) {
-      std::cerr << "Error: Cannot retrieve jetvetomap_all from file!" << std::endl;
-      return;
-  }
-  h_jet_veto_map->SetDirectory(0); // Detach from file so it stays in memory
-  f_veto->Close();
-  std::cout << "Loaded Jet Veto Map: jetvetomap_all" << std::endl;
+  // Initialize Jet Selector with your specific 2024 map file
+  JetSelect js("Winter24Prompt24_2024BCDEFGHI.root");
 
   //MC normalization
   double number_A = 208; // Lead
@@ -391,6 +380,9 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
   TTreeReaderArray<Float_t> jteta = {fReader, "jteta"};
   TTreeReaderArray<Float_t> jtphi = {fReader, "jtphi"};
   TTreeReaderArray<Float_t> rawpt = {fReader, "rawpt"};
+  TTreeReaderArray<Float_t> jtPfCEF = {fReader, "jtPfCEF"};
+  TTreeReaderArray<Float_t> jtPfNEF = {fReader, "jtPfNEF"};
+  TTreeReaderArray<Float_t> jtPfMUF = {fReader, "jtPfMUF"};
   //TTreeReaderArray<Float_t> jtm = {fReader, "jtm"};
   //TTreeReaderArray<Float_t> jtgirth = {fReader, "jt_girth"};
   //TTreeReaderArray<Float_t> jtdyndeltaR = {fReader, "jtdyn_deltaR"};
@@ -407,6 +399,12 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
     Files.push_back("Spring23Prompt23_PbPb_V1_MC_L2Relative_AK2PF.txt");
   }
   JetCorrector JEC(Files);
+  // --- For debugging ---
+  cout << "Initializing JEC..." << endl;
+  for (const auto& file : Files) {
+      cout << "Loaded JEC File: " << file << endl;
+  }
+  // ---------------------
   JetUncertainty JEU("Autumn18_HI_V8_MC_Uncertainty_AK2PF.txt"); //!!! Old, update
 
   // Gen jets
@@ -558,8 +556,8 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
   TH1F *h_deltaPhi_Zj = new TH1F("h_deltaPhi_Zj", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
   TH1F *h_xZj = new TH1F("h_xZj", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
   TH1F *h_xZj_fixbinw = new TH1F("h_xZj_fixbinw", "Hist;x_{Zj}; Entries", 30, 0., 3.);
-  TH2F *h_jet_etaphi_before = new TH2F("h_jet_etaphi_before", "Jets Before Veto;#eta;#phi", 50, -2.5, 2.5, 60, -3.15, 3.15);
-  TH2F *h_jet_etaphi_after  = new TH2F("h_jet_etaphi_after",  "Jets After Veto;#eta;#phi",  50, -2.5, 2.5, 60, -3.15, 3.15);
+  TH2F *h_jet_etaphi_before = new TH2F("h_jet_etaphi_before", "Jets Before Veto;#eta;#phi", 40, -2.5, 2.5, 40, -TMath::Pi(), TMath::Pi());
+  TH2F *h_jet_etaphi_after  = new TH2F("h_jet_etaphi_after",  "Jets After Veto;#eta;#phi",  40, -2.5, 2.5, 40, -TMath::Pi(), TMath::Pi());
 
   TH1F *h_vz = new TH1F("h_vz", "Hist; vz; Entries", 30, -20, 20);
   TH1F *h_avg_rho = new TH1F("h_avg_rho", "Hist; <#rho>; Entries", 50, 0, 400);
@@ -953,8 +951,9 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
       if(jtpt_corr[ijet]<30) continue;
       if(abs(jteta[ijet])>2.5) continue;
       h_jet_etaphi_before->Fill(jteta[ijet], jtphi[ijet], scale);
-      // Check Jet Veto Map: if bin content > 0, the jet is in a vetoed region
-      if (h_jet_veto_map->GetBinContent(h_jet_veto_map->FindBin(jteta[ijet], jtphi[ijet])) > 0) continue;
+      // Apply Combined Jet ID and Veto Map
+      // Pass the current jet index [ijet] to the arrays
+      if (!js.JetSelection(jteta[ijet], jtphi[ijet], jtPfCEF[ijet], jtPfNEF[ijet], jtPfMUF[ijet])) continue;
       h_jet_etaphi_after->Fill(jteta[ijet], jtphi[ijet], scale);
       detaMinus = jteta[ijet] - muMinus.Eta();
       dphiMinus = RelativePhi(jtphi[ijet], muMinus.Phi());
