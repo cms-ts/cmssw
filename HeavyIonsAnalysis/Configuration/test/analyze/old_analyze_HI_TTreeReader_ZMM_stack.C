@@ -29,9 +29,9 @@ double RelativePhi(double phi_1,double phi_2) {
   return d_phi;
 }
 
-//To run on data, root -l 'analyze_HI_TTreeReader_ZMM_stack.C("data")'
-//for MC see MC_samples.h, for ex. root -l 'analyze_HI_TTreeReader_ZMM_stack.C("signal")'
-void analyze_HI_TTreeReader_ZMM_stack(const char * argument_name) {
+//To run on data, root -l 'old_analyze_HI_TTreeReader_ZMM_stack.C("data")'
+//for MC see MC_samples.h, for ex. root -l 'old_analyze_HI_TTreeReader_ZMM_stack.C("signal")'
+void old_analyze_HI_TTreeReader_ZMM_stack(const char * argument_name) {
 
   // --- Load Muon Scale Factor Histograms ---
   // TightID SF

@@ -1,10 +1,50 @@
+/*
+////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                    //
+//   ANALYSIS MACRO: MinBias Library Producer for Mixed Event Subtraction             //
+//                                                                                    //
+//   File:    analyze_MinBias_TTreeReader.C                                           //
+//   Author:  Raffaele                                                                //
+//   Date:    2024-2026                                                               //
+//                                                                                    //
+//   DESCRIPTION:                                                                     //
+//   Creates a library of MinBias events to be used for Mixed Event Background        //
+//   Subtraction in the Z+Jet analysis. It reads MinBias tuples, processes jets,      //
+//   and stores event info (HF, VZ, Cen) and Leading Jet info into a flat TTree.      //
+//                                                                                    //
+//   CORE WORKFLOW:                                                                   //
+//   1. Initialization:       Load Chains, JEC, JER, and Jet Selectors.               //
+//   2. Binning Setup:        Define mixing bins (HF, VZ, or VZ+Centrality).          //
+//   3. Event Loop:           Apply filters, calculate Centrality/Rho.                //
+//   4. Jet Processing:       Apply JEC/JER, cuts cleaning.                           //
+//   5. Storage:              Fill 'jet_tree' with event metadata and leading jet.    //
+//                                                                                    //
+//   USAGE EXAMPLES:                                                                  //
+//   root -l 'analyze_MinBias_TTreeReader.C(true, 0)'   // Data (HF Binning)          //
+//   root -l 'analyze_MinBias_TTreeReader.C(false, 2)'  // MC (VZ+Cen Binning)        //
+//                                                                                    //
+//   PARAMETERS:                                                                      //
+//   ------------------------------------------------------------------------------   //
+//   [isData] (bool)        True for Data, False for MC.                              //
+//                                                                                    //
+//   [use_binning_option]   Controls the binning scheme for mixing:                   //
+//       0: HF binning only                                                           //
+//       1: VZ binning only                                                           //
+//       2: VZ + Centrality binning (Combined - Recommended for Analysis)             //
+//                                                                                    //
+//   DEPENDENCIES:                                                                    //
+//   - JetCorrector.h, JERProvider.h, JetSelection_PbPb.h                             //
+//   - binning_config.h                                                               //
+//                                                                                    //
+////////////////////////////////////////////////////////////////////////////////////////
+*/
+
 // C++ includes
 #include <iostream>   // Input/output stream. Needed for std::cout.
 #include <vector>     // For std::vector
 #include <map>        // For std::map to store events per bin
 #include <string>     // For std::string
 #include <utility>    // For std::pair
-#include "binning_config.h" // Custom binning configuration header
 #include <sstream>    // For std::stringstream for string formatting
 
 // Root includes
@@ -26,19 +66,14 @@
 #include "TTreeReaderValue.h"
 #include "TTreeReaderArray.h"
 
-#include "../JetCorrector.h" // for JEC
-#include "../JERProvider.h"     // Include JER Provider
-#include "../JetSelection_PbPb.h" // For Id selection + jet veto map in PbPb
+#include "binning_config.h"        // Custom binning configuration header
+#include "../JetCorrector.h"       // for JEC
+#include "../JERProvider.h"        // Include JER Provider
+#include "../JetSelection_PbPb.h"  // For Id selection + jet veto map in PbPb
 
 using namespace std;
 
-//To run, root -l analyze_HI_MinBias_TTreeReader.C
-//Default isData, for MC root -l 'analyze_MinBias_TTreeReader.C(false)'
 void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0) {
-// use_binning_option:
-// 0: HF binning only (existing behavior)
-// 1: VZ binning only (existing behavior)
-// 2: VZ + Centrality binning (new behavior)
 
   //TTrees
   TChain data("data"), EventTree("EventTree"), HiTree("HiTree"),  skimanalysis("skimanalysis"), hltanalysis("hltanalysis"), hiFJRhoAnalyzerFinerBins("hiFJRhoAnalyzerFinerBins");
@@ -237,7 +272,7 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
   jet_tree->Branch("jet_phi_MinBias", &jet_tree_phi);
   jet_tree->Branch("jet_eta_MinBias", &jet_tree_eta);
 
-  //Canvas
+  // Canvas
   gStyle->SetOptStat(0);
   TCanvas* c1 = new TCanvas("c1", "c1", 1200, 800);
   c1->Divide(1,1);
@@ -250,7 +285,7 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
   TCanvas* c5 = new TCanvas("c5", "c5", 1200, 800);
   c5->Divide(1,1);
 
-  //Histograms
+  // Histograms
   TH1F *h_cen = new TH1F("h_cen", "Hist; centrality bin; Entries", 20, 0, 100);
   TH1F *h_HF = new TH1F("h_HF", "Hist; HF; Entries", 80, 0, 8000);
 
@@ -365,11 +400,11 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
     // Pre-calculate GenJet Vectors for JER
     std::vector<float> v_gen_pts, v_gen_etas, v_gen_phis;
     if (!isData) {
-        for (int i = 0; i < *ngen; i++) {
-            v_gen_pts.push_back(genpt[i]);
-            v_gen_etas.push_back(geneta[i]);
-            v_gen_phis.push_back(genphi[i]);
-        }
+      for (int i = 0; i < *ngen; i++) {
+        v_gen_pts.push_back(genpt[i]);
+        v_gen_etas.push_back(geneta[i]);
+        v_gen_phis.push_back(genphi[i]);
+      }
     }
 
     // Loop over Jets
@@ -388,15 +423,14 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
       }
       jtpt_corr[ijet] = pt_final;
       // Selections
-      if(jtpt_corr[ijet]<30) continue;
-      if(abs(jteta[ijet])>2.5) continue;
+      if(jtpt_corr[ijet]<30 || abs(jteta[ijet])>2.5) continue;
       // Apply Combined Jet ID and Veto Map
       // Pass the current jet index [ijet] to the arrays
       if (!js.JetSelection(jteta[ijet], jtphi[ijet], jtPfCEF[ijet], jtPfNEF[ijet], jtPfMUF[ijet])) continue;
       if (ijetLeading == -1 || jtpt_corr[ijet] > jtpt_corr[ijetLeading]) {
           ijetLeading = ijet;
       }
-    } //end loop over jets
+    } // end loop over jets
 
     if (ijetLeading != -1) {
       jet_tree_pt = jtpt_corr[ijetLeading];
@@ -431,13 +465,12 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
 
   // We iterate over bin_event_counts to tracks bins not completely full
   for (const auto& pair : bin_event_counts) {
-      std::string label = pair.first;
-      int count = pair.second;
-
-      if (count < events_per_bin_limit) {
-          std::cout << "Bin " << label << " only reached: "
-                    << count << " / " << events_per_bin_limit << " events. [INCOMPLETE]" << std::endl;
-      }
+    std::string label = pair.first;
+    int count = pair.second;
+    if (count < events_per_bin_limit) {
+      std::cout << "Bin " << label << " only reached: "
+                << count << " / " << events_per_bin_limit << " events. [INCOMPLETE]" << std::endl;
+    }
   }
 
   std::cout << "\n--- Finished event collection. Final status of leading jet data per bin: ---" << std::endl;
@@ -463,6 +496,7 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
     else output_filename = "./MinBias_leading_jets_MC_UnknownOption.root";
   }
   outputFile = new TFile(output_filename, "RECREATE");
+
   // Write the TTree
   jet_tree->Write("",TObject::kOverwrite);
   outputFile->Close();

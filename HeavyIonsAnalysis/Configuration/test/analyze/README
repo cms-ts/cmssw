@@ -14,7 +14,6 @@ root -l -b -q 'analyze_HI_TTreeReader_ZMM.C("signal", 3, 0)'
 //already saved in plot/ folder
 //--------------------------------
 
-
 //--------------------------------
 //To run data and MC signal in order to compute weights
 chmod +x do_analyze_weights.sh
@@ -39,8 +38,8 @@ chmod +x do_analyze_syst.sh
 // --- Deprecated ---
 //--------------------------------
 //To run over data and all MC in MC_samples.h
-chmod +x do_analyze_stack.sh
-./do_analyze_stack.sh
+chmod +x old_do_analyze_stack.sh
+./old_do_analyze_stack.sh
 //the output root files are saved in stack/ folder
 //--------------------------------
 
