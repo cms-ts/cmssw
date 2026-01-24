@@ -1,50 +1,41 @@
 /*
-////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                    //
-//   ANALYSIS MACRO: Z Boson (Z->mumu) + Jet Framework for PbPb and pp Collisions     //
-//                                                                                    //
-//   File:    analyze_HI_TTreeReader_ZMM.C                                            //
-//   Author:  Raffaele Delli Gatti                                                    //
-//   Date:    2024-2026                                                               //
-//                                                                                    //
-//   DESCRIPTION:                                                                     //
-//   Performs selection and analysis of Z bosons decaying into dimuons in Heavy Ion   //
-//   collisions. Includes Jet processing, Background Subtraction, and Unfolding.      //
-//                                                                                    //
-//   CORE WORKFLOW:                                                                   //
-//   1. Muon Selection:       TightID & HLT Scale Factors (JSON).                     //
-//   2. Z Reconstruction:     Dimuon mass & pT cuts.                                  //
-//   3. Jet Processing:       JEC, JER, and cleaning against Z-muons.                 //
-//   4. Bkg Subtraction:      Event Mixing with MinBias samples for PbPb              //
-//   5. Unfolding Prep:       Response matrices (Reco vs Gen) for xZj.                //
-//   6. Systematics:          Variations for Centrality, JEC, JER, SFs, Shape.        //
-//                                                                                    //
-//   USAGE EXAMPLES:                                                                  //
-//   root -l 'analyze_HI_TTreeReader_ZMM.C("data", 1, 0)'      // Data                //
-//   root -l 'analyze_HI_TTreeReader_ZMM.C("signal", 3, 0)'    // MC Nominal          //
-//   root -l 'analyze_HI_TTreeReader_ZMM.C("signal", 3, 11)'   // MC Syst (JER Down)  //
-//                                                                                    //
-//   PARAMETERS:                                                                      //
-//   ------------------------------------------------------------------------------   //
-//   [sample_name]  Input label (e.g., "data" or MC label).                           //
-//                                                                                    //
-//   [weight_phase] Control Flag:                                                     //
-//       0: Ncoll weights                                                             //
-//       1: Rho weights only                                                          //
-//       2: Vz weights                                                                //
-//       3: Final Analysis (Rho + Vz + Systematics)                                   //
-//                                                                                    //
-//   [systFlag]     Systematic Variations:                                            //
-//       0: Nominal              8: Binning                                           //
-//       1,2: Muon SF Down/Up    9,10: JEC Down/Up                                    //
-//       4: Prior/Shape          11,12: JER Down/Up                                   //
-//       6,7: Centrality Down/Up 13,14: Shape Down/Up                                 //
-//                                                                                    //
-//   DEPENDENCIES:                                                                    //
-//   - helpers.h, MC_samples.h, CorrectionSF.h                                        //
-//   - JetCorrector.h, JetUncertainty.h, JERProvider.h, JetSelection_PbPb.h           //
-//                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                            //
+//   ANALYSIS MACRO: Z Boson (Z->mumu) + Jet Framework for PbPb and pp Collisions                                             //
+//                                                                                                                            //
+//   File:    analyze_HI_TTreeReader_ZMM.C                                                                                    //
+//   Author:  Raffaele Delli Gatti                                                                                            //
+//   Date:    2024-2026                                                                                                       //
+//                                                                                                                            //
+//   DESCRIPTION:                                                                                                             //
+//   Performs selection and analysis of Z bosons decaying into dimuons in Heavy Ion collisions. Includes Jet processing,      //
+//   Background Subtraction, and Unfolding.                                                                                   //
+//                                                                                                                            //
+//   CORE WORKFLOW:                                                                                                           //
+//   1. Muon Selection:  TightID & HLT Scale Factors (JSON).        2. Z Reconstruction:  Dimuon mass & pT cuts.              //
+//   3. Jet Processing:  JEC, JER, and cleaning against Z-muons.    4. Bkg Subtraction:   Event Mixing with MinBias for PbPb. //
+//   5. Unfolding Prep:  Response matrices (Reco vs Gen) for xZj.   6. Systematics:       Cen, JEC, JER, SFs, Shape.          //
+//                                                                                                                            //
+//   USAGE EXAMPLES:                                                                                                          //
+//   root -l 'analyze_HI_TTreeReader_ZMM.C("data", 1, 0)'      // Data                                                        //
+//   root -l 'analyze_HI_TTreeReader_ZMM.C("signal", 3, 0)'    // MC Nominal                                                  //
+//   root -l 'analyze_HI_TTreeReader_ZMM.C("signal", 3, 11)'   // MC Syst (JER Down)                                          //
+//                                                                                                                            //
+//   PARAMETERS:                                                                                                              //
+//   ------------------------------------------------------------------------------                                           //
+//   [sample_name]  Input label (e.g., "data" or MC label).                                                                   //
+//                                                                                                                            //
+//   [weight_phase] Control Flag:                                  [systFlag]     Systematic Variations:                      //
+//       0: Ncoll weights                                              0: Nominal              8: Binning                     //
+//       1: Rho weights only                                           1,2: Muon SF Down/Up    9,10: JEC Down/Up              //
+//       2: Vz weights                                                 4: Prior/Shape          11,12: JER Down/Up             //
+//       3: Final Analysis (Rho + Vz + Systematics)                    6,7: Centrality Down/Up 13,14: Shape Down/Up           //
+//                                                                                                                            //
+//   DEPENDENCIES:                                                                                                            //
+//   - helpers.h, MC_samples.h, CorrectionSF.h                                                                                //
+//   - JetCorrector.h, JetUncertainty.h, JERProvider.h, JetSelection_PbPb.h                                                   //
+//                                                                                                                            //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 */
 
 // C++ includes
@@ -95,6 +86,143 @@ using namespace std;
 
 void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_phase = 1, int systFlag = 0) {
 
+  // --- Initialize TTrees ---
+  TChain data("data"), EventTree("EventTree"), HiTree("HiTree"),
+         skimanalysis("skimanalysis"), hltanalysis("hltanalysis"),
+         hiFJRhoAnalyzerFinerBins("hiFJRhoAnalyzerFinerBins");
+  glob_t globlist;
+
+  // Binning_option for mixed event background subtraction, Use VZ + Centrality binning as default
+  // 0: HF binning only
+  // 1: VZ binning only
+  // 2: VZ + Centrality binning
+  int binning_option = 2;
+
+  // Sample name
+  TString file_name = sample_name;
+  // File with MinBias sample
+  TFile *inFile_MinBias;
+
+  bool isData = false;
+  bool isSignal = file_name.Contains("signal");
+  double Xsec = 1;
+  double Ngen = 1;
+
+  std::cout << "------------------------------------------------" << std::endl;
+  if (file_name.Contains("data")) {
+    isData = true;
+    glob("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime*/CRAB3_Analysis_test13_ZMM_Prime*/*/*.root", GLOB_NOSORT, NULL, &globlist);
+    if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_HF.root");
+    else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_VZ.root");
+    else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_VZ_Cen_Combined.root");
+    else { cerr << "Invalid binning_option for data MinBias file." << endl; return; }
+    cout << "This is data" << endl;
+  }
+  else {
+    // Loop over files
+    for (const auto& file : files) {
+      if (file_name.Contains(file.label)) {
+        glob(file.path_miniaod, GLOB_NOSORT, NULL, &globlist);
+        if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_HF.root");
+        else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_VZ.root");
+        else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_VZ_Cen_Combined.root");
+        else { cerr << "Invalid binning_option for MC MinBias file." << endl; return; }
+        Xsec = file.xsec;
+        Ngen = file.ngen;
+        cout << "This is MC " << file.label << ": ngen = " << Ngen << " xsec = " << Xsec << endl;
+      }
+    }
+  }
+  cout << "Found " << globlist.gl_pathc << " files"<< endl;
+
+  // --- Load Weight Histograms and retrieve histograms ---
+  TH1D* h_weight_rho   = loadWeightHist("weights_MC/rho_weights_1/weight_rho.root", "h_weight_rho");
+  TH1D* h_weight_vz    = loadWeightHist("weights_MC/vz_weights_2/weight_vz.root", "h_weight_vz");
+  TH1D* h_weight_JEWEL = loadWeightHist("weights_MC/final_weight_3/weight_JEWEL.root", "h_weight_JEWEL");
+  // --- End Load Weight  ---
+
+  // --- MC normalization ---
+  double number_A = 208; // Lead
+  // --- Read Lumi Automatically ---
+  double Lumi = getLumiFromSummary("brilcalc_Collisions2023HI.csv"); // nb-1
+  std::cout << "Parsed Lumi  : " << Lumi << " nb^-1" << std::endl;
+  // Get MC all histogram
+  TFile* file_MC_all = TFile::Open("./weights_MC/MC_all_weights/output_HI_mu_MC_all.root", "READ");
+  TDirectoryFile* dir_Muons_MC_all = (TDirectoryFile*)file_MC_all->Get("HI/Muons");
+  TH1D* h_norm = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights");
+  TH1D* h_norm_cen = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights_cen");
+  TH1D* h_nev = (TH1D*)dir_Muons_MC_all->Get("h_n_events");
+  TH1D* h_cen_after = (TH1D*)dir_Muons_MC_all->Get("h_cen_after");
+  double n_ev = h_nev->Integral(0, h_nev->GetNbinsX()+1);
+  double sum_w = h_norm->Integral(0, h_norm->GetNbinsX()+1);
+  double sum_ncoll = h_norm_cen->Integral(0, h_norm_cen->GetNbinsX()+1);
+  double sum_w_and_ncoll = h_cen_after->Integral(0, h_cen_after->GetNbinsX()+1);
+  std::cout << "n_ev = " << n_ev << " sum_w = " << sum_w << " sum_ncoll = " << sum_ncoll << std::endl;
+
+  double norm_MC_w_ncoll = number_A*number_A*Lumi*Xsec*(n_ev/sum_ncoll)/sum_w;
+  double norm_MC_w = number_A*number_A*Lumi*Xsec/sum_w;
+  if (!isSignal) norm_MC_w_ncoll = number_A*number_A*Lumi*Xsec*n_ev/sum_ncoll/Ngen;
+  if (!isData) std::cout << "norm_MC_w = " << norm_MC_w << " norm_MC_w_ncoll = " << norm_MC_w_ncoll << std::endl;
+
+  if (!inFile_MinBias || inFile_MinBias->IsZombie()) {
+    std::cerr << "Error: Could not open input file! Check path and file existence." << std::endl;
+    return;
+  }
+  std::cout << "------------------------------------------------" << std::endl;
+
+  // --- Add files to chains ---
+  for (size_t i = 0; i < globlist.gl_pathc; i++) {
+    //data.Add(TString(globlist.gl_pathv[i]) + "/akCs2PFJetAnalyzerSubstructure/t");
+    data.Add(TString(globlist.gl_pathv[i]) + "/akCs2PFJetAnalyzer/t");
+    EventTree.Add(TString(globlist.gl_pathv[i]) + "/muonAnalyzer/MuonTree");
+    HiTree.Add(TString(globlist.gl_pathv[i]) + "/hiEvtAnalyzer/HiTree");
+    skimanalysis.Add(TString(globlist.gl_pathv[i]) + "/skimanalysis/HltTree");
+    hiFJRhoAnalyzerFinerBins.Add(TString(globlist.gl_pathv[i]) + "/hiFJRhoAnalyzerFinerBins/t");
+    //hltanalysis.Add(TString(globlist.gl_pathv[i]) + "/hltanalysis/HltTree");
+  }
+  globfree(&globlist);
+
+  // To associate additional TTrees with a primary TTree.
+  // This allows you to access information from the friend trees while looping over the primary tree
+  data.AddFriend("EventTree");
+  data.AddFriend("HiTree");
+  data.AddFriend("skimanalysis");
+  data.AddFriend("hiFJRhoAnalyzerFinerBins");
+  //data.AddFriend("hltanalysis");
+
+  // Calculate Total Events BEFORE initializing the Reader
+  Long64_t total_events = data.GetEntries();
+  // Initialize Reader AFTER touching the Chain
+  TTreeReader fReader(&data);
+
+  // Declaration of leaf types
+  TTreeReaderValue<Int_t> run = {fReader, "run"};    // Run number
+  TTreeReaderValue<Int_t> evt = {fReader, "evt"};    // Event number
+  TTreeReaderValue<Int_t> lumi = {fReader, "lumi"};  // Luminosity block
+  TTreeReaderValue<Int_t> hiBin = {fReader, "hiBin"}; // centralityx2
+  TTreeReaderValue<Float_t> weight = {fReader, isData ? "hiHF" : "weight"}; // MC event weight, not used in data
+  TTreeReaderValue<Float_t> vz = {fReader, "vz"};
+  TTreeReaderArray<double> rho = {fReader, "rho"};
+  TTreeReaderValue<Float_t> hiHF = {fReader, "hiHF"};
+  //TTreeReaderValue<float> Ncoll = {fReader, "Ncoll"}; // Ncoll
+
+  // Filters
+  TTreeReaderValue<int> pprimaryVertexFilter = {fReader, "pprimaryVertexFilter"};
+  TTreeReaderValue<int> pclusterCompatibilityFilter = {fReader, "pclusterCompatibilityFilter"};
+  TTreeReaderValue<int> pphfCoincFilter2Th4 = {fReader, "pphfCoincFilter2Th4"};
+
+  // Trigger, no needed because already in production
+  //TTreeReaderValue<Int_t> HLT_HIL2SingleMu7_v3 = {fReader, "HLT_HIL2SingleMu7_v3"};
+
+  // Muon
+  TTreeReaderValue<Int_t> nReco = {fReader, "nReco"};
+  TTreeReaderArray<Float_t> recoPt = {fReader, "recoPt"};
+  TTreeReaderArray<Float_t> recoEta = {fReader, "recoEta"};
+  TTreeReaderArray<Float_t> recoPhi = {fReader, "recoPhi"};
+  TTreeReaderArray<Int_t> recoCharge = {fReader, "recoCharge"};
+  TTreeReaderArray<bool> recoIDTight = {fReader, "recoIDTight"};
+  const double muonMass = 0.1056583755; //From PDG 2024
+
   // --- Load Muon Scale Factors from JSON ---
   std::cout << "Loading Muon Scale Factors from JSON..." << std::endl;
   CorrectionSF tightID_SF;
@@ -143,149 +271,6 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
   std::cout << "JSON Scale Factors loaded successfully." << std::endl;
   // --- End Load Muon Scale Factors from JSON ---
 
-  // --- Load Weight Histograms and retrieve histograms ---
-  TH1D* h_weight_rho   = loadWeightHist("weights_MC/rho_weights_1/weight_rho.root", "h_weight_rho");
-  TH1D* h_weight_vz    = loadWeightHist("weights_MC/vz_weights_2/weight_vz.root", "h_weight_vz");
-  TH1D* h_weight_JEWEL = loadWeightHist("weights_MC/final_weight_3/weight_JEWEL.root", "h_weight_JEWEL");
-  // --- End Load Weight  ---
-
-  // --- Initialize TTrees ---
-  TChain data("data"), EventTree("EventTree"), HiTree("HiTree"),
-         skimanalysis("skimanalysis"), hltanalysis("hltanalysis"),
-         hiFJRhoAnalyzerFinerBins("hiFJRhoAnalyzerFinerBins");
-  glob_t globlist;
-
-  // Binning_option for mixed event background subtraction, Use VZ + Centrality binning as default
-  // 0: HF binning only
-  // 1: VZ binning only
-  // 2: VZ + Centrality binning
-  int binning_option = 2;
-
-  // File with MinBias sample
-  TFile *inFile_MinBias;
-  TString file_name = sample_name;
-
-  bool isData = false;
-  double Xsec = 1;
-  double Ngen = 1;
-
-  if (file_name.Contains("data")) {
-    isData = true;
-    glob("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime*/CRAB3_Analysis_test13_ZMM_Prime*/*/*.root", GLOB_NOSORT, NULL, &globlist);
-    if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_HF.root");
-    else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_VZ.root");
-    else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_VZ_Cen_Combined.root");
-    else { cerr << "Invalid binning_option for data MinBias file." << endl; return; }
-    cout << "This is data" << endl;
-  }
-  else {
-    // Loop over files
-    for (const auto& file : files) {
-      if (file_name.Contains(file.label)) {
-        glob(file.path_miniaod, GLOB_NOSORT, NULL, &globlist);
-        if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_HF.root");
-        else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_VZ.root");
-        else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_VZ_Cen_Combined.root");
-        else { cerr << "Invalid binning_option for MC MinBias file." << endl; return; }
-        Xsec = file.xsec;
-        Ngen = file.ngen;
-        cout << "This is MC " << file.label << ": ngen = " << Ngen << " xsec = " << Xsec << endl;
-      }
-    }
-  }
-  cout << "Found " << globlist.gl_pathc << " files"<< endl;
-
-  // --- Initialize JER Provider ---
-  JERProvider jer;
-  if (!isData) {
-    // Is MC
-    cout << "Initializing JER..." << endl;
-    // Load both SF and Resolution Files
-    jer.LoadSF("Autumn18_RunD_V7b_MC_SF_AK4PF.txt");
-    jer.LoadResolution("Autumn18_RunD_V7b_MC_PtResolution_AK4PF.txt");
-    // Note: We typically don't apply Phi/Eta smearing for standard analysis, so we only load PtResolution.
-  }
-  // Initialize Jet Selector with specific map file
-  JetSelect js("Winter24Prompt24_2024BCDEFGHI.root");
-
-  // --- MC normalization ---
-  double number_A = 208; // Lead
-  // --- Read Lumi Automatically ---
-  double Lumi = getLumiFromSummary("brilcalc_Collisions2023HI.csv"); // nb-1
-  std::cout << "Parsed Lumi  : " << Lumi << " nb^-1" << std::endl;
-  // Get MC all histogram
-  TFile* file_MC_all = TFile::Open("./weights_MC/MC_all_weights/output_HI_mu_MC_all.root", "READ");
-  TDirectoryFile* dir_Muons_MC_all = (TDirectoryFile*)file_MC_all->Get("HI/Muons");
-  TH1D* h_norm = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights");
-  TH1D* h_norm_cen = (TH1D*)dir_Muons_MC_all->Get("h_sum_weights_cen");
-  TH1D* h_nev = (TH1D*)dir_Muons_MC_all->Get("h_n_events");
-  TH1D* h_cen_after = (TH1D*)dir_Muons_MC_all->Get("h_cen_after");
-  double n_ev = h_nev->Integral(0, h_nev->GetNbinsX()+1);
-  double sum_w = h_norm->Integral(0, h_norm->GetNbinsX()+1);
-  double sum_ncoll = h_norm_cen->Integral(0, h_norm_cen->GetNbinsX()+1);
-  double sum_w_and_ncoll = h_cen_after->Integral(0, h_cen_after->GetNbinsX()+1);
-  std::cout << "n_ev = " << n_ev << " sum_w = " << sum_w << " sum_ncoll = " << sum_ncoll << std::endl;
-
-  double norm_MC_w_ncoll = number_A*number_A*Lumi*Xsec*(n_ev/sum_ncoll)/sum_w;
-  double norm_MC_w = number_A*number_A*Lumi*Xsec/sum_w;
-  if (!file_name.Contains("signal")) norm_MC_w_ncoll = number_A*number_A*Lumi*Xsec*n_ev/sum_ncoll/Ngen;
-  if (!isData) std::cout << "norm_MC_w = " << norm_MC_w << " norm_MC_w_ncoll = " << norm_MC_w_ncoll << std::endl;
-
-  if (!inFile_MinBias || inFile_MinBias->IsZombie()) {
-    std::cerr << "Error: Could not open input file! Check path and file existence." << std::endl;
-    return;
-  }
-
-  // --- Add files to chains ---
-  for (size_t i = 0; i < globlist.gl_pathc; i++) {
-    //data.Add(TString(globlist.gl_pathv[i]) + "/akCs2PFJetAnalyzerSubstructure/t");
-    data.Add(TString(globlist.gl_pathv[i]) + "/akCs2PFJetAnalyzer/t");
-    EventTree.Add(TString(globlist.gl_pathv[i]) + "/muonAnalyzer/MuonTree");
-    HiTree.Add(TString(globlist.gl_pathv[i]) + "/hiEvtAnalyzer/HiTree");
-    skimanalysis.Add(TString(globlist.gl_pathv[i]) + "/skimanalysis/HltTree");
-    hiFJRhoAnalyzerFinerBins.Add(TString(globlist.gl_pathv[i]) + "/hiFJRhoAnalyzerFinerBins/t");
-    //hltanalysis.Add(TString(globlist.gl_pathv[i]) + "/hltanalysis/HltTree");
-  }
-  globfree(&globlist);
-
-  // To associate additional TTrees with a primary TTree.
-  // This allows you to access information from the friend trees while looping over the primary tree
-  data.AddFriend("EventTree");
-  data.AddFriend("HiTree");
-  data.AddFriend("skimanalysis");
-  data.AddFriend("hiFJRhoAnalyzerFinerBins");
-  //data.AddFriend("hltanalysis");
-
-  TTreeReader fReader(&data);
-
-  // Declaration of leaf types
-  TTreeReaderValue<Int_t> run = {fReader, "run"};    // Run number
-  TTreeReaderValue<Int_t> evt = {fReader, "evt"};    // Event number
-  TTreeReaderValue<Int_t> lumi = {fReader, "lumi"};  // Luminosity block
-  TTreeReaderValue<Int_t> hiBin = {fReader, "hiBin"}; // centralityx2
-  TTreeReaderValue<Float_t> weight = {fReader, isData ? "hiHF" : "weight"}; // MC event weight, not used in data
-  TTreeReaderValue<Float_t> vz = {fReader, "vz"};
-  TTreeReaderArray<double> rho = {fReader, "rho"};
-  TTreeReaderValue<Float_t> hiHF = {fReader, "hiHF"};
-  //TTreeReaderValue<float> Ncoll = {fReader, "Ncoll"}; // Ncoll
-
-  // Filters
-  TTreeReaderValue<int> pprimaryVertexFilter = {fReader, "pprimaryVertexFilter"};
-  TTreeReaderValue<int> pclusterCompatibilityFilter = {fReader, "pclusterCompatibilityFilter"};
-  TTreeReaderValue<int> pphfCoincFilter2Th4 = {fReader, "pphfCoincFilter2Th4"};
-
-  // Trigger, no needed because already in production
-  //TTreeReaderValue<Int_t> HLT_HIL2SingleMu7_v3 = {fReader, "HLT_HIL2SingleMu7_v3"};
-
-  // Muon
-  TTreeReaderValue<Int_t> nReco = {fReader, "nReco"};
-  TTreeReaderArray<Float_t> recoPt = {fReader, "recoPt"};
-  TTreeReaderArray<Float_t> recoEta = {fReader, "recoEta"};
-  TTreeReaderArray<Float_t> recoPhi = {fReader, "recoPhi"};
-  TTreeReaderArray<Int_t> recoCharge = {fReader, "recoCharge"};
-  TTreeReaderArray<bool> recoIDTight = {fReader, "recoIDTight"};
-  const double muonMass = 0.1056583755; //From PDG 2024
-
   // Jet
   TTreeReaderValue<Int_t> nref = {fReader, "nref"};
   TTreeReaderArray<Float_t> jteta = {fReader, "jteta"};
@@ -298,7 +283,7 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
   //TTreeReaderArray<Float_t> jtgirth = {fReader, "jt_girth"};
   //TTreeReaderArray<Float_t> jtdyndeltaR = {fReader, "jtdyn_deltaR"};
 
-  // JEC
+  // JEC and JER
   vector<string> Files;
   // L2Relative is applied to BOTH Data and MC (the two files are actually identical)
   // L2Residual applied only to Data
@@ -317,6 +302,27 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
   }
   // ---------------------
   JetUncertainty JEU("Autumn18_HI_V8_MC_Uncertainty_AK2PF.txt"); //!!! Old, update
+
+  // --- Initialize JER Provider ---
+  JERProvider jer;
+  if (!isData) {
+    // Is MC
+    cout << "Initializing JER..." << endl;
+    // Load both SF and Resolution Files
+    jer.LoadSF("Autumn18_RunD_V7b_MC_SF_AK4PF.txt");
+    jer.LoadResolution("Autumn18_RunD_V7b_MC_PtResolution_AK4PF.txt");
+    // Note: We typically don't apply Phi/Eta smearing for standard analysis, so we only load PtResolution.
+  }
+
+  // Pre-calculate GenJet Vectors for easier passing to JER function
+  // Declare BEFORE the event loop
+  std::vector<float> v_gen_pts, v_gen_etas, v_gen_phis;
+  v_gen_pts.reserve(100); // Reserve memory once to avoid re-allocations, reserve(100) does not set a hard limit.
+  v_gen_etas.reserve(100);
+  v_gen_phis.reserve(100);
+
+  // Initialize Jet Selector with specific map file
+  JetSelect js("Winter24Prompt24_2024BCDEFGHI.root");
 
   // Gen jets
   TTreeReaderValue<Int_t> ngen = {fReader, isData ? "nref" : "ngen"};
@@ -351,12 +357,34 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
   inputTree->SetBranchAddress("jet_phi_MinBias", &jet_phi_MinBias);
   inputTree->SetBranchAddress("jet_eta_MinBias", &jet_eta_MinBias);
 
-  // Pre-count the MinBias events Before the event loop, count how many events you actually have for each bin.
+  // --- OPTIMIZATION START: Cache MinBias events into RAM ---
+  std::cout << "------------------------------------------------" << std::endl;
+  std::cout << "Caching MinBias events into memory..." << std::endl;
+
+  std::cout << "Found " << inputTree->GetEntries() << " MinBias entries in 'jet_tree'." << std::endl;
+  std::cout << "Caching into memory... " << std::flush; // Flush ensures text appears immediately
+
+  std::map<int, std::vector<MinBiasJetInfo>> minBiasCache; // Map: Key = Bin ID, Value = Vector of jets in that bin
   std::map<int, int> mb_counts;
-  for(int i=0; i < inputTree->GetEntries(); i++) {
-    inputTree->GetEntry(i);
+
+  // Read the MinBias tree exactly ONCE
+  for(int iEntry=0; iEntry < inputTree->GetEntries(); iEntry++){
+    inputTree->GetEntry(iEntry);
+    // Pre-count the MinBias events before event loop, count how many events you actually have for each bin.
     mb_counts[bin_MinBias]++;
+    // Store only the necessary info
+    MinBiasJetInfo info;
+    info.pt = jet_pt_MinBias;
+    info.eta = jet_eta_MinBias;
+    info.phi = jet_phi_MinBias;
+
+    // Push into the specific bin vector
+    minBiasCache[bin_MinBias].push_back(info);
   }
+  std::cout << "Done." << std::endl;
+  std::cout << "Cached " << minBiasCache.size() << " unique bins." << std::endl;
+  std::cout << "Caching complete " << std::endl;
+  // --- OPTIMIZATION END ---
 
   // --- Bin definition for MinBias matching (based on selected option) ---
   std::vector<std::pair<float, float>> primary_bins; // For HF or VZ only
@@ -407,11 +435,9 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
     std::cerr << "Invalid binning_option: " << binning_option << std::endl;
     return;
   }
+  std::cout << "------------------------------------------------" << std::endl;
   // --- End of bin definition ---
 
-  // TTree entries
-  Int_t nEntries_MinBias = inputTree->GetEntries();
-  std::cout << "Reading " << nEntries_MinBias << " entries from 'jet_tree'..." << std::endl;
   // Canvas
   gStyle->SetOptStat(0);
   TCanvas* c1 = new TCanvas("c1", "c1", 1200, 800);
@@ -602,8 +628,22 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
 
   unsigned int iEvent = 0;
   unsigned int itotev = 0;
+  std::cout << "Starting Analysis Loop over " << total_events << " events..." << std::endl;
+  int report_step = static_cast<unsigned int>(total_events / 100); // Update 100 times
   while (fReader.Next()) {
+    // Clear GenJet Vectors
+    v_gen_pts.clear();
+    v_gen_etas.clear();
+    v_gen_phis.clear();
     itotev++;
+    // --- Progress Bar ---
+    if (itotev % report_step == 0 || itotev == 1) {
+        double progress = 100.0 * itotev / total_events;
+        // \r returns cursor to start of line, allowing us to overwrite the previous number
+        std::cout << "\r[Analysis] Processing: " << itotev << " / " << total_events
+                  << " (" << std::fixed << std::setprecision(2) << progress << "%)" << std::flush;
+    }
+    // --- end of Progress Bar ---
     if(*pprimaryVertexFilter<=0) continue;
     if(*pclusterCompatibilityFilter<=0) continue;
     if(*pphfCoincFilter2Th4<=0) continue;
@@ -632,7 +672,7 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
       scale*=norm_MC_w*(*weight);
     }
     if (!isData && weight_phase != 0) {
-      if (file_name.Contains("signal")) scale*=norm_MC_w_ncoll*weight_cent*(*weight);
+      if (isSignal) scale*=norm_MC_w_ncoll*weight_cent*(*weight);
       else scale*=norm_MC_w_ncoll*weight_cent;
     }
     // Selection on centrality bin
@@ -795,8 +835,7 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
     h_mumu->Fill(Z.M(), scale);
     h_Z_pt->Fill(Z.Pt(), scale);
 
-    // Pre-calculate GenJet Vectors for easier passing to JER function
-    std::vector<float> v_gen_pts, v_gen_etas, v_gen_phis;
+    // Fill GenJet Vectors pre-calcuted for easier passing to JER function
     if (!isData) {
       for (int i = 0; i < *ngen; i++) {
         v_gen_pts.push_back(genpt[i]);
@@ -949,27 +988,30 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
       }
       // --- End of bin determination ---
 
+      // Mixing events with MinBias, assumes 'current_global_bin_n' and 'events_per_mixed_bin_limit' events for each bin
       if (current_global_bin_n != -1) { // Only proceed with MinBias matching if a valid bin was found
-        // Loop over the TTree entries for mixing events with MinBias, assumes the 'bin_MinBias' tree
-        // corresponds to 'current_global_bin_n' and contains 'events_per_mixed_bin_limit' events for each bin
-        double events_filled_for_this_bin_in_MinBias = 0;
-        for(int iEntry=0; iEntry< nEntries_MinBias; iEntry++){
-          inputTree->GetEntry(iEntry); // Read all branch values for the current entry
-          if (current_global_bin_n == bin_MinBias) { // Match by global bin number
-            // Determine weight for this specific bin, if n events the weight is 1/n
-            double n_mix = mb_counts[current_global_bin_n];
-            double mixing_weight = (n_mix > 0) ? (1.0 / n_mix) : 0.0;
+        // Check if this bin exists in our cache
+        if (minBiasCache.count(current_global_bin_n)) {
+          // Access the specific vector of jets for this bin directly
+          const std::vector<MinBiasJetInfo>& cachedJets = minBiasCache[current_global_bin_n];
+          double events_filled_for_this_bin_in_MinBias = 0;
+          // Determine weight (using the size of the cached vector)
+          double n_mix = mb_counts[current_global_bin_n]; // Or use cachedJets.size() if they are 1-to-1
+          double mixing_weight = (n_mix > 0) ? (1.0 / n_mix) : 0.0;
+          // Loop ONLY over the jets that belong to this bin
+          for (const auto& mbJet : cachedJets) {
+            // Use mbJet.pt, mbJet.eta, mbJet.phi instead of tree variables
             // Apply same jet cuts as for signal jets
-            if (jet_pt_MinBias > jtpt_corr[ijetLeading]) {
-              if (getDeltaR(jet_eta_MinBias, jet_phi_MinBias, muMinus.Eta(), muMinus.Phi()) >= 0.2 &&
-                  getDeltaR(jet_eta_MinBias, jet_phi_MinBias, muPlus.Eta(), muPlus.Phi()) >= 0.2) {
-                double dPhi_Zj_MinBias = RelativePhi(Z.Phi(), jet_phi_MinBias);
-                double xZj_MinBias = jet_pt_MinBias/Z.Pt();
+            if (mbJet.pt > jtpt_corr[ijetLeading]) {
+              if (getDeltaR(mbJet.eta, mbJet.phi, muMinus.Eta(), muMinus.Phi()) >= 0.2 &&
+                  getDeltaR(mbJet.eta, mbJet.phi, muPlus.Eta(), muPlus.Phi()) >= 0.2) {
+                double dPhi_Zj_MinBias = RelativePhi(Z.Phi(), mbJet.phi);
+                double xZj_MinBias = mbJet.pt / Z.Pt();
                 h_deltaPhi_Zj_MinBias->Fill(dPhi_Zj_MinBias, scale * mixing_weight);
                 //Remove overflow and put it in the last bin
                 //if (xZj_MinBias > xZj_max) xZj_MinBias = xZj_max - 0.01;
                 if (dPhi_Zj_MinBias > 7 * TMath::Pi() / 8) {
-                  h_jet_pt_lj_MinBias->Fill(jet_pt_MinBias, scale * mixing_weight);
+                  h_jet_pt_lj_MinBias->Fill(mbJet.pt, scale * mixing_weight);
                   h_xZj_MinBias->Fill(xZj_MinBias, scale * mixing_weight);
                   if (itotev < 0.7*Ngen) h_xZj_MinBias_train_closure->Fill(xZj_MinBias, scale * mixing_weight);
                   else h_xZj_MinBias_test_closure->Fill(xZj_MinBias, scale * mixing_weight);
@@ -984,10 +1026,10 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
             }
             events_filled_for_this_bin_in_MinBias++;
           }
-        }
-        if (events_filled_for_this_bin_in_MinBias != events_per_mixed_bin_limit) {
-        std::cout << "--- Warning! MinBias bin " << current_global_bin_n << " has only " << events_filled_for_this_bin_in_MinBias
-                  << " events (expected " << events_per_mixed_bin_limit << "). ---" << std::endl;
+          if (events_filled_for_this_bin_in_MinBias != events_per_mixed_bin_limit) {
+          std::cout << "--- Warning! MinBias bin " << current_global_bin_n << " has only " << events_filled_for_this_bin_in_MinBias
+                    << " events (expected " << events_per_mixed_bin_limit << "). ---" << std::endl;
+          }
         }
       }
 
@@ -1052,17 +1094,6 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
   h_jet_pt_lj_subtracted->SetTitle("h_jet_pt_lj - h_jet_pt_lj_MinBias (rescaled)");
   h_jet_pt_lj_subtracted->Add(h_jet_pt_lj_MinBias, -1); // The -1 performs the subtraction
 
-  cout << "Bkg Integral (dPhi): " << h_deltaPhi_Zj_MinBias->Integral(0, h_deltaPhi_Zj_MinBias->GetNbinsX()+1) << endl;
-  cout << "Bkg Integral (pT): " << h_jet_pt_lj_MinBias->Integral(0, h_jet_pt_lj_MinBias->GetNbinsX()+1) << " fraction: "
-       << h_jet_pt_lj_MinBias->Integral(0, h_jet_pt_lj_MinBias->GetNbinsX()+1)/h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1)
-       << endl;
-
-  if (!isData) {
-    cout << "Raw - True (pT): " << h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1) - h_jet_pt_lj_matched->Integral(0, h_jet_pt_lj_matched->GetNbinsX()+1)
-         << " fraction: " << (h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1) - h_jet_pt_lj_matched->Integral(0, h_jet_pt_lj_matched->GetNbinsX()+1))/h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1)
-         << endl;
-  }
-
   TH1F* h_xZj_subtracted = (TH1F*)h_xZj->Clone("h_xZj_subtracted");
   h_xZj_subtracted->SetDirectory(0);
   h_xZj_subtracted->SetTitle("h_xZj - h_xZj_MinBias (rescaled)");
@@ -1088,9 +1119,45 @@ void analyze_HI_TTreeReader_ZMM(const char * sample_name = "data", int weight_ph
   h_response_closure_subtracted->SetTitle("h_response_closure_unmatched - h_response_MinBias_closure (rescaled)");
   h_response_closure_subtracted->Add(h_response_MinBias_closure, -1); // The -1 performs the subtraction
 
-  cout << "Number of Z+jet events = " << h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1)
-       << ", if Z_pt>80: " << h_Z_pt_j->Integral(h_Z_pt->FindBin(80), h_Z_pt->GetNbinsX()+1) << endl;
-  cout << "tot ev = " << itotev << endl;
+  // --- Output summary ---
+  // Clear the progress bar line
+  std::cout << "\r[Analysis] Processing: " << total_events << " / " << total_events << " (100.0%) - Complete." << std::endl;
+  std::cout << "------------------------------------------------" << std::endl;
+  std::cout << "--- Analysis Summary ---" << std::endl;
+  std::cout << "Total Events Processed: " << itotev << std::endl;
+
+  double raw_dPhi_integral = h_deltaPhi_Zj->Integral(0, h_deltaPhi_Zj->GetNbinsX()+1);
+  double raw_pt_integral = h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1);
+
+  std::cout << "[Raw Info]" << std::endl;
+  std::cout << "Raw Integral (dPhi):   " << raw_dPhi_integral
+            << "        Raw Integral (pT):    " << raw_pt_integral << std::endl;
+
+  double bkg_dPhi_integral = h_deltaPhi_Zj_MinBias->Integral(0, h_deltaPhi_Zj_MinBias->GetNbinsX()+1);
+  double bkg_pt_integral = h_jet_pt_lj_MinBias->Integral(0, h_jet_pt_lj_MinBias->GetNbinsX()+1);
+  std::cout << "[Background Subtraction Info]" << std::endl;
+  std::cout << "Bkg Integral (dPhi):   " << bkg_dPhi_integral
+            << "        Bkg Integral (pT):    " << bkg_pt_integral << std::endl;
+  std::cout << "Bkg Fraction (dPhi):   " << (raw_pt_integral > 0 ? bkg_dPhi_integral/raw_pt_integral : 0)
+            << "        Bkg Fraction (pT):    " << (raw_pt_integral > 0 ? bkg_pt_integral/raw_pt_integral : 0) << std::endl;
+
+  if (!isData) {
+      double matched_dPhi_integral = h_deltaPhi_Zj_matched->Integral(0, h_deltaPhi_Zj_matched->GetNbinsX()+1);
+      double matched_pt_integral = h_jet_pt_lj_matched->Integral(0, h_jet_pt_lj_matched->GetNbinsX()+1);
+      std::cout << "[MC Matching Info]" << std::endl;
+      std::cout << "Raw - Matched (dPhi):  " << raw_dPhi_integral - matched_dPhi_integral
+                << "        Raw - Matched (pT):   " << raw_pt_integral - matched_pt_integral << std::endl;
+      std::cout << "Fraction (dPhi):       " << (raw_dPhi_integral > 0 ? (raw_dPhi_integral - matched_dPhi_integral)/raw_dPhi_integral : 0)
+                << "        Fraction (pT):        " << (raw_pt_integral > 0 ? (raw_pt_integral - matched_pt_integral)/raw_pt_integral : 0) << std::endl;
+  }
+
+  std::cout << "[Z Boson Info]" << std::endl;
+  std::cout << "Z+Jet Events found:    " << raw_pt_integral << std::endl;
+  std::cout << "Z+Jet (pT_Z > 60):     " << h_Z_pt_j->Integral(h_Z_pt->FindBin(60), h_Z_pt->GetNbinsX()+1)
+            << "        Z+Jet (pT_Z > 80):     " << h_Z_pt_j->Integral(h_Z_pt->FindBin(80), h_Z_pt->GetNbinsX()+1) << std::endl;
+  std::cout << "--- End Analysis Sum ---" << std::endl;
+  std::cout << "------------------------------------------------" << std::endl;
+  // --- End output summary ---
 
   c1->cd(1);
   h_mumu->Draw();

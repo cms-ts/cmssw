@@ -1,42 +1,36 @@
 /*
-////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                    //
-//   ANALYSIS MACRO: MinBias Library Producer for Mixed Event Subtraction             //
-//                                                                                    //
-//   File:    analyze_MinBias_TTreeReader.C                                           //
-//   Author:  Raffaele                                                                //
-//   Date:    2024-2026                                                               //
-//                                                                                    //
-//   DESCRIPTION:                                                                     //
-//   Creates a library of MinBias events to be used for Mixed Event Background        //
-//   Subtraction in the Z+Jet analysis. It reads MinBias tuples, processes jets,      //
-//   and stores event info (HF, VZ, Cen) and Leading Jet info into a flat TTree.      //
-//                                                                                    //
-//   CORE WORKFLOW:                                                                   //
-//   1. Initialization:       Load Chains, JEC, JER, and Jet Selectors.               //
-//   2. Binning Setup:        Define mixing bins (HF, VZ, or VZ+Centrality).          //
-//   3. Event Loop:           Apply filters, calculate Centrality/Rho.                //
-//   4. Jet Processing:       Apply JEC/JER, cuts cleaning.                           //
-//   5. Storage:              Fill 'jet_tree' with event metadata and leading jet.    //
-//                                                                                    //
-//   USAGE EXAMPLES:                                                                  //
-//   root -l 'analyze_MinBias_TTreeReader.C(true, 0)'   // Data (HF Binning)          //
-//   root -l 'analyze_MinBias_TTreeReader.C(false, 2)'  // MC (VZ+Cen Binning)        //
-//                                                                                    //
-//   PARAMETERS:                                                                      //
-//   ------------------------------------------------------------------------------   //
-//   [isData] (bool)        True for Data, False for MC.                              //
-//                                                                                    //
-//   [use_binning_option]   Controls the binning scheme for mixing:                   //
-//       0: HF binning only                                                           //
-//       1: VZ binning only                                                           //
-//       2: VZ + Centrality binning (Combined - Recommended for Analysis)             //
-//                                                                                    //
-//   DEPENDENCIES:                                                                    //
-//   - JetCorrector.h, JERProvider.h, JetSelection_PbPb.h                             //
-//   - binning_config.h                                                               //
-//                                                                                    //
-////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                            //
+//   ANALYSIS MACRO: MinBias Library Producer for Mixed Event Subtraction                                                     //
+//                                                                                                                            //
+//   File:    analyze_MinBias_TTreeReader.C                                                                                   //
+//   Author:  Raffaele                                                                                                        //
+//   Date:    2024-2026                                                                                                       //
+//                                                                                                                            //
+//   DESCRIPTION:                                                                                                             //
+//   Creates a library of MinBias events to be used for Mixed Event Background Subtraction in the Z+Jet analysis.             //
+//   It reads MinBias tuples, processes jets, and stores event info (HF, VZ, Cen) and Leading Jet info into a flat TTree.     //
+//                                                                                                                            //
+//   CORE WORKFLOW:                                                                                                           //
+//   1. Initialization:   Load Chains, JEC, JER, and Jet Selectors.    2. Bin Setup:     Define mixing bins (HF, VZ, VZ+Cen). //
+//   3. Event Loop:       Apply filters, calculate Centrality/Rho.     4. Jet Process:   Apply JEC/JER, cuts cleaning.        //
+//   5. Storage:          Fill 'jet_tree' with event data and jet_l.                                                          //
+//                                                                                                                            //
+//   USAGE EXAMPLES:                                                                                                          //
+//   root -l 'analyze_MinBias_TTreeReader.C(true, 0)'   // Data (HF Binning)                                                  //
+//   root -l 'analyze_MinBias_TTreeReader.C(false, 2)'  // MC (VZ + Cen Binning)                                              //
+//                                                                                                                            //
+//   PARAMETERS:                                                                                                              //
+//   ------------------------------------------------------------------------------                                           //
+//   [isData] (bool)        True for Data, False for MC.                                                                      //
+//                                                                                                                            //
+//   [use_binning_option]   Controls the binning scheme for mixing:                                                           //
+//    0: HF binning only           1: VZ binning only             2: VZ + Cen (Combined - Recommended for Analysis)           //
+//                                                                                                                            //
+//   DEPENDENCIES:                                                                                                            //
+//   - JetCorrector.h, JERProvider.h, JetSelection_PbPb.h         - binning_config.h                                          //
+//                                                                                                                            //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 */
 
 // C++ includes

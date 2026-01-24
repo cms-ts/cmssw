@@ -32,6 +32,13 @@
     return std::sqrt(dEta * dEta + dPhi * dPhi);
   }
 
+  // Simple structure for MinBias Jets
+  struct MinBiasJetInfo {
+    float pt;
+    float eta;
+    float phi;
+  };
+
 // =================================================================================
 //   FILE LOADING HELPERS
 // =================================================================================

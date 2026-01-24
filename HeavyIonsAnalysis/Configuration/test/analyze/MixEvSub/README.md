@@ -21,6 +21,16 @@ The macro accepts two arguments:
 
 ### Usage Examples
 
+To produce all files at once, use the provided shell script.
+
+```bash
+# Ensure the script is executable
+chmod +x do_analyze_Minbias.sh
+
+# Run the script
+./do_analyze_Minbias.sh
+```
+
 **Option 0: HF Binning (Default)**
 Produces files with suffix `_HF.root`.
 
