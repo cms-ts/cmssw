@@ -45,6 +45,10 @@
 
   // Helper to load a weight histogram from a file safely
   TH1D* loadWeightHist(const std::string& filepath, const std::string& histname) {
+
+    // Output the name of the file being opened
+    std::cout << "Opening file for weighting: " << filepath << std::endl;
+
     TFile* f = TFile::Open(filepath.c_str(), "READ");
     if (!f || f->IsZombie()) {
       std::cerr << "Error: Cannot open file " << filepath << std::endl;

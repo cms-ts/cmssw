@@ -115,6 +115,8 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
   //TTreeReaderValue<float> Ncoll = {fReader, "Ncoll"}; // Ncoll
 
   TTreeReaderArray<double> rho = {fReader, "rho"};
+  TTreeReaderArray<double> etaMin = {fReader, "etaMin"};
+  TTreeReaderArray<double> etaMax = {fReader, "etaMax"};
 
   // Filters
   TTreeReaderValue<int> pprimaryVertexFilter = {fReader, "pprimaryVertexFilter"};
@@ -386,11 +388,6 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
     iEvent++;
     //cout << "***iEvent = " << iEvent << "\t run = " << run << "\t lumi = " << lumi << "\t evt = " << event << endl;
 
-    // Calculate average rho for JER
-    double sum_rho = 0;
-    for (unsigned int i = 0; i < rho.GetSize(); i++) sum_rho += rho[i];
-    double avg_rho = (rho.GetSize() > 0) ? sum_rho / rho.GetSize() : 0;
-
     // Pre-calculate GenJet Vectors for JER
     std::vector<float> v_gen_pts, v_gen_etas, v_gen_phis;
     if (!isData) {
@@ -410,10 +407,18 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
       JEC.SetJetPhi(jtphi[ijet]);
       double Correction = JEC.GetCorrection();
       double CorrectedPT = JEC.GetCorrectedPT();
+      // For JER, we need to find the rho value in the bin that contains the jet
+      double jetRho = 1e-6; // Consider that in HiFJRhoProducer.cc, they initialize rho with value of 1e-6
+      for (unsigned int iEta = 0; iEta < etaMin.GetSize(); iEta++) {
+        if (jteta[ijet] >= etaMin[iEta] && jteta[ijet] < etaMax[iEta]) {
+            jetRho = rho[iEta];
+            break;
+        }
+      }
       // Apply JER if MC
       double pt_final = CorrectedPT;
       if (!isData) {
-        pt_final = jer.GetSmearedPt(CorrectedPT, jteta[ijet], jtphi[ijet], avg_rho, v_gen_pts, v_gen_etas, v_gen_phis, 0);
+        pt_final = jer.GetSmearedPt(CorrectedPT, jteta[ijet], jtphi[ijet], jetRho, v_gen_pts, v_gen_etas, v_gen_phis, 0);
       }
       jtpt_corr[ijet] = pt_final;
       // Selections

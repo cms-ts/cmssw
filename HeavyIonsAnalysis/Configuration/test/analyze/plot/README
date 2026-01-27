@@ -1,18 +1,29 @@
 //--------------------------------
-  Plot data and MC signal plots
+//  Plot veto check
 //--------------------------------
+// Macro: plot_veto_check.C
+// Arguments: (collision_type, isData)
 
+// 1. PbPb23 (Defaults)
+root -l -b -q plot_veto_check.C                    // Data (Default)
+root -l -b -q 'plot_veto_check.C("PbPb23", false)'  // MC Signal
+
+// 2. ppref24
+root -l -b -q 'plot_veto_check.C("ppref24", true)'  // Data
+root -l -b -q 'plot_veto_check.C("ppref24", false)' // MC Signal
+
+// 3. Use "PbPb24" for PbPb24
+root -l -b -q 'plot_veto_check.C("PbPb24", true)'   // Data
+
+// 4. Specific Background MC (e.g., TT, WZ, etc.)
+// You can specify MC sample label modifying inside plot_veto_check.C
+
+// --- Deprecated ---
+//--------------------------------
+//  Plot data and MC signal plots
+//--------------------------------
 //To plot one histo, for ex. h_mumu_j
-root -l -b -q 'plot.C("h_mumu_j")'
+root -l -b -q 'old_plot.C("h_mumu_j")'
 //To plot all histo
-chmod +x do_plot_all.sh
+chmod +x old_do_plot_all.sh
 ./do_plot_all.sh
-
-//--------------------------------
-  Plot veto check
-//--------------------------------
-
-//For data
-root -l -b -q plot_veto_check.C
-//For MC
-root -l -b -q 'plot_veto_check.C("output_HI_mu_MC_signal.root")'

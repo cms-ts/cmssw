@@ -9,10 +9,14 @@
 #include "TRatioPlot.h"
 #include "TLatex.h"
 #include "TGraph.h"
-//#include "../MC_samples.h" // Include the header file
+#include "../../helpers.h" // For getLumiFromSummary
 #include "../tdrstyle.C"
 
-void JEWEL_weight_3(int after_flag  = 0) {
+void JEWEL_weight_3(const char * collision_type = "PbPb23", int after_flag = 0) {
+
+        // Setup Collision Logic ---
+        TString s_coll = collision_type;
+        bool isPbPb = s_coll.Contains("PbPb");
 
         //histogram parameters
         std::string histo_name = "h_xZj_for_JEWEL_w";
@@ -25,40 +29,92 @@ void JEWEL_weight_3(int after_flag  = 0) {
 
         setTDRStyle();
 
-        double Lumi = 1.64; // nb-1
+        double Lumi = 1.;
         double number_A = 208; // Lead
+
+        // --- Read Lumi Automatically ---
+        if (s_coll.Contains("PbPb23"))      Lumi = getLumiFromSummary("../../brilcalc_Collisions2023HI.csv");
+        else if (s_coll.Contains("PbPb24")) Lumi = getLumiFromSummary("../../brilcalc_Collisions2024_HI.csv");
+        else if (s_coll.Contains("ppref24")) Lumi = getLumiFromSummary("../../brilcalc_Collisions2024_ppref.csv");
+
+        if (isPbPb) std::cout << "Parsed Lumi  : " << Lumi << " nb^-1" << std::endl;
+        else        std::cout << "Parsed Lumi  : " << Lumi << " pb^-1" << std::endl;
 
         // Create legend
         double xmin_leg = (after_flag == 0) ? 0.6 : 0.5;
         TLegend* legend = new TLegend(xmin_leg, 0.7, 0.8, 0.8);
         legend->SetBorderSize(0);
 
-        // Open MC file
-        std::string MC_file_name = "../../plot/output_HI_mu_MC_signal.root";
-        if (after_flag == 1) MC_file_name = "../../syst_prior_model/output_HI_mu_MC_prior_model.root";
-        TFile* file_ = TFile::Open(MC_file_name.c_str(), "READ");
-        TDirectoryFile* dir = (TDirectoryFile*)file_->Get("HI/Muons");
+        // Determine internal names (HI, HI24, ppref)
+        TString name_output = "HI";
+        if (s_coll.Contains("PbPb24")) name_output = "HI24";
+        else if (s_coll.Contains("ppref24")) name_output = "ppref";
+
+        // Open MC file Dynamically
+        TString MC_file_name;
+        if (after_flag == 0) {
+          MC_file_name = "../../plot/output_" + name_output + "_mu_MC_signal.root";
+        } else {
+          MC_file_name = "../../syst_prior_model/output_" + name_output + "_mu_MC_prior_model.root";
+        }
+        std::cout << "Opening MC file   : " << MC_file_name << std::endl;
+
+        TFile* file_ = TFile::Open(MC_file_name, "READ");
+        if (!file_ || file_->IsZombie()) {
+          std::cerr << "Error: Cannot open MC file " << MC_file_name << std::endl;
+          return;
+        }
+
+        TDirectoryFile* dir = (TDirectoryFile*)file_->Get(name_output + "/Muons");
+        if (!dir) {
+          std::cerr << "Error: Directory " << name_output << "/Muons not found in MC file." << std::endl;
+          return;
+        }
         TH1D* h = (TH1D*)dir->Get(histo_name.c_str());
+        if (!h) {
+          std::cerr << "Error: Histogram " << histo_name << " not found." << std::endl;
+          return;
+        }
+
+        // --- Open JEWEL File (Switch between QGP and Vac) ---
+        TString jewel_path;
+        if (isPbPb) {
+          // PbPb Case: Use QGP
+          jewel_path = "/gfsvol01/cms/users/rdelliga/work/Hi_forest/JEWEL/CMSSW_13_2_13/src/jewel-2.4.0/jewel_converted_Zj_QGP.pu14test.root";
+        } else {
+          // pp/ppref Case: Use Vacuum
+          jewel_path = "/gfsvol01/cms/users/rdelliga/work/Hi_forest/JEWEL/CMSSW_13_2_13/src/jewel-2.4.0/jewel_converted_Zj_vac.pu14test.root";
+        }
+
+        std::cout << "Opening Jewel file   : " << jewel_path << std::endl;
+
+        TFile* file_JEWEL = TFile::Open(jewel_path, "READ");
+        if (!file_JEWEL || file_JEWEL->IsZombie()) {
+          std::cerr << "Error: Cannot open JEWEL file " << jewel_path << std::endl;
+          return;
+        }
         // Get JEWEL histogram
-        TFile* file_JEWEL = TFile::Open("/gfsvol01/cms/users/rdelliga/work/Hi_forest/JEWEL/CMSSW_13_2_13/src/jewel-2.4.0/jewel_converted_Zj_QGP.pu14test.root", "READ");
-        file_JEWEL->cd();
-        TH1D* h_JEWEL = (TH1D*)gDirectory->Get(histo_name.c_str());
+        TH1D* h_JEWEL = (TH1D*)file_JEWEL->Get(histo_name.c_str());
+        if (!h_JEWEL) {
+          std::cerr << "Error: JEWEL Histogram " << histo_name << " not found." << std::endl;
+          return;
+        }
 
         // Calculate normalization
         cout << "before norm MC: " << h->Integral(0, h->GetNbinsX()+1) << " JEWEL: " << h_JEWEL->Integral(0, h_JEWEL->GetNbinsX()+1) << endl; 
         double norm_MC = h->Integral(0, h->GetNbinsX()+1);
         double norm_JEWEL = h_JEWEL->Integral(0, h_JEWEL->GetNbinsX()+1);
-        h->Scale(1./norm_MC);
-        h_JEWEL->Scale(1./norm_JEWEL);
+        if (norm_MC > 0) h->Scale(1./norm_MC);
+        if (norm_JEWEL > 0) h_JEWEL->Scale(1./norm_JEWEL);
         cout << "after norm MC: " << h->Integral(0, h->GetNbinsX()+1) << " JEWEL: " << h_JEWEL->Integral(0, h_JEWEL->GetNbinsX()+1) << endl;
 
         // Create canvas
-        int H_ref = 800; 
-        int W_ref = 800; 
+        int H_ref = 800;
+        int W_ref = 800;
 
         // references for T, B, L, R
         float T = 0.08*H_ref;
-        float B = 0.12*H_ref; 
+        float B = 0.12*H_ref;
         float L = 0.12*W_ref;
         float R = 0.04*W_ref;
         TCanvas *c = new TCanvas("c", "c", W_ref, H_ref);
@@ -110,7 +166,8 @@ void JEWEL_weight_3(int after_flag  = 0) {
         }
 
         // Legend
-        legend->AddEntry(h_JEWEL, "JEWEL (truth) med", "epl");
+        if (isPbPb) legend->AddEntry(h_JEWEL, "JEWEL (truth) med", "epl");
+        else legend->AddEntry(h_JEWEL, "JEWEL (truth) vac", "epl");
         if (after_flag == 0) legend->AddEntry(h, "POWHEG+PYTHIA", "epl");
         else legend->AddEntry(h, "POWHEG+PYTHIA (JEWEL rew)", "epl");
 
@@ -141,8 +198,13 @@ void JEWEL_weight_3(int after_flag  = 0) {
         latex2->SetTextColor(kBlack); // Set text color (optional)
         latex2->SetTextFont(42);
 
-        //latex->DrawLatexNDC(0.24,0.86,TString::Format("#int JEWEL = %.0f", h_JEWEL->Integral(0, h_JEWEL->GetNbinsX()+1)));
-        latex2->DrawLatexNDC(0.52,0.92,TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", Lumi));
+        // --- Adaptive Label ---
+        if (isPbPb) {
+          latex2->DrawLatexNDC(0.54, 0.92, TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", Lumi));
+        } else {
+          // Use pp label and pb-1 units for ppref
+          latex2->DrawLatexNDC(0.59, 0.92, TString::Format("pp %.0f pb^{-1} (5.36 TeV)", Lumi));
+        }
 
         // Set titles and labels and lines
         h_ratio->GetLowerRefYaxis()->SetTitle("JEW/POW");
@@ -157,14 +219,15 @@ void JEWEL_weight_3(int after_flag  = 0) {
         h_weight_JEWEL->Divide(h);
 
         if (after_flag == 0) {
-          TFile* file_weight_JEWEL = new TFile("weight_JEWEL.root", "RECREATE");
+          TFile* file_weight_JEWEL = new TFile("weight_" + name_output + "_JEWEL.root", "RECREATE");
           h_weight_JEWEL->Write("h_weight_JEWEL");
           file_weight_JEWEL->Close();
+          std::cout << "Weight file created: " << "weight_" << name_output << "_JEWEL.root" << std::endl;
         }
 
         // Print the canvas
         std::string is_bef_or_aft = "_before.pdf";
         if (after_flag == 1) is_bef_or_aft = "_after.pdf";
-        c->Print((histo_name + is_bef_or_aft).c_str());
+        c->Print((histo_name + "_" + name_output.Data() + is_bef_or_aft).c_str());
 }
 

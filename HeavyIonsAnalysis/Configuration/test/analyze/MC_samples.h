@@ -14,6 +14,7 @@ struct FileInfo {
 };
 
 // Create a vector of FileInfo structs for PbPb23
+// xsec in nb
 const std::vector<FileInfo> files = {
     {"/eos/infnts/cms/store/user/kdeleo/WplusToMuplusNu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test13_ZMM_WplusToM/250403_145634/0000.root", "output_HI_mu_MC_WplusToMuplusNu.root", "WplusToMuplusNu", 2.719 * 1000 / 1000, 9985999},
     {"/eos/infnts/cms/store/user/kdeleo/singleT_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test13_ZMM_singleT/250403_075844/0000.root", "output_HI_mu_MC_singleT.root", "singleT", 1.494 * 10 / 1000, 9928620},
@@ -31,7 +32,7 @@ const std::vector<FileInfo> files = {
 };
 
 // PPref 24
-
+// xsec in pb
 const std::vector<FileInfo> files_ppref = {
     {"/eos/infnts/cms/store/user/kdeleo/WplusToMuplusNu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test18_mc_ppRef_ZMM_WplusToMu/251121_153250/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_WplusToMuplusNu.root", "WplusToMuplusNu", 4.09 * 1000, 9730000},
     {"/eos/infnts/cms/store/user/kdeleo/T_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test18_mc_ppRef_ZMM_SingleT/251124_103245/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_singleT.root", "singleT", 3.06, 10000000},

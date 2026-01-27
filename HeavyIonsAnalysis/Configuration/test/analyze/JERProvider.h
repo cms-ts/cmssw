@@ -36,27 +36,48 @@ public:
     JERProvider(int seed = 12345) { rand.SetSeed(seed); }
 
     // Load Scale Factor text file
+    // Load Scale Factor text file
     void LoadSF(std::string filename) {
       std::ifstream file(filename);
       if (!file.is_open()) { std::cerr << "JERProvider Error: Cannot open SF file " << filename << std::endl; return; }
       std::string line;
       while (std::getline(file, line)) {
         // Skip header (starts with {)
-        if (line.empty() || line[0] == '{') continue; // Skip header
-        std::stringstream ss(line);
-        // Format: EtaMin EtaMax PtMin PtMax Unused SF SFDown SFUp
-        // Example: -5.191 -3.139 0 7000 3 1.0495 0.8770 1.2220
-        float etaMin, etaMax, ptMin, ptMax;
-        int nParams;
-        float sf, sf_down, sf_up;
+        if (line.empty() || line[0] == '{') continue;
 
-        if (!(ss >> etaMin >> etaMax >> ptMin >> ptMax >> nParams >> sf >> sf_down >> sf_up)) continue;
+        std::stringstream ss(line);
+        std::vector<float> tokens;
+        float temp;
+        while (ss >> temp) tokens.push_back(temp);
 
         SFRecord r;
-        r.etaMin = etaMin; r.etaMax = etaMax;
-        r.ptMin = ptMin;   r.ptMax = ptMax;
-        r.sf = sf; r.sf_down = sf_down; r.sf_up = sf_up;
-        sfRecords.push_back(r);
+
+        // CASE 1: Standard 8-column format (Eta + Pt bins)
+        // Format: EtaMin EtaMax PtMin PtMax nParams SF SFDown SFUp
+        if (tokens.size() >= 8) {
+          r.etaMin  = tokens[0];
+          r.etaMax  = tokens[1];
+          r.ptMin   = tokens[2];
+          r.ptMax   = tokens[3];
+          // tokens[4] is nParams (usually 3), skip
+          r.sf      = tokens[5];
+          r.sf_down = tokens[6];
+          r.sf_up   = tokens[7];
+          sfRecords.push_back(r);
+        }
+        // CASE 2: 6-column format (Eta bins only, Pt independent)
+        // Format: EtaMin EtaMax nParams SF SFDown SFUp
+        else if (tokens.size() >= 6) {
+          r.etaMin  = tokens[0];
+          r.etaMax  = tokens[1];
+          r.ptMin   = 0.0;    // Default: valid for all Pt
+          r.ptMax   = 99999.0;// Default: valid for all Pt
+          // tokens[2] is nParams, skip
+          r.sf      = tokens[3];
+          r.sf_down = tokens[4];
+          r.sf_up   = tokens[5];
+          sfRecords.push_back(r);
+        }
       }
       std::cout << "JERProvider: Loaded " << sfRecords.size() << " SF records." << std::endl;
     }
@@ -113,7 +134,16 @@ public:
             float term3 = (r.p2 * r.p2);
 
             float res_sq = term1 + term2 + term3;
-            return (res_sq > 0) ? std::sqrt(res_sq) : 0.0;
+            float final_res = (res_sq > 0) ? std::sqrt(res_sq) : 0.0;
+            // --- ADD THIS SECTION FOR DEBUGGING ---
+/*            std::cout << " [JER DEBUG] Input(Pt=" << pt << ", Eta=" << eta << ", Rho=" << rho << ") "
+                      << "MATCHED Bin (Rho=[" << r.rhoMin << "," << r.rhoMax << "]"
+                      << " Pt=[" << r.ptMin << "," << r.ptMax << "]"
+                      << " Eta=[" << r.etaMin << "," << r.etaMax << "]) "
+                      << "--> Res=" << final_res << std::endl;
+            // --- DEBUGGING END ---
+*/
+            return final_res;
           }
         }
       }

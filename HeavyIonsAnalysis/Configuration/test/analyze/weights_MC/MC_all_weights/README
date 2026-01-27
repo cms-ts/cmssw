@@ -1,13 +1,22 @@
 //--------------------------------
-  Compute sum weights all
+//  Compute sum all weights (MC Normalization)
 //--------------------------------
+// Macro: analyze_HI_TTreeReader_ZMM_all.C
+// Description: Runs over the full MC Signal sample to compute the total sum of weights 
+//              (gen weight, centrality, etc.) needed for correct normalization.
+//
+// Arguments: (collision_type)
 
-//To run analyzer on PbPb 23
-root -l analyze_HI_TTreeReader_ZMM_all.C
-//the output is output_HI_mu_MC_all.root
-// For ppref 24
-root -l 'analyze_HI_TTreeReader_ZMM_all.C(false)'
-//the output is output_ppref_mu_MC_all.root
+// 1. PbPb 2023 (Default)
+root -l -b -q 'analyze_HI_TTreeReader_ZMM_all.C("PbPb23")'
+// Output: output_HI_mu_MC_all.root
 
-//Output is read in the folders plot/ and stack/
-//for MC normalization 
+// 2. PbPb 2024
+root -l -b -q 'analyze_HI_TTreeReader_ZMM_all.C("PbPb24")'
+// Output: output_HI24_mu_MC_all.root
+
+// 3. pp Ref 2024
+root -l -b -q 'analyze_HI_TTreeReader_ZMM_all.C("ppref24")'
+// Output: output_ppref_mu_MC_all.root
+
+// NOTE: These output files are read by analyze_HI_TTreeReader_ZMM.C 

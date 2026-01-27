@@ -9,10 +9,11 @@
 #include "TRatioPlot.h"
 #include "TLatex.h"
 #include "TGraph.h"
+#include "../../helpers.h"           // for getLumiFromSummary, cen tables, etc.
 //#include "../MC_samples.h" // Include the header file
 #include "../tdrstyle.C"
 
-void vz_weight_2(int after_flag  = 0) {
+void vz_weight_2(const char * collision_type = "PbPb23", int after_flag  = 0) {
 
         //histogram parameters
         std::string histo_name = "h_vz";
@@ -24,24 +25,35 @@ void vz_weight_2(int after_flag  = 0) {
 
         setTDRStyle();
 
-        double Lumi = 1.64; // nb-1
         double number_A = 208; // Lead
+        // Collision name
+        TString collision_name = collision_type; // Collision name
+        bool isPbPb = collision_name.Contains("PbPb");
+        // --- Read Lumi Automatically ---
+        double Lumi = 1;
+        if (collision_name.Contains("PbPb23")) Lumi = getLumiFromSummary("../../brilcalc_Collisions2023HI.csv"); // nb-1
+        else if (collision_name.Contains("PbPb24")) Lumi = getLumiFromSummary("../../brilcalc_Collisions2024_HI.csv"); // nb-1
+        else if (collision_name.Contains("ppref24")) Lumi = getLumiFromSummary("../../brilcalc_Collisions2024_ppref.csv"); // pb-1
+        if (isPbPb) std::cout << "Parsed Lumi  : " << Lumi << " nb^-1" << std::endl;
+        else std::cout << "Parsed Lumi  : " << Lumi << " pb^-1" << std::endl;
 
         // Create legend
-        TLegend* legend = new TLegend(0.66, 0.7, 0.88, 0.8);
+        TLegend* legend = new TLegend(0.7, 0.7, 0.9, 0.8);
         legend->SetBorderSize(0);
 
         // Open MC file
-        std::string MC_file_name = "./output_HI_mu_MC_vz_weights.root";
-        if (after_flag == 1) MC_file_name = "../../plot/output_HI_mu_MC_signal.root";
-        TFile* file_ = TFile::Open(MC_file_name.c_str(), "READ");
-        TDirectoryFile* dir = (TDirectoryFile*)file_->Get("HI/Muons");
+        TString name_output = "HI";
+        if (collision_name.Contains("PbPb24")) name_output = "HI24";
+        else if (collision_name.Contains("ppref24")) name_output = "ppref";
+        TString MC_file_name = (after_flag == 0) ? "./output_"+name_output+"_mu_MC_vz_weights.root"
+                                                 : "../../plot/output_"+name_output+"_mu_MC_signal.root";
+        TFile* file_ = TFile::Open(MC_file_name.Data(), "READ");
+        TDirectoryFile* dir = (TDirectoryFile*)file_->Get(name_output+"/Muons");
         TH1D* h = (TH1D*)dir->Get(histo_name.c_str());
         // Get data histogram
-        TFile* file_data = TFile::Open("../../plot/output_HI_mu_data.root", "READ");
-        TDirectoryFile* dir_data = (TDirectoryFile*)file_data->Get("HI/Muons");
+        TFile* file_data = TFile::Open("../../plot/output_"+name_output+"_mu_data.root", "READ");
+        TDirectoryFile* dir_data = (TDirectoryFile*)file_data->Get(name_output+"/Muons");
         TH1D* h_data = (TH1D*)dir_data->Get(histo_name.c_str());
-
         // Calculate normalization
         cout << "before norm MC: " << h->Integral(0, h->GetNbinsX()+1) << " data: " << h_data->Integral(0, h_data->GetNbinsX()+1) << endl; 
         double norm_MC = h->Integral(0, h->GetNbinsX()+1);
@@ -130,7 +142,11 @@ void vz_weight_2(int after_flag  = 0) {
         latex2->SetTextFont(42);
 
         //latex->DrawLatexNDC(0.24,0.86,TString::Format("#int data = %.0f", h_data->Integral(0, h_data->GetNbinsX()+1)));
-        latex2->DrawLatexNDC(0.52,0.92,TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", Lumi));
+        if (isPbPb) {
+          latex2->DrawLatexNDC(0.54, 0.92, TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", Lumi));
+        } else {
+          latex2->DrawLatexNDC(0.59, 0.92, TString::Format("pp %.0f pb^{-1} (5.36 TeV)", Lumi));
+        }
 
         // Set titles and labels and lines
         h_ratio->GetLowerRefYaxis()->SetTitle("Data/MC");
@@ -147,14 +163,16 @@ void vz_weight_2(int after_flag  = 0) {
         h_weight_vz->SetMaximum(5.2);
 
         if (after_flag == 0) {
-          TFile* file_weight_vz = new TFile("weight_vz.root", "RECREATE");
+          TString out_name = "weight_"+name_output+"_vz.root";
+          TFile* file_weight_vz = new TFile(out_name, "RECREATE");
           h_weight_vz->Write("h_weight_vz");
           file_weight_vz->Close();
+          std::cout << "Weight file created: " << out_name << std::endl;
         }
 
         // Print the canvas
         std::string is_bef_or_aft = "_before.pdf";
         if (after_flag == 1) is_bef_or_aft = "_after.pdf";
-        c->Print((histo_name + is_bef_or_aft).c_str());
+        c->Print((histo_name + "_" + name_output.Data() + is_bef_or_aft).c_str());
 }
 

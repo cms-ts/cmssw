@@ -1,6 +1,14 @@
 //--------------------------------
-  Plot data and MC stacks
+//  Plot data and MC stacks
 //--------------------------------
 
-//To plot all histos defined in histo_par structure
+// To plot all histos defined in histo_par structure:
+
+// 1. Default (PbPb23):
 root -l -b -q h_stack.C
+
+// 2. For pp reference (ppref24):
+root -l -b -q 'h_stack.C("ppref24")'
+
+// 3. For 2024 PbPb (PbPb24):
+root -l -b -q 'h_stack.C("PbPb24")'

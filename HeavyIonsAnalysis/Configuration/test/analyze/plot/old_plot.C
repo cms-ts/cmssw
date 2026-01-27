@@ -23,7 +23,7 @@ std::map<std::string, std::tuple<const char*, const char*, int, double, double>>
 //    {"h_jet_deltaR", {"R_{g}", "Events", 10, 0, 0.2}}
 };
 
-void plot(const char* h_n) {
+void old_plot(const char* h_n) {
 // Check if the histogram name exists in the map
     if (histo_params.find(h_n) == histo_params.end()) {
         std::cerr << "Error: Histogram '" << h_n << "' not found in parameter map." << std::endl;
