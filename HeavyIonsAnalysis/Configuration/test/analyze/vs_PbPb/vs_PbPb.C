@@ -16,8 +16,8 @@ void vs_PbPb(bool subtracted = false) {
         std::string string_subtracted = "";
         if (subtracted) string_subtracted = "_subtracted";
         //histogram parameters
-        std::string histo_name = "h_deltaPhi_Zj";
-//        std::string histo_name = "h_xZj";
+//        std::string histo_name = "h_deltaPhi_Zj";
+        std::string histo_name = "h_xZj";
         std::string histo_norm_name = "h_jet_pt_lj";
         std::string x_title = "";
         if (histo_name == "h_deltaPhi_Zj") x_title = "#Delta#phi_{Zj}";

@@ -33,7 +33,7 @@ double RelativePhi(double phi_1,double phi_2) {
 void analyze_ppref_TTreeReader_ZMM(bool isData = true) {
 
   //TTrees
-  TChain data("data"), EventTree("EventTree"), HiTree("HiTree"),  skimanalysis("skimanalysis"), hltanalysis("hltanalysis");
+  TChain data("data"), EventTree("EventTree"), HiTree("HiTree"),  skimanalysis("skimanalysis"), hltanalysis("hltanalysis"), hiFJRhoAnalyzerFinerBins("hiFJRhoAnalyzerFinerBins");
 
   glob_t globlist;
   if (isData) {
@@ -42,7 +42,7 @@ void analyze_ppref_TTreeReader_ZMM(bool isData = true) {
   cout << "This is data" << endl;
   }
   else {
-    glob("/eos/infnts/cms/store/user/kdeleo/DYto2Mu_MLL-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test13_ZMM_DYto2Mu/250321_154613/0000/HiForestMiniAOD_MC_*.root", GLOB_NOSORT, NULL, &globlist);
+    glob("/eos/infnts/cms/store/user/kdeleo/DYToMuMu_M-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test18_mc_ppRef_ZMM_DYto2Mu/251115_123708/0000/HiForestMiniAOD_*.root", GLOB_NOSORT, NULL, &globlist);
     cout << "This is MC" << endl;
   }
   cout << "Found " << globlist.gl_pathc << " files"<< endl;
@@ -70,7 +70,6 @@ void analyze_ppref_TTreeReader_ZMM(bool isData = true) {
   TTreeReaderValue<Int_t> run = {fReader, "run"};    // Run number
   TTreeReaderValue<Int_t> evt = {fReader, "evt"};    // Event number
   TTreeReaderValue<Int_t> lumi = {fReader, "lumi"};  // Luminosity block
-  TTreeReaderValue<Int_t> hiBin = {fReader, "hiBin"}; // centralityx2
   TTreeReaderValue<Float_t> weight = {fReader, isData ? "hiHF" : "weight"}; // MC event weight, not used in data
   TTreeReaderValue<Float_t> vz = {fReader, "vz"};
   //TTreeReaderValue<float> Ncoll = {fReader, "Ncoll"}; // Ncoll
@@ -100,6 +99,8 @@ void analyze_ppref_TTreeReader_ZMM(bool isData = true) {
   TTreeReaderArray<Float_t> rawpt = {fReader, "jtpt"};
   //TTreeReaderArray<Float_t> jtm = {fReader, "jtm"};
 
+  TTreeReaderValue<Float_t> hiHF = {fReader, "hiHF"};
+
   //Canvas
   gStyle->SetOptStat(0);
   TCanvas* c1 = new TCanvas("c1", "c1", 1200, 800);
@@ -121,12 +122,8 @@ void analyze_ppref_TTreeReader_ZMM(bool isData = true) {
   TH1F *h_mumu = new TH1F("h_mumu", "Hist;m_{#mu#mu} [GeV]; Entries", 20, 60, 120);
   TH1F *h_Z_pt = new TH1F("h_Z_pt", "Hist;p_{t}^{Z} [GeV]; Entries", 30, 0, 300);
   TH1F *h_njet = new TH1F("h_njet", "Hist;Number of jets; Entries", 10, 0, 10);
-  TH1F *h_cen = new TH1F("h_cen", "Hist; centrality bin; Entries", 20, 0, 100);
 
-  TH1F *h_mumu_j = new TH1F("h_mumu_j", "Hist;m_{#mu#mu} [GeV]; Entries", 20, 60, 120);
-  TH1F *h_Z_pt_j = new TH1F("h_Z_pt_j", "Hist;p_{t}^{Z} [GeV]; Entries", 30, 0, 300);
   TH1F *h_jet_pt_lj = new TH1F("h_jet_pt_lj", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
-  TH1F *h_cen_j = new TH1F("h_cen_j", "Hist; centrality bin; Entries", 20, 0, 100);
   TH1F *h_deltaPhi_Zj = new TH1F("h_deltaPhi_Zj", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
   TH1F *h_xZj = new TH1F("h_xZj", "Hist;x_{Zj}; Entries", 20, 0, 3);
 
@@ -148,8 +145,10 @@ void analyze_ppref_TTreeReader_ZMM(bool isData = true) {
   // Loop over events to access and analyze the data
   unsigned int iEvent = 0;
   unsigned int iEvfltr = 0;
+  double sum_weight = 0;
   while (fReader.Next()) {
   iEvent++;
+  if (!isData) sum_weight += *weight;
     if(*goodvertex<=0) continue;
   iEvfltr++;
     // Scale MC
@@ -204,7 +203,6 @@ void analyze_ppref_TTreeReader_ZMM(bool isData = true) {
     if (Z_pt < 40 ) continue;
 
     h_vz->Fill(*vz, scale);
-    h_cen->Fill((*hiBin)/2, scale);
     h_mumu->Fill(Z_mass, scale);
     h_Z_pt->Fill(Z_pt, scale);
 
@@ -244,34 +242,38 @@ void analyze_ppref_TTreeReader_ZMM(bool isData = true) {
         h_deltaPhi_Zj->Fill(dPhi_Zj, scale);
         if (dPhi_Zj > 7 * TMath::Pi() / 8) {
           h_njet->Fill(njets, scale);
-          h_mumu_j->Fill(Z_mass, scale);
-          h_Z_pt_j->Fill(Z_pt, scale);
           h_jet_pt_lj->Fill(jtpt_corr[ijetLeading], scale);
           h_xZj->Fill(jtpt_corr[ijetLeading]/Z_pt, scale);
-          h_cen_j->Fill((*hiBin)/2, scale);
-          //h_jetgirth->Fill(jtgirth[ijetLeading], scale);
-          //h_jet_deltaR->Fill(jtdyndeltaR[ijetLeading], scale);
         }
     }
   }  // end loop events
 
-  cout << "Tot ev = " << iEvent << " ev with filter = " << iEvfltr << endl;
-  cout << "Number of events = " << h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1) << ", if Z_pt>80: " << h_Z_pt_j->Integral(h_Z_pt->FindBin(80), h_Z_pt->GetNbinsX()+1) << endl;
+  // Normalize histogram
+  if (!isData) {
+  double Xsec = 6.57 * 100; //pb
+  double Lumi = 479; // pb-1
+  double norm_signal = Xsec * Lumi / sum_weight;
+  h_mumu->Scale(norm_signal);
+  h_Z_pt->Scale(norm_signal);
+  h_njet->Scale(norm_signal);
+  h_jet_pt_lj->Scale(norm_signal);
+  h_deltaPhi_Zj->Scale(norm_signal);
+  h_xZj->Scale(norm_signal);
+  h_vz->Scale(norm_signal);
+  }
+
+  cout << "Tot ev = " << iEvent << " ev with filter = " << iEvfltr << " sum_weight = " << sum_weight << endl;
+  cout << "Number of events = " << h_jet_pt_lj->Integral(0, h_jet_pt_lj->GetNbinsX()+1) << endl;
   cout << "dphi<pi/3: " << h_deltaPhi_Zj->Integral(0,h_deltaPhi_Zj->FindBin(TMath::Pi()/3)) << endl;
   c1->cd(1);
-  h_mumu_j->Draw();
-  c1->Print("h_mumu_j_ppref.pdf");
-  c2->cd(1);
-  h_Z_pt_j->Draw();
-  c2->Print("h_Z_pt_j_ppref.pdf");
+  h_mumu->Draw();
+  c1->Print("h_mumu_ppref.pdf");
   c3->cd(1);
   h_njet->Draw();
   c3->Print("h_njet_ppref.pdf");
   c4->cd(1);
   h_jet_pt_lj->Draw();
   c4->Print("h_jet_pt_lj_ppref.pdf");
-  c5->cd(1);
-  h_cen->Draw();
   c6->cd(1);
   h_xZj->Draw();
   c6->Print("h_XZj_ppref.pdf");
@@ -289,11 +291,7 @@ void analyze_ppref_TTreeReader_ZMM(bool isData = true) {
   h_mumu->Write();
   h_Z_pt->Write();
   h_njet->Write();
-  h_cen->Write();
-  h_mumu_j->Write();
-  h_Z_pt_j->Write();
   h_jet_pt_lj->Write();
-  h_cen_j->Write();
   h_deltaPhi_Zj->Write();
   h_xZj->Write();
   h_vz->Write();
