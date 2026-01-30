@@ -4,9 +4,9 @@
 
 # --- COLLISION SECTION ---
 # Uncomment ONE of the following lines to select the collision type
-COLLISION="PbPb23"
+#COLLISION="PbPb23"
 #COLLISION="ppref24"
-#COLLISION="PbPb24"
+COLLISION="PbPb24"
 
 # Starting directory
 ORIGINAL_DIR=$(pwd)
@@ -28,7 +28,7 @@ echo "=== Step 0: Ncoll Weights (PbPb Only) ==="
     root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"$COLLISION\", \"signal\", 0, 0)"
     echo "-> Plotting Ncoll..."
     cd weights_MC/Ncoll_weights_0/
-    root -l -b -q Ncoll_weight_0.C
+    root -l -b -q "Ncoll_weight_0.C(\"$COLLISION\", 0)"
     cd "$ORIGINAL_DIR"
 
     echo "=== Step 1: Rho Weights (PbPb Only) ==="
@@ -38,9 +38,9 @@ echo "=== Step 0: Ncoll Weights (PbPb Only) ==="
     root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"$COLLISION\", \"signal\", 1, 0)"
     echo "-> Plotting Ncoll (check) and Computing Rho Weights..."
     cd weights_MC/Ncoll_weights_0/
-    root -l -b -q 'Ncoll_weight_0.C(1)'
+    root -l -b -q "Ncoll_weight_0.C(\"$COLLISION\", 1)"
     cd ../rho_weights_1/
-    root -l -b -q rho_weight_1.C
+    root -l -b -q "rho_weight_1.C(\"$COLLISION\", 0)"
     cd "$ORIGINAL_DIR"
 
 else
@@ -67,7 +67,7 @@ if [[ "$COLLISION" == *"PbPb"* ]]; then
    echo "-> (Optional) Checking Rho reweighting..."
    root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"$COLLISION\", \"signal\", -1, 0)"
    cd weights_MC/rho_weights_1/
-   root -l -b -q 'rho_weight_1.C(1)'
+   root -l -b -q "rho_weight_1.C(\"$COLLISION\", 1)"
    cd "$ORIGINAL_DIR"
 fi
 

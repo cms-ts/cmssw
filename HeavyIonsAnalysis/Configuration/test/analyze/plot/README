@@ -14,6 +14,7 @@ root -l -b -q 'plot_veto_check.C("ppref24", false)' // MC Signal
 
 // 3. Use "PbPb24" for PbPb24
 root -l -b -q 'plot_veto_check.C("PbPb24", true)'   // Data
+root -l -b -q 'plot_veto_check.C("PbPb24", false)' // MC Signal
 
 // 4. Specific Background MC (e.g., TT, WZ, etc.)
 // You can specify MC sample label modifying inside plot_veto_check.C

@@ -16,13 +16,15 @@
 //   3. Jet Processing:  JEC, JER, and cleaning against Z-muons.    4. Bkg Subtraction:   Event Mixing with MinBias for PbPb. //
 //   5. Unfolding Prep:  Response matrices (Reco vs Gen) for xZj.   6. Systematics:       Cen, JEC, JER, SFs, Shape.          //
 //                                                                                                                            //
-//   USAGE EXAMPLES:                                                                                                          //
-//   root -l 'analyze_HI_TTreeReader_ZMM.C("data", 1, 0)'      // Data                                                        //
-//   root -l 'analyze_HI_TTreeReader_ZMM.C("signal", 3, 0)'    // MC Nominal                                                  //
-//   root -l 'analyze_HI_TTreeReader_ZMM.C("signal", 3, 11)'   // MC Syst (JER Down)                                          //
+//   USAGE EXAMPLES for PbPb23:                                                                                               //
+//   root -l 'analyze_HI_TTreeReader_ZMM.C("PbPb23", "data", 1, 0)'      // Data                                              //
+//   root -l 'analyze_HI_TTreeReader_ZMM.C("PbPb23", "signal", 3, 0)'    // MC Nominal                                        //
+//   root -l 'analyze_HI_TTreeReader_ZMM.C("PbPb23", "signal", 3, 11)'   // MC Syst (JER Down)                                //
 //                                                                                                                            //
 //   PARAMETERS:                                                                                                              //
 //   ------------------------------------------------------------------------------                                           //
+//   [collision_type] Input label (e.g., "PbPb23", "PbPb24", or "ppref24").                                                   //
+//                                                                                                                            //
 //   [sample_name]  Input label (e.g., "data" or MC label).                                                                   //
 //                                                                                                                            //
 //   [weight_phase] Control Flag:                                  [systFlag]     Systematic Variations:                      //
@@ -33,7 +35,7 @@
 //                                                                                                                            //
 //   DEPENDENCIES:                                                                                                            //
 //   - helpers.h, MC_samples.h, CorrectionSF.h                                                                                //
-//   - JetCorrector.h, JetUncertainty.h, JERProvider.h, JetSelection_PbPb.h                                                   //
+//   - JetCorrector.h, JetUncertainty.h, JERProvider.h, JetSelection_PbPb.h, JetSelection_pp.h                                //
 //                                                                                                                            //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 */
@@ -114,7 +116,14 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   double Ngen = 1;
 
   // Create a pointer to the vector of MC samples we want to use
-  const std::vector<FileInfo>* targetVector = (isPbPb) ? &files : &files_ppref;
+  const std::vector<FileInfo>* targetVector = nullptr;
+  if (collision_name.Contains("PbPb24")) {
+      targetVector = &files_PbPb24;
+  } else if (collision_name.Contains("PbPb23")) {
+      targetVector = &files;
+  } else {
+      targetVector = &files_ppref;
+  }
 
   std::cout << "------------------------------------------------" << std::endl;
   if (collision_name.Contains("PbPb23")) std::cout << "Running 2023 PbPb collisions" << endl;
@@ -125,16 +134,24 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   if (file_name.Contains("data")) {
     isData = true;
     if (isPbPb) {
-      glob("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime*/CRAB3_Analysis_test13_ZMM_Prime*/*/*.root", GLOB_NOSORT, NULL, &globlist);
-      if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_HF.root");
-      else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_VZ.root");
-      else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_data_VZ_Cen_Combined.root");
+      if (is2023)
+        glob("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime*/CRAB3_Analysis_test13_ZMM_Prime*/*/*.root", GLOB_NOSORT, NULL, &globlist);
+      else
+          // Pattern "PbPb24[AB]_" matches "PbPb24A_..." and "PbPb24B_..." but EXCLUDES "PbPb24_..."
+        glob("/eos/infnts/cms/store/user/rdelliga/HIPhysicsRawPrime*/CRAB3_Analysis_test21_ZMM_PbPb24[AB]_*/*/*.root", GLOB_NOSORT, NULL, &globlist);
+
+      // Dynamic Prefix for MinBias files
+      TString mb_prefix = (is2023) ? "" : "HI24_";
+
+      if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_data_HF.root");
+      else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_data_VZ.root");
+      else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_data_VZ_Cen_Combined.root");
       else { cerr << "Invalid binning_option for data MinBias file." << endl; return; }
-      cout << "This is PbPb data" << endl;
+      cout << "This is PbPb data (" << (is2023 ? "2023" : "2024") << ")" << endl;
     } else {
       glob("/eos/infnts/cms/store/user/kdeleo/PPRefSingleMuon*/CRAB3_Analysis_test16_ZMM_PPRefSingleMuon*/*/*.root", GLOB_NOSORT, NULL, &globlist);
     }
-  } else {
+  } else { //MC
     // Loop over files
     for (const auto& file : *targetVector) {
       if (file_name.Contains(file.label)) {
@@ -147,9 +164,10 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       }
     }
     if (isPbPb) {
-      if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_HF.root");
-      else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_VZ.root");
-      else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_leading_jets_MC_VZ_Cen_Combined.root");
+      TString mb_prefix = (is2023) ? "" : "HI24_";
+      if (binning_option == 0)      inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_MC_HF.root");
+      else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_MC_VZ.root");
+      else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_MC_VZ_Cen_Combined.root");
       else { cerr << "Invalid binning_option for MC MinBias file." << endl; return; }
     }
   }
@@ -177,35 +195,46 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   // ----------------------------------------------
 
   if (isPbPb) {
-    if (!inFile_MinBias || inFile_MinBias->IsZombie()) {
+    if (inFile_MinBias && !inFile_MinBias->IsZombie()) {
+      cout << "Opened MinBias file: " << inFile_MinBias->GetName() << endl;
+    } else {
       std::cerr << "Error: Could not open input file! Check path and file existence." << std::endl;
       return;
     }
   }
+
   // --- Load Weight Histograms and retrieve histograms ---
   TH1D* h_weight_rho   = nullptr;
   TH1D* h_weight_vz    = nullptr;
   TH1D* h_weight_JEWEL = nullptr;
 
-  // Only load weights if running on MC
-  if (!isData) {
-    // 1. Vz Weight (Used for PbPb and ppref MC)
-    std::string name_weight_vz = (isPbPb) ? "weights_MC/vz_weights_2/weight_HI_vz.root"
-                                            : "weights_MC/vz_weights_2/weight_ppref_vz.root";
-    h_weight_vz = loadWeightHist(name_weight_vz, "h_weight_vz");
+   // Only load weights if running on MC
+  if (!isData && weight_phase!=0) {
+    // 1. Rho Weight (Only for PbPb MC, specific to year)
+    if (isPbPb && weight_phase!=1) {
+      std::string name_weight_rho = (is2023) ? "weights_MC/rho_weights_1/weight_HI_rho.root"
+                                             : "weights_MC/rho_weights_1/weight_HI24_rho.root";
+      h_weight_rho = loadWeightHist(name_weight_rho, "h_weight_rho");
+    }
 
-    // 2. Rho Weight (Only for PbPb MC)
-    if (isPbPb) {
-       h_weight_rho = loadWeightHist("weights_MC/rho_weights_1/weight_rho.root", "h_weight_rho");
+    // 2. Vz Weight (Specific to each campaign: PbPb23, PbPb24, ppref)
+    if (weight_phase!=2) {
+      std::string name_weight_vz;
+      if (collision_name.Contains("PbPb23"))           name_weight_vz = "weights_MC/vz_weights_2/weight_HI_vz.root";
+      else if (collision_name.Contains("PbPb24"))      name_weight_vz = "weights_MC/vz_weights_2/weight_HI24_vz.root";
+      else if (collision_name.Contains("ppref24"))     name_weight_vz = "weights_MC/vz_weights_2/weight_ppref_vz.root";
+      h_weight_vz = loadWeightHist(name_weight_vz, "h_weight_vz");
     }
 
     // 3. JEWEL Weight (Only for Systematics)
     if (systFlag == 4) {
-      std::string name_weight_JEWEL = (isPbPb) ? "weights_MC/final_weight_3/weight_HI_JEWEL.root"
-                                              : "weights_MC/final_weight_3/weight_ppref_JEWEL.root";
+      std::string name_weight_JEWEL;
+      if (collision_name.Contains("PbPb23"))       name_weight_JEWEL = "weights_MC/final_weight_3/weight_HI_JEWEL.root";
+      else if (collision_name.Contains("PbPb24"))  name_weight_JEWEL = "weights_MC/final_weight_3/weight_HI24_JEWEL.root";
+      else if (collision_name.Contains("ppref24")) name_weight_JEWEL = "weights_MC/final_weight_3/weight_ppref_JEWEL.root";
       h_weight_JEWEL = loadWeightHist(name_weight_JEWEL, "h_weight_JEWEL");
       std::cout << "JEWEL file needed for syst variation" << std::endl;
-      }
+    }
   }
   // --- End Load Weight  ---
 
@@ -226,10 +255,21 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
 
   if (!isData) {
     // Get MC all histogram
-    const char* name_MC_all = (isPbPb) ? "./weights_MC/MC_all_weights/output_HI_mu_MC_all.root"
-                                       : "./weights_MC/MC_all_weights/output_ppref_mu_MC_all.root";
-    const char* name_dir_all = (isPbPb) ? "HI/Muons" : "ppref/Muons";
+    TString name_MC_all;
+    TString name_dir_all;
 
+    if (collision_name.Contains("PbPb23")) {
+        name_MC_all = "./weights_MC/MC_all_weights/output_HI_mu_MC_all.root";
+        name_dir_all = "HI/Muons";
+    }
+    else if (collision_name.Contains("PbPb24")) {
+        name_MC_all = "./weights_MC/MC_all_weights/output_HI24_mu_MC_all.root";
+        name_dir_all = "HI24/Muons";
+    }
+    else if (collision_name.Contains("ppref24")) {
+        name_MC_all = "./weights_MC/MC_all_weights/output_ppref_mu_MC_all.root";
+        name_dir_all = "ppref/Muons";
+    }
     std::cout << "Opening MC norm file: " << name_MC_all << std::endl;
 
     TFile* file_MC_all = TFile::Open(name_MC_all, "READ");
@@ -328,11 +368,11 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   else goodvertex = new TTreeReaderValue<int>(fReader, "goodvertex");
 
   //Trigger for MC, no needed in data because already in production
-  TTreeReaderValue<Int_t>* HLT_HIL2SingleMu = nullptr;
+  TTreeReaderValue<Int_t>* HLT_L2SingleMu = nullptr;
   if (!isData) {
-    if (collision_name.Contains("PbPb23")) HLT_HIL2SingleMu = new TTreeReaderValue<Int_t>(fReader, "HLT_HIL2SingleMu7_v3");
-    else if (collision_name.Contains("PbPb24")) HLT_HIL2SingleMu = new TTreeReaderValue<Int_t>(fReader, "HLT_HIL2SingleMu7_v7");
-    else if (collision_name.Contains("ppref24")) HLT_HIL2SingleMu = new TTreeReaderValue<Int_t>(fReader, "HLT_PPRefL2SingleMu7_v6");
+    if (collision_name.Contains("PbPb23")) HLT_L2SingleMu = new TTreeReaderValue<Int_t>(fReader, "HLT_HIL2SingleMu7_v3");
+    else if (collision_name.Contains("PbPb24")) HLT_L2SingleMu = new TTreeReaderValue<Int_t>(fReader, "HLT_HIL2SingleMu7_v7");
+    else if (collision_name.Contains("ppref24")) HLT_L2SingleMu = new TTreeReaderValue<Int_t>(fReader, "HLT_PPRefL2SingleMu7_v6");
   }
 
   // Muon
@@ -875,7 +915,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     if (isPbPb) hiBin_to_use = **hiBin; // Start with the nominal hiBin
     // Warning check (Comparison)
     if (isData && isPbPb) {
-      int calculated_nominal = is2023 ? getHiBin(*hiHF, cenHF_2023PbPb_nominal) : getHiBin(*hiHF, cenHF_2024PbPb_nominal);
+      int calculated_nominal = is2023 ? getHiBin(*hiHF, cenHF_2023PbPb_nominal)
+                                      : getHiBin(*hiHF, cenHF_2024PbPb_nominal);
       if (**hiBin != calculated_nominal) {
         cout << "!!! WARNING: hiBin = " << **hiBin
              << " hiHF = " << *hiHF
@@ -887,9 +928,11 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     }
     // Systematics Assignment for centrality
     if (isData && isPbPb && systFlag == 6)
-      hiBin_to_use = is2023 ? getHiBin(*hiHF, cenHF_2023PbPb_down) : getHiBin(*hiHF, cenHF_2024PbPb_down); // Centrality Down
+      hiBin_to_use = is2023 ? getHiBin(*hiHF, cenHF_2023PbPb_down)
+                            : getHiBin(*hiHF, cenHF_2024PbPb_down);
     if (isData && isPbPb && systFlag == 7)
-      hiBin_to_use = is2023 ? getHiBin(*hiHF, cenHF_2023PbPb_up) : getHiBin(*hiHF, cenHF_2024PbPb_up); // Centrality Up
+      hiBin_to_use = is2023 ? getHiBin(*hiHF, cenHF_2023PbPb_up)
+                            : getHiBin(*hiHF, cenHF_2024PbPb_up);
     // Centrality weight
     float weight_cent = isPbPb ? Ncoll[hiBin_to_use] : 1;
     // Scale MC
@@ -930,13 +973,14 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     // use binning to get the value of the weight
     if (isPbPb) {
       if (!isData) {
-        int bin_rho = h_weight_rho->FindBin(avg_rho);
         if (weight_phase == 2 || weight_phase == -1) {
+          int bin_rho = h_weight_rho->FindBin(avg_rho);
           // Apply rho weight
           scale*=h_weight_rho->GetBinContent(bin_rho);
         }
         if (weight_phase == 3) {
          // Apply rho and vz weight
+         int bin_rho = h_weight_rho->FindBin(avg_rho);
          int bin_vz = h_weight_vz->FindBin(*vz);
          scale*=h_weight_rho->GetBinContent(bin_rho)*h_weight_vz->GetBinContent(bin_vz);
         }
@@ -1025,7 +1069,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     if (*nReco < 2 ) continue;
     iEvent++;
     if (!isData) {
-      if(**HLT_HIL2SingleMu<=0) continue; // no needed for data because already in production
+      if(**HLT_L2SingleMu<=0) continue; // no needed for data because already in production
     }
     //cout << "***iEvent = " << iEvent << "\t run = " << run << "\t lumi = " << lumi << "\t evt = " << event << endl;
 
@@ -1404,7 +1448,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   std::cout << "[Background Subtraction Info]" << std::endl;
   std::cout << "Bkg Integral (dPhi):   " << bkg_dPhi_integral
             << "        Bkg Integral (pT):    " << bkg_pt_integral << std::endl;
-  std::cout << "Bkg Fraction (dPhi):   " << (raw_pt_integral > 0 ? bkg_dPhi_integral/raw_pt_integral : 0)
+  std::cout << "Bkg Fraction (dPhi):   " << (raw_dPhi_integral > 0 ? bkg_dPhi_integral/raw_dPhi_integral : 0)
             << "        Bkg Fraction (pT):    " << (raw_pt_integral > 0 ? bkg_pt_integral/raw_pt_integral : 0) << std::endl;
 
   }
@@ -1528,6 +1572,6 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   //if (pclusterCompatibilityFilter) delete pclusterCompatibilityFilter;
   //if (pphfCoincFilter2Th4) delete pphfCoincFilter2Th4;
   //if (goodvertex) delete goodvertex;
-  //if (HLT_HIL2SingleMu) delete HLT_HIL2SingleMu;
+  //if (HLT_L2SingleMu) delete HLT_L2SingleMu;
 }
 

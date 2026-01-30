@@ -16,12 +16,14 @@
 //   3. Event Loop:       Apply filters, calculate Centrality/Rho.     4. Jet Process:   Apply JEC/JER, cuts cleaning.        //
 //   5. Storage:          Fill 'jet_tree' with event data and jet_l.                                                          //
 //                                                                                                                            //
-//   USAGE EXAMPLES:                                                                                                          //
-//   root -l 'analyze_MinBias_TTreeReader.C(true, 0)'   // Data (HF Binning)                                                  //
-//   root -l 'analyze_MinBias_TTreeReader.C(false, 2)'  // MC (VZ + Cen Binning)                                              //
+//   USAGE EXAMPLES for PbPb23:                                                                                               //
+//   root -l 'analyze_MinBias_TTreeReader.C("PbPb23", true, 0)'   // Data (HF Binning)                                        //
+//   root -l 'analyze_MinBias_TTreeReader.C("PbPb23", false, 2)'  // MC (VZ + Cen Binning)                                    //
 //                                                                                                                            //
 //   PARAMETERS:                                                                                                              //
 //   ------------------------------------------------------------------------------                                           //
+//   [collision_type] Input label (e.g., "PbPb23", "PbPb24", or "ppref24").                                                   //
+//                                                                                                                            //
 //   [isData] (bool)        True for Data, False for MC.                                                                      //
 //                                                                                                                            //
 //   [use_binning_option]   Controls the binning scheme for mixing:                                                           //
@@ -67,19 +69,39 @@
 
 using namespace std;
 
-void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0) {
+void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = true, int use_binning_option = 2) {
+
+  TString s_year = year_str;
+  bool is2023 = s_year.Contains("23");
+  bool is2024 = s_year.Contains("24");
 
   //TTrees
   TChain data("data"), EventTree("EventTree"), HiTree("HiTree"),  skimanalysis("skimanalysis"), hltanalysis("hltanalysis"), hiFJRhoAnalyzerFinerBins("hiFJRhoAnalyzerFinerBins");
 
   glob_t globlist;
+  // --- Input File Logic ---
   if (isData) {
-    glob("/eos/infnts/cms/store/user/kdeleo/HIMinimumBias0/CRAB3_Analysis_test15_MinBias0/250522_121447/0000/HiForestMiniAOD_DATA_*.root", GLOB_NOSORT, NULL, &globlist);
-  cout << "This is data" << endl;
+    cout << "Running on DATA - Year: " << s_year << endl;
+    if (is2023) {
+        glob("/eos/infnts/cms/store/user/kdeleo/HIMinimumBias0/CRAB3_Analysis_test15_MinBias0/250522_121447/0000/HiForestMiniAOD_DATA_*.root", GLOB_NOSORT, NULL, &globlist);
+    }
+    else if (is2024) {
+        glob("/eos/infnts/cms/store/user/rdelliga/HIMinimumBias0/CRAB3_Analysis_test23_PbPb24*MinBias*/*/*/HiForestMiniAOD_DATA_*.root", GLOB_NOSORT, NULL, &globlist);
+    }
   }
   else {
-    glob("/eos/infnts/cms/store/user/kdeleo/MinBias_Drum5F_5p36TeV_hydjet/CRAB3_Analysis_test15_mc_MinBias/250523_135118/0000/HiForestMiniAOD_MC_*.root", GLOB_NOSORT, NULL, &globlist);
-    cout << "This is MC" << endl;
+    cout << "Running on MC - Year: " << s_year << endl;
+    if (is2023) {
+        glob("/eos/infnts/cms/store/user/kdeleo/MinBias_Drum5F_5p36TeV_hydjet/CRAB3_Analysis_test15_mc_MinBias/250523_135118/0000/HiForestMiniAOD_MC_*.root", GLOB_NOSORT, NULL, &globlist);
+    }
+    else if (is2024) {
+        glob("/eos/infnts/cms/store/user/rdelliga/MinBias_Drum5F_5p36TeV_hydjet/CRAB3_Analysis_test20_mc_PbPb24_MinBias/260109_102927/0000/HiForestMiniAOD_*.root", GLOB_NOSORT, NULL, &globlist);
+    }
+  }
+
+  if (globlist.gl_pathc == 0) {
+      cerr << "ERROR: No files found! Check glob path." << endl;
+      return;
   }
   cout << "Found " << globlist.gl_pathc << " files"<< endl;
 
@@ -156,12 +178,23 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
   // L2Relative is applied to BOTH Data and MC (the two files are actually identical)
   // L2Residual applied only to Data
   if (isData) {
-    Files.push_back("../Spring23Prompt23_PbPb_V1_DATA_L2Relative_AK2PF.txt");
-    Files.push_back("../Spring23Prompt23_PbPb_V1_DATA_L2Residual_AK2PF.txt");
-
+    if (is2023) {
+        Files.push_back("../Spring23Prompt23_PbPb_V1_DATA_L2Relative_AK2PF.txt");
+        Files.push_back("../Spring23Prompt23_PbPb_V1_DATA_L2Residual_AK2PF.txt");
+    }
+    else if (is2024) {
+        Files.push_back("../PbPb_2024_noPUcorr_L2Relative_AK4PF.txt");
+        // Missing L2 Residual
+    }
   } else {
-    Files.push_back("../Spring23Prompt23_PbPb_V1_MC_L2Relative_AK2PF.txt");
+    if (is2023) {
+        Files.push_back("../Spring23Prompt23_PbPb_V1_MC_L2Relative_AK2PF.txt");
+    }
+    else if (is2024) {
+        Files.push_back("../PbPb_2024_noPUcorr_L2Relative_AK4PF.txt");
+    }
   }
+
   JetCorrector JEC(Files);
   // For debugging
   cout << "Initializing JEC..." << endl;
@@ -169,17 +202,45 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
       cout << "  Loaded JEC File: " << file << endl;
   }
 
-  // Initialize JER Provider
+  // --- Initialize JER Provider ---
   JERProvider jer;
   if (!isData) {
+    // Is MC
     cout << "Initializing JER..." << endl;
-    // Ensure these text files exist in the path or update path accordingly
-    jer.LoadSF("../Autumn18_RunD_V7b_MC_SF_AK4PF.txt");
-    jer.LoadResolution("../Autumn18_RunD_V7b_MC_PtResolution_AK4PF.txt");
+    // Load both SF and Resolution Files
+    std::string jer_sf_file = "";
+    std::string jer_res_file = "";
+    // Define files based on collision type
+    if (is2023) {
+      jer_sf_file = "../Autumn18_RunD_V7b_MC_SF_AK4PF.txt";  //!!! Old, update
+      jer_res_file = "../Autumn18_RunD_V7b_MC_PtResolution_AK4PF.txt"; //!!! Old, update
+    }
+    else {
+      jer_sf_file = "../Autumn18_RunD_V7b_MC_SF_AK4PF.txt"; //!!! Old, update
+      jer_res_file = "../Autumn18_RunD_V7b_MC_PtResolution_AK4PF.txt"; //!!! Old, update
+    }
+    // Print and Load
+    if (!jer_sf_file.empty()) {
+        std::cout << "Loading JER SF: " << jer_sf_file << std::endl;
+        jer.LoadSF(jer_sf_file);
+    }
+    if (!jer_res_file.empty()) {
+        std::cout << "Loading JER Resolution: " << jer_res_file << std::endl;
+        jer.LoadResolution(jer_res_file);
+    }
+    // Note: We typically don't apply Phi/Eta smearing for standard analysis, so we only load PtResolution.
   }
 
-  // Initialize Jet Selector with your specific 2024 map file
-  JetSelect js("../Winter24Prompt24_2024BCDEFGHI.root");
+  // Initialize Jet Selector as pointers
+  JetSelect* js_PbPb = nullptr;
+
+  // Load specific map file (same for now)
+  if (is2023) {
+    js_PbPb = new JetSelect("../Winter24Prompt24_2024BCDEFGHI.root");
+  } else {
+    js_PbPb = new JetSelect("../Winter24Prompt24_2024BCDEFGHI.root");
+  }
+  std::cout << "------------------------------------------------" << std::endl;
 
   // --- Define bins ---
   std::map<std::string, std::vector<std::pair<double, double>>> leading_jets_by_bin;
@@ -294,9 +355,21 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
   std::map<std::string, int> bin_event_counts; // Keeps count for each specific bin label
   int overall_filled_bins_count = 0; // Counts how many distinct bins have reached their limit
 
+  // Pre-calculate GenJet Vectors for easier passing to JER function
+  // Declare BEFORE the event loop
+  std::vector<float> v_gen_pts, v_gen_etas, v_gen_phis;
+  v_gen_pts.reserve(100); // Reserve memory once to avoid re-allocations, reserve(100) does not set a hard limit.
+  v_gen_etas.reserve(100);
+  v_gen_phis.reserve(100);
+
   // Loop over events to access and analyze the data
   unsigned int iEvent = 0;
   while (fReader.Next()) {
+    // Clear GenJet Vectors
+    v_gen_pts.clear();
+    v_gen_etas.clear();
+    v_gen_phis.clear();
+
     // Optional: if all bins are filled, we can stop processing events early
     if (overall_filled_bins_count == total_bins_count) {
       std::cout << "All " << total_bins_count << " bins have collected " << events_per_bin_limit << " events. Stopping event loop early." << std::endl;
@@ -388,10 +461,9 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
     iEvent++;
     //cout << "***iEvent = " << iEvent << "\t run = " << run << "\t lumi = " << lumi << "\t evt = " << event << endl;
 
-    // Pre-calculate GenJet Vectors for JER
-    std::vector<float> v_gen_pts, v_gen_etas, v_gen_phis;
+    // Fill GenJet Vectors pre-calcuted for easier passing to JER function
     if (!isData) {
-      for (int i = 0; i < *ngen; i++) {
+      for (int i = 0; i < genpt.GetSize(); i++) {
         v_gen_pts.push_back(genpt[i]);
         v_gen_etas.push_back(geneta[i]);
         v_gen_phis.push_back(genphi[i]);
@@ -425,7 +497,7 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
       if(jtpt_corr[ijet]<30 || abs(jteta[ijet])>2.5) continue;
       // Apply Combined Jet ID and Veto Map
       // Pass the current jet index [ijet] to the arrays
-      if (!js.JetSelection(jteta[ijet], jtphi[ijet], jtPfCEF[ijet], jtPfNEF[ijet], jtPfMUF[ijet])) continue;
+      if (!js_PbPb->JetSelection(jteta[ijet], jtphi[ijet], jtPfCEF[ijet], jtPfNEF[ijet], jtPfMUF[ijet])) continue;
       if (ijetLeading == -1 || jtpt_corr[ijet] > jtpt_corr[ijetLeading]) {
           ijetLeading = ijet;
       }
@@ -483,16 +555,20 @@ void analyze_MinBias_TTreeReader(bool isData = true, int use_binning_option = 0)
   // --- Store to a ROOT file ---
   TFile *outputFile;
   TString output_filename;
+  // Output Filename Logic
+  TString prefix = "";
+  if (is2024) prefix = "HI24_"; // Add prefix for 2024 files
+
   if (isData) {
-    if (use_binning_option == 0) output_filename = "./MinBias_leading_jets_data_HF.root";
-    else if (use_binning_option == 1) output_filename = "./MinBias_leading_jets_data_VZ.root";
-    else if (use_binning_option == 2) output_filename = "./MinBias_leading_jets_data_VZ_Cen_Combined.root";
-    else output_filename = "./MinBias_leading_jets_data_UnknownOption.root";
+    if (use_binning_option == 0) output_filename = "./MinBias_" + prefix + "leading_jets_data_HF.root";
+    else if (use_binning_option == 1) output_filename = "./MinBias_" + prefix + "leading_jets_data_VZ.root";
+    else if (use_binning_option == 2) output_filename = "./MinBias_" + prefix + "leading_jets_data_VZ_Cen_Combined.root";
+    else output_filename = "./MinBias_" + prefix + "leading_jets_data_UnknownOption.root";
   } else {
-    if (use_binning_option == 0) output_filename = "./MinBias_leading_jets_MC_HF.root";
-    else if (use_binning_option == 1) output_filename = "./MinBias_leading_jets_MC_VZ.root";
-    else if (use_binning_option == 2) output_filename = "./MinBias_leading_jets_MC_VZ_Cen_Combined.root";
-    else output_filename = "./MinBias_leading_jets_MC_UnknownOption.root";
+    if (use_binning_option == 0) output_filename = "./MinBias_" + prefix + "leading_jets_MC_HF.root";
+    else if (use_binning_option == 1) output_filename = "./MinBias_" + prefix + "leading_jets_MC_VZ.root";
+    else if (use_binning_option == 2) output_filename = "./MinBias_" + prefix + "leading_jets_MC_VZ_Cen_Combined.root";
+    else output_filename = "./MinBias_" + prefix + "leading_jets_MC_UnknownOption.root";
   }
   outputFile = new TFile(output_filename, "RECREATE");
 

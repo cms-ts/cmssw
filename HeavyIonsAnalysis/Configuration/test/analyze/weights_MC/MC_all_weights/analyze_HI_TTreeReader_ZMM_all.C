@@ -37,9 +37,9 @@ void analyze_HI_TTreeReader_ZMM_all(const char* collision_type = "PbPb23") {
   if (s_coll.Contains("PbPb23")) {
     targetVector = &files;
   }
-//  else if (s_coll.Contains("PbPb24")) {
-//    targetVector = &files_PbPb24;;
-//  }
+  else if (s_coll.Contains("PbPb24")) {
+    targetVector = &files_PbPb24;;
+  }
   else if (s_coll.Contains("ppref24")) {
     targetVector = &files_ppref;
   } else {
@@ -152,8 +152,7 @@ void analyze_HI_TTreeReader_ZMM_all(const char* collision_type = "PbPb23") {
   h_cen_after->Draw();
 
   // Create the main directory "MC"
-  const char*  name_dir = (isPbPb) ? "HI" : "ppref";
-  TDirectory *Dir = file_output_HI_mu->mkdir(name_dir);
+  TDirectory *Dir = file_output_HI_mu->mkdir(name_output);
   // Navigate to the directory
   Dir->cd();
   // Create a new directory named "Muons"

@@ -2,8 +2,9 @@
 #include "CMS_lumi.C"
 #include "TH1.h"
 #include "TH1F.h"
+#include "../helpers.h"           // for getLumiFromSummary, cen tables, etc.
 
-TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_name, const char * x_title, const char * y_title, int bin, double min, double max);
+TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool isData, const char * histo_name, const char * x_title, const char * y_title, int bin, double min, double max);
 
 // Use a map to store histogram parameters
 std::map<std::string, std::tuple<const char*, const char*, int, double, double>> histo_params = {
@@ -12,7 +13,7 @@ std::map<std::string, std::tuple<const char*, const char*, int, double, double>>
     {"h_xZj", {"x_{Zj}", "Events", 5, 0, 2}},
 };
 
-void plot_MinBias(const char* h_n, bool isData = true) {
+void plot_MinBias(const char* collision_type = "PbPb23", const char* h_n = "h_deltaPhi_Zj", bool isData = true) {
 // Check if the histogram name exists in the map
     if (histo_params.find(h_n) == histo_params.end()) {
         std::cerr << "Error: Histogram '" << h_n << "' not found in parameter map." << std::endl;
@@ -37,7 +38,14 @@ void plot_MinBias(const char* h_n, bool isData = true) {
   extraText  = "Preliminary";  // default extra text is "Preliminary"
   //lumi_8TeV  = "19.1 fb^{-1}"; // default is "19.7 fb^{-1}"
   //lumi_7TeV  = "4.9 fb^{-1}";  // default is "5.1 fb^{-1}"
-  lumi_sqrtS = "PbPb 1.64 nb^{-1} (5.36 TeV)";       // used with iPeriod = 0, e.g. for simulation-only plots (default is an empty string)
+  TString s_coll = collision_type;
+  if (s_coll.Contains("PbPb23")) {
+      lumi_sqrtS = TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", getLumiFromSummary("../brilcalc_Collisions2023HI.csv"));
+  }
+  else if (s_coll.Contains("PbPb24")) {
+      lumi_sqrtS = TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", getLumiFromSummary("../brilcalc_Collisions2024_HI.csv"));
+  }
+  // used with iPeriod = 0, e.g. for simulation-only plots (default is an empty string)
 
   int iPeriod = 0;    // 1=7TeV, 2=8TeV, 3=7+8TeV, 7=7+8+13TeV, 0=free form (uses lumi_sqrtS)
 
@@ -48,7 +56,7 @@ void plot_MinBias(const char* h_n, bool isData = true) {
   // mode generally : 
   //   iPos = 10*(alignement 1/2/3) + position (1/2/3 = left/center/right)
 
-  example_plot( iPeriod, 0 , isData, h_n, x_title, y_title, bin, min, max);   // out of frame (in exceptional cases)
+  example_plot( iPeriod, 0 , collision_type, isData, h_n, x_title, y_title, bin, min, max);   // out of frame (in exceptional cases)
   //  example_plot( iPeriod, 11 );  // left-aligned
   //  example_plot( iPeriod, 33 );  // right-aligned
 
@@ -61,7 +69,7 @@ void plot_MinBias(const char* h_n, bool isData = true) {
   //  example_plot( iPeriod, 33 );  // right-aligned  
 }
 
-TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_name, const char * x_title, const char * y_title, int bin, double min, double max)
+TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool isData, const char * histo_name, const char * x_title, const char * y_title, int bin, double min, double max)
 { 
   //  if( iPos==0 ) relPosX = 0.12;
 
@@ -134,11 +142,20 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
   float markerSize  = 0.8;
 
   {
-    const char* data_or_MC = isData ? "../plot/output_HI_mu_data.root" : "../plot/output_HI_mu_MC_signal.root";
+    // Dynamic Filename
+    TString s_coll = collision_type;
+    TString fname;
+    TString name_prefix;
+    if (s_coll.Contains("PbPb23")) name_prefix = "HI";
+    else if (s_coll.Contains("PbPb24"))  name_prefix = "HI24";
 
-    TFile* file = TFile::Open(data_or_MC, "READ");
+    if (isData) fname.Form("../plot/output_%s_mu_data.root", name_prefix.Data());
+    else        fname.Form("../plot/output_%s_mu_MC_signal.root", name_prefix.Data());
+
+    cout << "Opening " << fname << endl;
+    TFile* file = TFile::Open(fname, "READ");
     // and take its directories
-    TDirectoryFile* dir_HI = (TDirectoryFile*)file->Get("HI");
+    TDirectoryFile* dir_HI = (TDirectoryFile*)file->Get(name_prefix);
     if (!dir_HI)
       cout << "Cannot find dir_HI" << endl;
     TDirectoryFile* dir_Muons = (TDirectoryFile*)dir_HI->Get("Muons");
@@ -154,7 +171,8 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
     std::string matched_name = std::string(histo_name) + "_matched";
     TH1D* h_MinBias = (TH1D*)dir_Muons->Get(bkg_name.c_str());
     TH1D* h_subtracted = (TH1D*)dir_Muons->Get(subtracted_name.c_str());
-    TH1D* h_matched = (TH1D*)dir_Muons->Get(matched_name.c_str());
+    TH1D* h_matched = nullptr;
+    if (!isData) h_matched = (TH1D*)dir_Muons->Get(matched_name.c_str());
 
 
     //TFile file_("histo.root","READ");
@@ -164,7 +182,7 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
     h_->SetDirectory(0);
     h_MinBias->SetDirectory(0);
     h_subtracted->SetDirectory(0);
-    h_matched->SetDirectory(0);
+    if (!isData) h_matched->SetDirectory(0);
     //h_MC->SetMarkerStyle(23);
     //h_MC->SetMarkerSize(markerSize);
     h_->SetLineColor(kBlack);
@@ -181,10 +199,12 @@ TCanvas* example_plot( int iPeriod, int iPos, bool isData, const char * histo_na
       h_MinBias->SetMarkerColor(histLineColor);
       h_MinBias->SetMarkerSize(markerSize);
     }
-    h_matched->SetLineColor(TColor::GetColor("#e42536"));
-    h_matched->SetMarkerStyle(20);
-    h_matched->SetMarkerColor(TColor::GetColor("#e42536"));
-    h_matched->SetMarkerSize(markerSize);
+    if (!isData) {
+      h_matched->SetLineColor(TColor::GetColor("#e42536"));
+      h_matched->SetMarkerStyle(20);
+      h_matched->SetMarkerColor(TColor::GetColor("#e42536"));
+      h_matched->SetMarkerSize(markerSize);
+     }
     //h_->SetFillColor(histFillColor); // Choose a suitable color
     //h_->SetFillStyle(1001); // Choose a fill style (solid)
     //h_MC->SetMarkerColor(TColor::GetColor("#e42536"));

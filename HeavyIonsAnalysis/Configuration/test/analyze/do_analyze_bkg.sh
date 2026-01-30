@@ -5,8 +5,8 @@
 # --- CONFIGURATION SECTION ---
 # Uncomment ONE of the following lines to select the collision type
 #COLLISION="PbPb23"
-COLLISION="ppref24"
-#COLLISION="PbPb24"
+#COLLISION="ppref24"
+COLLISION="PbPb24"
 
 echo "------------------------------------------------"
 echo "Analyzing backgrounds for: $COLLISION"

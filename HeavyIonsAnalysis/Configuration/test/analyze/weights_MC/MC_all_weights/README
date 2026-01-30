@@ -8,7 +8,7 @@
 // Arguments: (collision_type)
 
 // 1. PbPb 2023 (Default)
-root -l -b -q 'analyze_HI_TTreeReader_ZMM_all.C("PbPb23")'
+root -l -b -q analyze_HI_TTreeReader_ZMM_all.C
 // Output: output_HI_mu_MC_all.root
 
 // 2. PbPb 2024
