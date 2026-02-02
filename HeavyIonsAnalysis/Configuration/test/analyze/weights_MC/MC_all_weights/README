@@ -19,4 +19,8 @@ root -l -b -q 'analyze_HI_TTreeReader_ZMM_all.C("PbPb24")'
 root -l -b -q 'analyze_HI_TTreeReader_ZMM_all.C("ppref24")'
 // Output: output_ppref_mu_MC_all.root
 
+//For alternative MC in ppref
+root -l -b -q 'analyze_HI_TTreeReader_ZMM_all.C("ppref24_alternative")'
+// Output: output_ppref_mu_MC_all_alternative.root
+
 // NOTE: These output files are read by analyze_HI_TTreeReader_ZMM.C 

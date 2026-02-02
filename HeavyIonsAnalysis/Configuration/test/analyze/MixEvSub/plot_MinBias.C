@@ -1,7 +1,7 @@
 #include "../plot/tdrstyle.C"
 #include "CMS_lumi.C"
 #include "TH1.h"
-#include "TH1F.h"
+#include "TH1D.h"
 #include "../helpers.h"           // for getLumiFromSummary, cen tables, etc.
 
 TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool isData, const char * histo_name, const char * x_title, const char * y_title, int bin, double min, double max);
@@ -123,7 +123,7 @@ TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool i
   canv->SetTicky(0);
   //canv->SetLogy();
   
-  TH1* h = new TH1F("h","h",bin,min,max);
+  TH1* h = new TH1D("h","h",bin,min,max);
   h->GetXaxis()->SetNdivisions(6,5,0);
   h->GetXaxis()->SetTitle(x_title);  
   h->GetYaxis()->SetNdivisions(6,5,0);
@@ -210,7 +210,7 @@ TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool i
     //h_MC->SetMarkerColor(TColor::GetColor("#e42536"));
 
 
-    //TH1F *MC   = static_cast<TH1F*>(file_.Get("MC")->Clone());
+    //TH1D *MC   = static_cast<TH1D*>(file_.Get("MC")->Clone());
     //h_data->SetDirectory(0);
     //h_data->SetMarkerStyle(20);
     //h_data->SetMarkerSize(markerSize);

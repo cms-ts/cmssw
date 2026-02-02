@@ -343,13 +343,13 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
   c5->Divide(1,1);
 
   // Histograms
-  TH1F *h_cen = new TH1F("h_cen", "Hist; centrality bin; Entries", 20, 0, 100);
-  TH1F *h_HF = new TH1F("h_HF", "Hist; HF; Entries", 80, 0, 8000);
+  TH1D *h_cen = new TH1D("h_cen", "Hist; centrality bin; Entries", 20, 0, 100);
+  TH1D *h_HF = new TH1D("h_HF", "Hist; HF; Entries", 80, 0, 8000);
 
-  TH1F *h_jet_pt_lj = new TH1F("h_jet_pt_lj", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
-  TH1F *h_Phi_lj = new TH1F("h_Phi_lj", "Hist;#phi_{lj}; Entries", 20, -TMath::Pi(),TMath::Pi());
+  TH1D *h_jet_pt_lj = new TH1D("h_jet_pt_lj", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
+  TH1D *h_Phi_lj = new TH1D("h_Phi_lj", "Hist;#phi_{lj}; Entries", 20, -TMath::Pi(),TMath::Pi());
 
-  TH1F *h_vz = new TH1F("h_vz", "Hist; vz; Entries", 30, -20, 20);
+  TH1D *h_vz = new TH1D("h_vz", "Hist; vz; Entries", 30, -20, 20);
 
   // Track how many bins have reached 'events_per_bin_limit' events
   std::map<std::string, int> bin_event_counts; // Keeps count for each specific bin label

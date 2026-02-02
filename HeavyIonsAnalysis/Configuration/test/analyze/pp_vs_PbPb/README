@@ -1,0 +1,11 @@
+//--------------------------------
+  Compare data PbPb vs ppRef
+//--------------------------------
+
+//--------------------------------
+// To run vs_PbPb.C (before mixed event subtraction)
+root -l vs_PbPb.C
+// after subtraction
+root -l 'vs_PbPb.c(true)'
+// inside the macro choose which hist to compare
+//--------------------------------

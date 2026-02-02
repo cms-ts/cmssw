@@ -82,8 +82,8 @@ void JEWEL_weight_3(const char * collision_type = "PbPb23", int after_flag = 0) 
           // PbPb Case: Use QGP (depend on collision system type, not year)
           jewel_path = "/gfsvol01/cms/users/rdelliga/work/Hi_forest/JEWEL/CMSSW_13_2_13/src/jewel-2.4.0/jewel_converted_Zj_QGP.pu14test.root";
         } else {
-          // ppref Case: Use Vacuum
-          jewel_path = "/gfsvol01/cms/users/rdelliga/work/Hi_forest/JEWEL/CMSSW_13_2_13/src/jewel-2.4.0/jewel_converted_Zj_vac.pu14test.root";
+          // ppref Case: Use Alternative MC
+          jewel_path = "../../plot/output_" + name_output + "_mu_MC_alternative.root";
         }
 
         std::cout << "Opening Jewel file   : " << jewel_path << std::endl;
@@ -94,7 +94,20 @@ void JEWEL_weight_3(const char * collision_type = "PbPb23", int after_flag = 0) 
           return;
         }
         // Get JEWEL histogram
-        TH1D* h_JEWEL = (TH1D*)file_JEWEL->Get(histo_name.c_str());
+        TH1D* h_JEWEL = nullptr;
+        if (isPbPb) h_JEWEL = (TH1D*)file_JEWEL->Get(histo_name.c_str());
+        else {
+          TDirectoryFile* dir_JEWEL = (TDirectoryFile*)file_JEWEL->Get(name_output + "/Muons");
+          if (!dir_JEWEL) {
+            std::cerr << "Error: Directory " << name_output << "/Muons not found in MC file." << std::endl;
+            return;
+          }
+	  h_JEWEL = (TH1D*)dir_JEWEL->Get(histo_name.c_str());
+          if (!h_JEWEL) {
+            std::cerr << "Error: Histogram " << histo_name << " not found." << std::endl;
+            return;
+          }
+        }
         if (!h_JEWEL) {
           std::cerr << "Error: JEWEL Histogram " << histo_name << " not found." << std::endl;
           return;
@@ -167,9 +180,9 @@ void JEWEL_weight_3(const char * collision_type = "PbPb23", int after_flag = 0) 
 
         // Legend
         if (isPbPb) legend->AddEntry(h_JEWEL, "JEWEL (truth) med", "epl");
-        else legend->AddEntry(h_JEWEL, "JEWEL (truth) vac", "epl");
+        else legend->AddEntry(h_JEWEL, "MadGraph+PYTHIA (truth)", "epl");
         if (after_flag == 0) legend->AddEntry(h, "POWHEG+PYTHIA", "epl");
-        else legend->AddEntry(h, "POWHEG+PYTHIA (JEWEL rew)", "epl");
+        else legend->AddEntry(h, "POWHEG+PYTHIA (rew)", "epl");
 
         TPad *pad = h_ratio->GetUpperPad();
         pad->cd();

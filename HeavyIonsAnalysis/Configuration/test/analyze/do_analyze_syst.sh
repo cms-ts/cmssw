@@ -5,15 +5,15 @@
 # --- CONFIGURATION SECTION ---
 # Uncomment ONE of the following lines to select the collision type
 #COLLISION="PbPb23"
-#COLLISION="ppref24"
-COLLISION="PbPb24"
+COLLISION="ppref24"
+#COLLISION="PbPb24"
 
 echo "------------------------------------------------"
 echo "Analyzing systematics variation for: $COLLISION"
 echo "------------------------------------------------"
 
 # ==============================================================================
-#  STEP 0: NOMINAL RUNS (Baseline)
+#  STEP 1: NOMINAL RUNS (Baseline)
 # ==============================================================================
 echo "=== Step 0: Running Nominal Baselines ==="
 
@@ -22,14 +22,6 @@ root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"$COLLISION\", \"data\", 1, 0)"
 
 echo "-> Running Nominal MC (Phase 3)..."
 root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"$COLLISION\", \"signal\", 3, 0)"
-
-# ==============================================================================
-#  STEP 1: PREPARE WEIGHTS (MC Modelling)
-# ==============================================================================
-echo "=== Step 1: Preparing JEWEL Weights for MC Modelling ==="
-cd weights_MC/final_weight_3/
-root -l -b -q "JEWEL_weight_3.C(\"$COLLISION\", 0)"
-cd - > /dev/null  # Return to original dir silently
 
 # ==============================================================================
 #  STEP 2: SYSTEMATIC VARIATIONS
@@ -68,7 +60,7 @@ for k in $numbers_data; do
   root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"$COLLISION\", \"data\", 1, $k)"
 done
 
-echo "-> Plotting after applying JEWEL re-weighting"
+echo "-> Plotting after applying MC  re-weighting"
 cd weights_MC/final_weight_3/
 root -l -b -q "JEWEL_weight_3.C(\"$COLLISION\", 1)"
 cd - > /dev/null  # Return to original dir silently

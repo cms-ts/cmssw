@@ -29,9 +29,13 @@ root -l -b -q 'analyze_HI_TTreeReader_ZMM.C("PbPb24", "signal", 3, 0)' // MC Sig
 //--------------------------------
 // 2. Workflow Weights calculation
 //--------------------------------
-// Runs Data and MC Signal to compute Ncoll, Rho, and Vz weights, 
-// then produces final histograms.
 
+// Before, to recompute MC_all_weights, go to folder
+cd weights_MC/MC_all_weights/
+// and follow the README
+
+// Runs Data and MC Signal to compute Ncoll, Rho, and Vz weights,
+// then produces final histograms.
 chmod +x do_analyze_weights.sh
 ./do_analyze_weights.sh
 // Outputs saved in: weights_MC/ and plot/

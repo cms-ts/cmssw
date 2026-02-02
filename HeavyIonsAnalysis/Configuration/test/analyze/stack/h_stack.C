@@ -25,7 +25,7 @@ struct histoPar {
     double x_max;
 };
 
-void h_stack(const char * collision_type = "PbPb23") {
+void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false) {
 
     // --- 1. Setup Collision & Directory Logic ---
     TString s_coll = collision_type;
@@ -39,6 +39,10 @@ void h_stack(const char * collision_type = "PbPb23") {
     // Select the correct MC file vector from MC_samples.h
     const std::vector<FileInfo>* targetVector = (isPbPb) ? &files : &files_ppref;
 
+    // Consider alternative MC as signal
+    std::string signal_label = isAlternative ? "alternative" : "signal";
+    std::string alternative_label = isAlternative ? "signal" : "alternative";
+
     // --- 2. Create a vector of histoPar structs ---
     std::vector<histoPar> histo_par = {
     {"h_mumu", "m_{#mu#mu} [GeV]", "Events", 20, 60, 120},
@@ -48,6 +52,8 @@ void h_stack(const char * collision_type = "PbPb23") {
     {"h_mumu_j", "m_{#mu#mu} [GeV]", "Events", 20, 60, 120},
     {"h_Z_pt_j", "p_{T}^{Z} [GeV]", "Events", 30, 0, 300},
     {"h_jet_pt_lj", "leading jet p_{T} [GeV]", "Events", 30, 0, 300},
+    {"h_jet_pt_lj_nocut", "leading jet p_{T} [GeV]", "Events", 30, 0, 300},
+    {"h_jet_pt_lj_2pi_3", "leading jet p_{T} [GeV]", "Events", 30, 0, 300},
     {"h_cen_j", "cen_j", "Events", 20, 0, 100},
     {"h_deltaPhi_Zj", "#Delta#phi_{Zj}", "Events" , 20, 0, TMath::Pi()},
     {"h_xZj_fixbinw", "x_{Zj}", "Events", 30, 0., 3.},
@@ -97,7 +103,7 @@ void h_stack(const char * collision_type = "PbPb23") {
         TH1D* h_MC_tot = new TH1D(Form("h_MC_tot_%d", ih), histo_name.c_str(), n_bin, x_min, x_max);
 
         // Create legend
-        TLegend* legend = new TLegend(0.7, 0.65, 0.88, 0.85);
+        TLegend* legend = new TLegend(0.68, 0.65, 0.86, 0.85);
         legend->SetBorderSize(0);
 
         // --- Loop over MC files (using the correct vector) ---
@@ -124,7 +130,7 @@ void h_stack(const char * collision_type = "PbPb23") {
             // Debug print
             // std::cout << full_fname << " " << h->Integral(0, h->GetNbinsX()+1) << std::endl;
 
-            if (label=="signal") {
+            if (label==signal_label) {
               h_DYMM->SetFillColor(TColor::GetColor("#e42536"));
               h_DYMM->SetLineColor(h_DYMM->GetFillColor());
               h_DYMM->Add(h);
@@ -139,7 +145,7 @@ void h_stack(const char * collision_type = "PbPb23") {
               h_diboson->SetLineColor(h_diboson->GetFillColor());
               h_diboson->Add(h);
             }
-            else {
+            else if (label != alternative_label) {
               h_others->SetFillColor(TColor::GetColor("#f89c20"));
               h_others->SetLineColor(h_others->GetFillColor());
               h_others->Add(h);
@@ -216,7 +222,7 @@ void h_stack(const char * collision_type = "PbPb23") {
         double y_max = h_data->GetBinContent(h_data->GetMaximumBin());
         if (histo_name == "h_deltaPhi_Zj" || histo_name == "h_jet_deltaR" ||
             histo_name == "h_antimu_phi" || histo_name == "h_vz" ||
-            histo_name == "h_mu_eta" || histo_name == "h_mu_phi")  h_data->SetMaximum(90*y_max);
+            histo_name == "h_mu_eta" || histo_name == "h_mu_phi")  h_data->SetMaximum(180*y_max);
         else  h_data->SetMaximum(5.*y_max);
         h_data->SetMinimum(0.03);
         h_data->GetXaxis()->SetTitle(x_title.c_str());
@@ -228,7 +234,8 @@ void h_stack(const char * collision_type = "PbPb23") {
 
         // Legend
         legend->AddEntry(h_data, "Data", "PE");
-        legend->AddEntry(h_DYMM, "Drell-Yan", "f");
+        if (isAlternative) legend->AddEntry(h_DYMM, "DYto2L+2 jets", "f");
+        else legend->AddEntry(h_DYMM, "Drell-Yan", "f");
         legend->AddEntry(h_diboson, "Diboson", "f");
         legend->AddEntry(h_TT, "TT", "f");
         legend->AddEntry(h_others, "Others", "f");
@@ -276,6 +283,7 @@ void h_stack(const char * collision_type = "PbPb23") {
         c[ih]->Update();
 
         // Dynamic output filename to prevent overwriting
-        c[ih]->Print((histo_name + "_" + name_output.Data() + "_stack.pdf").c_str());
+        if (isAlternative) c[ih]->Print((histo_name + "_" + name_output.Data() + "_alternative_stack.pdf").c_str());
+        else c[ih]->Print((histo_name + "_" + name_output.Data() + "_stack.pdf").c_str());
     }
 }

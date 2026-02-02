@@ -112,6 +112,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   bool isPbPb = collision_name.Contains("PbPb");
   bool is2023 = collision_name.Contains("23");
   bool isSignal = file_name.Contains("signal");
+  bool isAlternative = file_name.Contains("alternative");
   double Xsec = 1;
   double Ngen = 1;
 
@@ -253,22 +254,43 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   double norm_MC_w = 1.0;
   double norm_MC_w_ncoll = 1.0;
 
+  double n_ev_alternative = 1.0;
+  double sum_w_alternative = 1.0;
+
   if (!isData) {
     // Get MC all histogram
     TString name_MC_all;
     TString name_dir_all;
 
     if (collision_name.Contains("PbPb23")) {
-        name_MC_all = "./weights_MC/MC_all_weights/output_HI_mu_MC_all.root";
-        name_dir_all = "HI/Muons";
+      name_MC_all = "./weights_MC/MC_all_weights/output_HI_mu_MC_all.root";
+      name_dir_all = "HI/Muons";
     }
     else if (collision_name.Contains("PbPb24")) {
-        name_MC_all = "./weights_MC/MC_all_weights/output_HI24_mu_MC_all.root";
-        name_dir_all = "HI24/Muons";
+      name_MC_all = "./weights_MC/MC_all_weights/output_HI24_mu_MC_all.root";
+      name_dir_all = "HI24/Muons";
     }
     else if (collision_name.Contains("ppref24")) {
-        name_MC_all = "./weights_MC/MC_all_weights/output_ppref_mu_MC_all.root";
-        name_dir_all = "ppref/Muons";
+      name_MC_all = "./weights_MC/MC_all_weights/output_ppref_mu_MC_all.root";
+      name_dir_all = "ppref/Muons";
+      if (isAlternative){
+        TFile* file_MC_all_alternative = TFile::Open("./weights_MC/MC_all_weights/output_ppref_mu_MC_all_alternative.root", "READ");
+        if (!file_MC_all_alternative || file_MC_all_alternative->IsZombie()) {
+          std::cerr << "Error: Cannot open alternative MC norm file " << std::endl;
+          return;
+        }
+        TDirectoryFile* dir_Muons_MC_all_alternative = (TDirectoryFile*)file_MC_all_alternative->Get(name_dir_all);
+        if (!dir_Muons_MC_all_alternative) {
+          std::cerr << "Error: Cannot find directory " << name_dir_all << " in alternative MC norm file." << std::endl;
+          return;
+        }
+        TH1D* h_norm_alternative = (TH1D*)dir_Muons_MC_all_alternative->Get("h_sum_weights");
+        TH1D* h_nev_alternative  = (TH1D*)dir_Muons_MC_all_alternative->Get("h_n_events");
+        sum_w_alternative = h_norm_alternative->Integral(0, h_norm_alternative->GetNbinsX()+1);
+        double n_ev_alternative = h_nev_alternative->Integral(0, h_nev_alternative->GetNbinsX()+1);
+
+        std::cout << "Alternative n_ev = " << n_ev_alternative << " sum_w = " << sum_w_alternative << std::endl;
+      }
     }
     std::cout << "Opening MC norm file: " << name_MC_all << std::endl;
 
@@ -300,7 +322,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     norm_MC_w_ncoll = isSignal ? number_A*number_A*Lumi*Xsec*(n_ev/sum_ncoll)/sum_w
                                : number_A*number_A*Lumi*(n_ev/sum_ncoll)/Ngen/1000; // :1000 since weights are ~Xsec in pb
     norm_MC_w = isPbPb ? number_A*number_A*Lumi*Xsec/sum_w
-                       : ( isSignal ? Lumi*Xsec/sum_w : Lumi/Ngen );
+                       : ( isSignal ? Lumi*Xsec/sum_w
+                                    : ( isAlternative ? Lumi*Xsec/sum_w_alternative : Lumi/Ngen ) );
 
     std::cout << "norm_MC_w = " << norm_MC_w << " norm_MC_w_ncoll = " << norm_MC_w_ncoll << std::endl;
   }
@@ -441,6 +464,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TTreeReaderArray<Float_t> jteta = {fReader, "jteta"};
   TTreeReaderArray<Float_t> jtphi = {fReader, "jtphi"};
   TTreeReaderArray<Float_t> rawpt = {fReader, "rawpt"};
+  TTreeReaderArray<Float_t> jtpt = {fReader, "jtpt"};
   TTreeReaderArray<Float_t> jtPfCEF = {fReader, "jtPfCEF"};
   TTreeReaderArray<Float_t> jtPfNEF = {fReader, "jtPfNEF"};
   TTreeReaderArray<Float_t> jtPfMUF = {fReader, "jtPfMUF"};
@@ -481,8 +505,15 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
      // Missing L2Residual
     }
     else if (collision_name.Contains("ppref24")) {
-      Files.push_back("2024ppRef_withPU_L2Relative_AK4PF.txt"); // !!! to update
-      Files.push_back("L2Residuals_2024ppRef.txt"); // !!! to update
+      std::cout << "Warning!!! Using jtpt instead of JEC for ppref" << endl;
+      // 1. Pileup Correction
+      Files.push_back("Spring18_ppRef5TeV_V6_DATA_L1FastJet_AK2PF.txt");
+      // 2. Relative Response (or MC truth)
+      Files.push_back("Spring18_ppRef5TeV_V6_DATA_L2Relative_AK2PF.txt");
+      // 3. Absolute Response
+      Files.push_back("Spring18_ppRef5TeV_V6_DATA_L3Absolute_AK2PF.txt");
+      // 4. Data Residuals (Only for Data)
+      Files.push_back("Spring18_ppRef5TeV_V6_DATA_L2L3Residual_AK2PF.txt");
     }
   }
   else {
@@ -492,8 +523,12 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     else if (collision_name.Contains("PbPb24")) {
       Files.push_back("PbPb_2024_noPUcorr_L2Relative_AK4PF.txt"); // !!! to update
     }
-    else if (collision_name.Contains("ppref24")) {
-      Files.push_back("2024ppRef_withPU_L2Relative_AK4PF.txt"); // !!! to update
+    else if (collision_name.Contains("ppref24")) { /// !!! old
+      std::cout << "Warning!!! Using jtpt instead of JEC for ppref" << endl;
+      Files.push_back("Spring18_ppRef5TeV_V6_MC_L1FastJet_AK2PF.txt");
+      Files.push_back("Spring18_ppRef5TeV_V6_MC_L2Relative_AK2PF.txt");
+      Files.push_back("Spring18_ppRef5TeV_V6_MC_L3Absolute_AK2PF.txt");
+      // MC does NOT use Residuals
     }
   }
   JetCorrector JEC(Files);
@@ -508,6 +543,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   else if (collision_name.Contains("PbPb24")) name_Uncertainty_file = "Autumn18_HI_V8_MC_Uncertainty_AK2PF.txt"; //!!! Old, update
   else if (collision_name.Contains("ppref24")) name_Uncertainty_file = "Spring18_ppRef5TeV_V6_MC_Uncertainty_AK2PF.txt"; //!!! Old, update
   JetUncertainty JEU(name_Uncertainty_file);
+  std::cout << "Loaded JEC Uncertainty File: " << name_Uncertainty_file << endl;
 
   // --- Initialize JER Provider ---
   JERProvider jer;
@@ -715,64 +751,66 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     xZj_bins_meas_vec = {0., 0.6, 0.9, 1.2, 1.5};
   }
 
-  // Create a pointer to the vector's data (compatible with TH1F constructors)
+  // Create a pointer to the vector's data (compatible with TH1D constructors)
   double* xZj_bins_meas = xZj_bins_meas_vec.data();
   //  double xZj_max;
 
-  TH1F *h_mumu = new TH1F("h_mumu", "Hist;m_{#mu#mu} [GeV]; Entries", 20, 60, 120);
-  TH1F *h_Z_pt = new TH1F("h_Z_pt", "Hist;p_{t}^{Z} [GeV]; Entries", 30, 0, 300);
-  TH1F *h_njet = new TH1F("h_njet", "Hist;Number of jets; Entries", 10, 0, 10);
-  TH1F *h_cen = new TH1F("h_cen", "Hist; centrality bin; Entries", 20, 0, 100);
+  TH1D *h_mumu = new TH1D("h_mumu", "Hist;m_{#mu#mu} [GeV]; Entries", 20, 60, 120);
+  TH1D *h_Z_pt = new TH1D("h_Z_pt", "Hist;p_{t}^{Z} [GeV]; Entries", 30, 0, 300);
+  TH1D *h_njet = new TH1D("h_njet", "Hist;Number of jets; Entries", 10, 0, 10);
+  TH1D *h_cen = new TH1D("h_cen", "Hist; centrality bin; Entries", 20, 0, 100);
 
-  TH1F *h_mumu_j = new TH1F("h_mumu_j", "Hist;m_{#mu#mu} [GeV]; Entries", 20, 60, 120);
-  TH1F *h_Z_pt_j = new TH1F("h_Z_pt_j", "Hist;p_{t}^{Z} [GeV]; Entries", 30, 0, 300);
-  TH1F *h_jet_pt_lj = new TH1F("h_jet_pt_lj", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
-  TH1F *h_cen_j = new TH1F("h_cen_j", "Hist; centrality bin; Entries", 20, 0, 100);
-  TH1F *h_HF_j = new TH1F("h_HF_j", "Hist; HF; Entries", 80, 0, 8000);
-  TH1F *h_deltaPhi_Zj = new TH1F("h_deltaPhi_Zj", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
-  TH1F *h_xZj = new TH1F("h_xZj", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
-  TH1F *h_xZj_fixbinw = new TH1F("h_xZj_fixbinw", "Hist;x_{Zj}; Entries", 30, 0., 3.);
+  TH1D *h_mumu_j = new TH1D("h_mumu_j", "Hist;m_{#mu#mu} [GeV]; Entries", 20, 60, 120);
+  TH1D *h_Z_pt_j = new TH1D("h_Z_pt_j", "Hist;p_{t}^{Z} [GeV]; Entries", 30, 0, 300);
+  TH1D *h_jet_pt_lj = new TH1D("h_jet_pt_lj", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
+  TH1D *h_jet_pt_lj_nocut = new TH1D("h_jet_pt_lj_nocut", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
+  TH1D *h_jet_pt_lj_2pi_3 = new TH1D("h_jet_pt_lj_2pi_3", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
+  TH1D *h_cen_j = new TH1D("h_cen_j", "Hist; centrality bin; Entries", 20, 0, 100);
+  TH1D *h_HF_j = new TH1D("h_HF_j", "Hist; HF; Entries", 80, 0, 8000);
+  TH1D *h_deltaPhi_Zj = new TH1D("h_deltaPhi_Zj", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
+  TH1D *h_xZj = new TH1D("h_xZj", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1D *h_xZj_fixbinw = new TH1D("h_xZj_fixbinw", "Hist;x_{Zj}; Entries", 30, 0., 3.);
   TH2F *h_jet_etaphi_before = new TH2F("h_jet_etaphi_before", "Jets Before Veto;#eta;#phi", 40, -2.5, 2.5, 40, -TMath::Pi(), TMath::Pi());
   TH2F *h_jet_etaphi_after  = new TH2F("h_jet_etaphi_after",  "Jets After Veto;#eta;#phi",  40, -2.5, 2.5, 40, -TMath::Pi(), TMath::Pi());
 
-  TH1F *h_vz = new TH1F("h_vz", "Hist; vz; Entries", 30, -20, 20);
-  TH1F *h_avg_rho = new TH1F("h_avg_rho", "Hist; <#rho>; Entries", 50, 0, 400);
+  TH1D *h_vz = new TH1D("h_vz", "Hist; vz; Entries", 30, -20, 20);
+  TH1D *h_avg_rho = new TH1D("h_avg_rho", "Hist; <#rho>; Entries", 50, 0, 400);
   auto *h_avg_rho_vs_cen = new TProfile("h_avg_rho_vs_cen", "Profile of <#rho> vs centrality bin", 200, 0, 200, 0, 400);
 
-  TH1F *h_deltaPhi_Zj_MinBias = new TH1F("h_deltaPhi_Zj_MinBias", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
-  TH1F *h_jet_pt_lj_MinBias = new TH1F("h_jet_pt_lj_MinBias", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
-  TH1F *h_xZj_MinBias = new TH1F("h_xZj_MinBias", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1D *h_deltaPhi_Zj_MinBias = new TH1D("h_deltaPhi_Zj_MinBias", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
+  TH1D *h_jet_pt_lj_MinBias = new TH1D("h_jet_pt_lj_MinBias", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
+  TH1D *h_xZj_MinBias = new TH1D("h_xZj_MinBias", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
 
-  TH1F *h_deltaPhi_Zj_matched = new TH1F("h_deltaPhi_Zj_matched", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
-  TH1F *h_jet_pt_lj_matched = new TH1F("h_jet_pt_lj_matched", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
-  TH1F *h_xZj_matched = new TH1F("h_xZj_matched", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1D *h_deltaPhi_Zj_matched = new TH1D("h_deltaPhi_Zj_matched", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
+  TH1D *h_jet_pt_lj_matched = new TH1D("h_jet_pt_lj_matched", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
+  TH1D *h_xZj_matched = new TH1D("h_xZj_matched", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
 
   // --- RooUnfold Histograms ---
 
-  TH1F* h_xZj_true = new TH1F("h_xZj_true", "True x_{Zj};x_{Zj};Entries", nbins_xZj, xZj_bins);     // For true MC
+  TH1D* h_xZj_true = new TH1D("h_xZj_true", "True x_{Zj};x_{Zj};Entries", nbins_xZj, xZj_bins);     // For true MC
   TH1D *h_xZj_for_JEWEL_w = new TH1D("h_xZj_for_JEWEL_w", "True x_{Zj};Entries", 60, 0.,3.);
-  TH1F* h_mumu_true = new TH1F("h_mumu_true", "True m;m_{#mu#mu} [GeV]; Entries", 20, 60, 120);
-  TH1F* h_xZj_reco = new TH1F("h_xZj_reco", "Reco x_{Zj};x_{Zj};Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1D* h_mumu_true = new TH1D("h_mumu_true", "True m;m_{#mu#mu} [GeV]; Entries", 20, 60, 120);
+  TH1D* h_xZj_reco = new TH1D("h_xZj_reco", "Reco x_{Zj};x_{Zj};Entries", nbins_xZj_meas, xZj_bins_meas);
   TH2F* h_response = new TH2F("h_response", "Response Matrix;Reco x_{Zj};True x_{Zj}", nbins_xZj_meas, xZj_bins_meas, nbins_xZj, xZj_bins);
   TH2F* h_response_unmatched = new TH2F("h_response_unmatched", "Response Matrix;Reco x_{Zj};True x_{Zj}", nbins_xZj_meas, xZj_bins_meas,nbins_xZj, xZj_bins);
   TH2F* h_response_MinBias = new TH2F("h_response_MinBias", "Response Matrix;Reco x_{Zj};True x_{Zj}", nbins_xZj_meas, xZj_bins_meas, nbins_xZj, xZj_bins);
 
-  TH1F *h_xZj_train_closure = new TH1F("h_xZj_train_closure", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
-  TH1F *h_xZj_train_closure_matched = new TH1F("h_xZj_train_closure_matched", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
-  TH1F *h_xZj_test_closure = new TH1F("h_xZj_test_closure", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
-  TH1F *h_xZj_test_closure_matched = new TH1F("h_xZj_test_closure_matched", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
-  TH1F *h_xZj_MinBias_train_closure = new TH1F("h_xZj_MinBias_train_closure", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
-  TH1F *h_xZj_MinBias_test_closure = new TH1F("h_xZj_MinBias_test_closure", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
-  TH1F* h_xZj_true_train_closure = new TH1F("h_xZj_true_train_closure", "True x_{Zj};x_{Zj};Entries", nbins_xZj, xZj_bins);
-  TH1F* h_xZj_true_test_closure = new TH1F("h_xZj_true_test_closure", "True x_{Zj};x_{Zj};Entries", nbins_xZj, xZj_bins);
+  TH1D *h_xZj_train_closure = new TH1D("h_xZj_train_closure", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1D *h_xZj_train_closure_matched = new TH1D("h_xZj_train_closure_matched", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1D *h_xZj_test_closure = new TH1D("h_xZj_test_closure", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1D *h_xZj_test_closure_matched = new TH1D("h_xZj_test_closure_matched", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1D *h_xZj_MinBias_train_closure = new TH1D("h_xZj_MinBias_train_closure", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1D *h_xZj_MinBias_test_closure = new TH1D("h_xZj_MinBias_test_closure", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
+  TH1D* h_xZj_true_train_closure = new TH1D("h_xZj_true_train_closure", "True x_{Zj};x_{Zj};Entries", nbins_xZj, xZj_bins);
+  TH1D* h_xZj_true_test_closure = new TH1D("h_xZj_true_test_closure", "True x_{Zj};x_{Zj};Entries", nbins_xZj, xZj_bins);
   TH2F* h_response_closure = new TH2F("h_response_closure", "Response Matrix;Reco x_{Zj};True x_{Zj}", nbins_xZj_meas, xZj_bins_meas, nbins_xZj, xZj_bins);
   TH2F* h_response_closure_unmatched = new TH2F("h_response_closure_unmatched", "Response Matrix;Reco x_{Zj};True x_{Zj}", nbins_xZj_meas, xZj_bins_meas, nbins_xZj, xZj_bins);
   TH2F* h_response_MinBias_closure = new TH2F("h_response_MinBias_closure", "Response Matrix;Reco x_{Zj};True x_{Zj}", nbins_xZj_meas, xZj_bins_meas, nbins_xZj, xZj_bins);
 
   // --- End RooUnfold Histograms ---
 
-  //TH1F *h_jetgirth = new TH1F("h_jetgirth", "Hist;girth; Entries", 10, 0, 0.2);
-  //TH1F *h_jet_deltaR = new TH1F("h_jet_deltaR", "Hist; R_{g}; Entries", 10, 0, 0.2);
+  //TH1D *h_jetgirth = new TH1D("h_jetgirth", "Hist;girth; Entries", 10, 0, 0.2);
+  //TH1D *h_jet_deltaR = new TH1D("h_jet_deltaR", "Hist; R_{g}; Entries", 10, 0, 0.2);
 
   // Output root file
   TFile *file_output_HI_mu;
@@ -809,23 +847,23 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   }
 
   if (weight_phase == 1 && isPbPb) {
-    cout << "Running weight_phase " << weight_phase << " for computing rho_weights" << endl;
     if (!isData) {
+      cout << "Running weight_phase " << weight_phase << " for computing rho_weights" << endl;
       file_output_HI_mu = new TFile("./weights_MC/rho_weights_1/output_"+name_output+"_mu_MC_rho_weights.root", "RECREATE");
     }
   }
 
   // This is just for plotting rho distributions after reweighting
   if (weight_phase == -1 && isPbPb) {
-    cout << "Running weight_phase " << weight_phase << " for plotting rho distributions after reweighting" << endl;
     if (!isData) {
+      cout << "Running weight_phase " << weight_phase << " for plotting rho distributions after reweighting" << endl;
       file_output_HI_mu = new TFile("./weights_MC/vz_weights_2/output_"+name_output+"_mu_MC_rho_weights_after.root", "RECREATE");
     }
   }
 
   if (weight_phase == 2) {
-    cout << "Running weight_phase " << weight_phase << " for computing vz_weights" << endl;
     if (!isData) {
+      cout << "Running weight_phase " << weight_phase << " for computing vz_weights" << endl;
       file_output_HI_mu = new TFile("./weights_MC/vz_weights_2/output_"+name_output+"_mu_MC_vz_weights.root", "RECREATE");
     }
   }
@@ -1144,11 +1182,13 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       JEC.SetJetEta(jteta[ijet]);
       JEC.SetJetPhi(jtphi[ijet]);
       double Correction = JEC.GetCorrection();
-      double CorrectedPT = JEC.GetCorrectedPT();
+//!!!    For ppref we use for now jtpt
+      double CorrectedPT = isPbPb ? JEC.GetCorrectedPT() : jtpt[ijet];
       JEU.SetJetPT(CorrectedPT);
       JEU.SetJetEta(jteta[ijet]);
       JEU.SetJetPhi(jtphi[ijet]);
       double pt_jec_applied = CorrectedPT;
+
       if (!isData && systFlag == 9) pt_jec_applied = CorrectedPT * (1 - JEU.GetUncertainty().first); //down
       if (!isData && systFlag == 10) pt_jec_applied = CorrectedPT * (1 + JEU.GetUncertainty().second); //up
       //cout << "after JEC: jtpt_corr = " << pt_jec_applied << endl;
@@ -1369,6 +1409,9 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         }
       }
 
+      if (dPhi_Zj > 2 * TMath::Pi() / 3) h_jet_pt_lj_2pi_3->Fill(jtpt_corr[ijetLeading], scale);
+      h_jet_pt_lj_nocut->Fill(jtpt_corr[ijetLeading], scale);
+
       // --- Fill information for unfolding ---
       if (RelativePhi(Z.Phi(), jtphi[ijetLeading]) > 7 * TMath::Pi() / 8) {
         if (!isData && ijetGenLeading_unfold != -1 && dPhi_Zj_Gen > 7 * TMath::Pi() / 8) {
@@ -1392,18 +1435,18 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   // =================================================================================
 
   // Finalize histograms by subtracting MinBias
-  TH1F* h_deltaPhi_Zj_subtracted = (TH1F*)h_deltaPhi_Zj->Clone("h_deltaPhi_Zj_subtracted");
+  TH1D* h_deltaPhi_Zj_subtracted = (TH1D*)h_deltaPhi_Zj->Clone("h_deltaPhi_Zj_subtracted");
   h_deltaPhi_Zj_subtracted->SetDirectory(0);
   h_deltaPhi_Zj_subtracted->SetTitle("h_deltaPhi_Zj - h_deltaPhi_Zj_MinBias (rescaled)");
   h_deltaPhi_Zj_subtracted->Add(h_deltaPhi_Zj_MinBias, -1); // The -1 performs the subtraction
 
 
-  TH1F* h_jet_pt_lj_subtracted = (TH1F*)h_jet_pt_lj->Clone("h_jet_pt_lj_subtracted");
+  TH1D* h_jet_pt_lj_subtracted = (TH1D*)h_jet_pt_lj->Clone("h_jet_pt_lj_subtracted");
   h_jet_pt_lj_subtracted->SetDirectory(0);
   h_jet_pt_lj_subtracted->SetTitle("h_jet_pt_lj - h_jet_pt_lj_MinBias (rescaled)");
   h_jet_pt_lj_subtracted->Add(h_jet_pt_lj_MinBias, -1); // The -1 performs the subtraction
 
-  TH1F* h_xZj_subtracted = (TH1F*)h_xZj->Clone("h_xZj_subtracted");
+  TH1D* h_xZj_subtracted = (TH1D*)h_xZj->Clone("h_xZj_subtracted");
   h_xZj_subtracted->SetDirectory(0);
   h_xZj_subtracted->SetTitle("h_xZj - h_xZj_MinBias (rescaled)");
   h_xZj_subtracted->Add(h_xZj_MinBias, -1); // The -1 performs the subtraction
@@ -1413,12 +1456,12 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   h_response_subtracted->SetTitle("h_response_unmatched - h_response_MinBias (rescaled)");
   h_response_subtracted->Add(h_response_MinBias, -1); // The -1 performs the subtraction
 
-  TH1F* h_xZj_train_closure_subtracted = (TH1F*)h_xZj_train_closure->Clone("h_xZj_train_closure_subtracted");
+  TH1D* h_xZj_train_closure_subtracted = (TH1D*)h_xZj_train_closure->Clone("h_xZj_train_closure_subtracted");
   h_xZj_train_closure_subtracted->SetDirectory(0);
   h_xZj_train_closure_subtracted->SetTitle("h_xZj_train_closure - h_xZj_MinBias_train_closure (rescaled)");
   h_xZj_train_closure_subtracted->Add(h_xZj_MinBias_train_closure, -1); // The -1 performs the subtraction
 
-  TH1F* h_xZj_test_closure_subtracted = (TH1F*)h_xZj_test_closure->Clone("h_xZj_test_closure_subtracted");
+  TH1D* h_xZj_test_closure_subtracted = (TH1D*)h_xZj_test_closure->Clone("h_xZj_test_closure_subtracted");
   h_xZj_test_closure_subtracted->SetDirectory(0);
   h_xZj_test_closure_subtracted->SetTitle("h_xZj_test_closure - h_xZj_MinBias_test_closure (rescaled)");
   h_xZj_test_closure_subtracted->Add(h_xZj_MinBias_test_closure, -1); // The -1 performs the subtraction
@@ -1448,8 +1491,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   std::cout << "[Background Subtraction Info]" << std::endl;
   std::cout << "Bkg Integral (dPhi):   " << bkg_dPhi_integral
             << "        Bkg Integral (pT):    " << bkg_pt_integral << std::endl;
-  std::cout << "Bkg Fraction (dPhi):   " << (raw_dPhi_integral > 0 ? bkg_dPhi_integral/raw_dPhi_integral : 0)
-            << "        Bkg Fraction (pT):    " << (raw_pt_integral > 0 ? bkg_pt_integral/raw_pt_integral : 0) << std::endl;
+  std::cout << "Bkg Fraction (dPhi):   " << (raw_dPhi_integral > 0 ? 100*bkg_dPhi_integral/raw_dPhi_integral : 0) << " %"
+            << "        Bkg Fraction (pT):    " << (raw_pt_integral > 0 ? 100*bkg_pt_integral/raw_pt_integral : 0) << " %" << std::endl;
 
   }
   if (!isData) {
@@ -1458,8 +1501,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       std::cout << "[MC Matching Info]" << std::endl;
       std::cout << "Raw - Matched (dPhi):  " << raw_dPhi_integral - matched_dPhi_integral
                 << "        Raw - Matched (pT):   " << raw_pt_integral - matched_pt_integral << std::endl;
-      std::cout << "Fraction (dPhi):       " << (raw_dPhi_integral > 0 ? (raw_dPhi_integral - matched_dPhi_integral)/raw_dPhi_integral : 0)
-                << "        Fraction (pT):        " << (raw_pt_integral > 0 ? (raw_pt_integral - matched_pt_integral)/raw_pt_integral : 0) << std::endl;
+      std::cout << "Fraction (dPhi):       " << (raw_dPhi_integral > 0 ? 100*(raw_dPhi_integral - matched_dPhi_integral)/raw_dPhi_integral : 0) << " %"
+                << "        Fraction (pT):        " << (raw_pt_integral > 0 ? 100*(raw_pt_integral - matched_pt_integral)/raw_pt_integral : 0) << " %" <<std::endl;
   }
 
   std::cout << "[Z Boson Info]" << std::endl;
@@ -1503,6 +1546,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   h_mumu_j->Write();
   h_Z_pt_j->Write();
   h_jet_pt_lj->Write();
+  h_jet_pt_lj_2pi_3->Write();
+  h_jet_pt_lj_nocut->Write();
   h_cen_j->Write();
   h_deltaPhi_Zj->Write();
   h_xZj->Write();

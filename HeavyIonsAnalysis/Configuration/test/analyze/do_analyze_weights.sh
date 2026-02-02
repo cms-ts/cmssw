@@ -5,8 +5,8 @@
 # --- COLLISION SECTION ---
 # Uncomment ONE of the following lines to select the collision type
 #COLLISION="PbPb23"
-#COLLISION="ppref24"
-COLLISION="PbPb24"
+COLLISION="ppref24"
+#COLLISION="PbPb24"
 
 # Starting directory
 ORIGINAL_DIR=$(pwd)
@@ -87,8 +87,14 @@ root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"$COLLISION\", \"signal\", 3, 0)"
 echo "-> Plotting Vz (check) and computing JEWEL Weights..."
 cd weights_MC/vz_weights_2/
 root -l -b -q "vz_weight_2.C(\"$COLLISION\", 1)"
+cd "$ORIGINAL_DIR"
 
-cd ../final_weight_3/
+# We need to run alternative for MC model syst studies in ppref
+if [[ "$COLLISION" == *"ppref24"* ]]; then
+root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"$COLLISION\", \"alternative\", 3, 0)"
+fi
+
+cd weights_MC/final_weight_3/
 root -l -b -q "JEWEL_weight_3.C(\"$COLLISION\", 0)"
 cd "$ORIGINAL_DIR"
 

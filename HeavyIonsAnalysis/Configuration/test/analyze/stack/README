@@ -9,6 +9,9 @@ root -l -b -q h_stack.C
 
 // 2. For pp reference (ppref24):
 root -l -b -q 'h_stack.C("ppref24")'
+//For alternative MC in ppref
+root -l -b -q 'h_stack.C("ppref24", true)'
 
 // 3. For 2024 PbPb (PbPb24):
 root -l -b -q 'h_stack.C("PbPb24")'
+

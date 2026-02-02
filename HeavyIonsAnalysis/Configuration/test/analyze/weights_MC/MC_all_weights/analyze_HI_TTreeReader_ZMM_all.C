@@ -31,6 +31,7 @@ void analyze_HI_TTreeReader_ZMM_all(const char* collision_type = "PbPb23") {
 
   TString input_path = "";
   bool found_signal = false;
+  bool found_alternative = false;
 
   // --- 1. Select MC File Vector from MC_samples.h ---
   const std::vector<FileInfo>* targetVector = nullptr;
@@ -42,25 +43,44 @@ void analyze_HI_TTreeReader_ZMM_all(const char* collision_type = "PbPb23") {
   }
   else if (s_coll.Contains("ppref24")) {
     targetVector = &files_ppref;
+  }
+  else if (s_coll.Contains("ppref24_alternative")) {
+    targetVector = &files_ppref;
   } else {
     std::cerr << "Error: Unknown collision type " << s_coll << std::endl;
     return;
   }
 
-  // Loop to find the "signal" label in the selected vector
-  if (targetVector) {
-    for (const auto& file : *targetVector) {
-      if (file.label == "signal") {
-        input_path = file.path_miniaod; // This contains the /path/to/*.root
-        cout << "Found signal path in MC_samples.h for " << s_coll << ": " << input_path << endl;
-        found_signal = true;
-        break;
+  if (!s_coll.Contains("ppref24_alternative")) {
+    // Loop to find the "signal" label in the selected vector
+    if (targetVector) {
+      for (const auto& file : *targetVector) {
+        if (file.label == "signal") {
+          input_path = file.path_miniaod; // This contains the /path/to/*.root
+          cout << "Found signal path in MC_samples.h for " << s_coll << ": " << input_path << endl;
+          found_signal = true;
+          break;
+        }
       }
     }
   }
+  else {
+    // Loop to find the "alternative" label in the selected vector
+    if (targetVector) {
+      for (const auto& file : *targetVector) {
+        if (file.label == "alternative") {
+          input_path = file.path_miniaod; // This contains the /path/to/*.root
+          cout << "Found alternative path in MC_samples.h for " << s_coll << ": " << input_path << endl;
+          found_alternative = true;
+          break;
+        }
+      }
+    }
 
-  if (!found_signal) {
-      cerr << "[ERROR] Could not find 'signal' label in MC_samples.h for " << s_coll << endl;
+  }
+
+  if (!found_signal && !found_alternative) {
+      cerr << "[ERROR] Could not find 'signal' or 'alternative' label in MC_samples.h for " << s_coll << endl;
       // Fallback/Default paths if needed (optional)
       return;
   }
@@ -104,19 +124,22 @@ void analyze_HI_TTreeReader_ZMM_all(const char* collision_type = "PbPb23") {
   c6->Divide(1,1);
 
   //Histograms
-  TH1F *h_n_events = new TH1F("h_n_events", "Hist; n; Entries", 1, 0, 2);
-  TH1F *h_weight = new TH1F("h_weight", "Hist; w; Entries", 20, -800, 800);
-  TH1F *h_sum_weights = new TH1F("h_sum_weights", "Hist; w; Entries", 1, 0, 20);
-  TH1F *h_sum_weights_cen = new TH1F("h_sum_weights_cen", "Hist; w; Entries", 1, 0, 2);
-  TH1F *h_cen_before = new TH1F("h_cen_before", "Hist; cen before; Entries", 20, 0, 100);
-  TH1F *h_cen_after = new TH1F("h_cen_after", "Hist; cen after; Entries", 20, 0, 100);
+  TH1D *h_n_events = new TH1D("h_n_events", "Hist; n; Entries", 1, 0, 2);
+  TH1D *h_weight = new TH1D("h_weight", "Hist; w; Entries", 20, -800, 800);
+  TH1D *h_sum_weights = new TH1D("h_sum_weights", "Hist; w; Entries", 1, 0, 20);
+  TH1D *h_sum_weights_cen = new TH1D("h_sum_weights_cen", "Hist; w; Entries", 1, 0, 2);
+  TH1D *h_cen_before = new TH1D("h_cen_before", "Hist; cen before; Entries", 20, 0, 100);
+  TH1D *h_cen_after = new TH1D("h_cen_after", "Hist; cen after; Entries", 20, 0, 100);
 
   // Output root file
   TString name_output = "HI";
   if (s_coll.Contains("PbPb24")) name_output = "HI24";
   else if (s_coll.Contains("ppref24")) name_output = "ppref";
 
-  TString out_file_path = "./output_" + name_output + "_mu_MC_all.root";
+  TString name_alternative = "";
+  if (s_coll.Contains("ppref24_alternative")) name_alternative = "_alternative";
+
+  TString out_file_path = "./output_" + name_output + "_mu_MC_all" + name_alternative + ".root";
   TFile *file_output_HI_mu = new TFile(out_file_path, "RECREATE");
 
   // Loop over events to access and analyze the data
@@ -134,7 +157,7 @@ void analyze_HI_TTreeReader_ZMM_all(const char* collision_type = "PbPb23") {
     iEvent++;
   }  // end loop events
 
-  cout << "Number of events = " << h_n_events->Integral(0, h_n_events->GetNbinsX()+1)
+  cout << "Number of events = " << h_n_events->Integral(0, h_n_events->GetNbinsX()+1) << " iEvent = " << iEvent
        << ", sumW = " << h_sum_weights->Integral(0, h_sum_weights->GetNbinsX()+1)
        << ", sumW_cen = " << h_sum_weights_cen->Integral(0, h_sum_weights_cen->GetNbinsX()+1) << endl;
 

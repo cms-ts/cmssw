@@ -59,7 +59,8 @@ const std::vector<FileInfo> files_ppref = {
     {"/eos/infnts/cms/store/user/kdeleo/WminusToMuminusNu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test18_mc_ppRef_ZMM_WminusToMu/251120_161830/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_WminusToMuminusNu.root", "WminusToMuminusNu", 2.73 * 1000, 9844580},
     {"/eos/infnts/cms/store/user/kdeleo/TT_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test18_mc_ppRef_ZMM_TT/251120_101043/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_TT.root", "TT", 6.62 * 10, 10000000},
 //    {"/eos/infnts/cms/store/user/kdeleo/DYToMuMu_M-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test18_mc_ppRef_ZMM_DYto2Mu/251115_123708/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_signal.root", "signal", 6.57 * 100, 9999999} //old
-    {"/eos/infnts/cms/store/user/rdelliga/DYToMuMu_M-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test22_run3_ppref_MC_ZMM_DYtoMuMu/260127_120900/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_signal.root", "signal", 6.57 * 100, 9999999}
+    {"/eos/infnts/cms/store/user/rdelliga/DYToMuMu_M-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test22_run3_ppref_MC_ZMM_DYtoMuMu/260127_120900/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_signal.root", "signal", 6.57 * 100, 9999999},
+    {"/eos/infnts/cms/store/user/rdelliga/DYto2L-2Jets_MLL-50_TuneCP5_5p36TeV_amcatnloFXFX-pythia8/CRAB3_Analysis_test22_run3_ppref_MC_ZMM_DYto2L_2Jets/260130_142319/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_alternative.root", "alternative", 2.328 * 1000, 30156049}
 };
 
 #endif // MC_SAMPLES_H
