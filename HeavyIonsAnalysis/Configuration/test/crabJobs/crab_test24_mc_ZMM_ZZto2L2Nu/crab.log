@@ -1,0 +1,181 @@
+DEBUG 2026-02-19 00:28:05.223 UTC: 	 CRAB Client version: v3.251020
+DEBUG 2026-02-19 00:28:05.224 UTC: 	 Running on: Linux farmui02.ts.infn.it 3.10.0-1160.119.1.el7.x86_64 #1 SMP Tue Jun 4 14:43:51 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-02-19 00:28:05.224 UTC: 	 Using SINGULARITY image: el8:x86_64
+DEBUG 2026-02-19 00:28:05.224 UTC: 	 Operating System: AlmaLinux 8.10 (Cerulean Leopard)
+DEBUG 2026-02-19 00:28:05.224 UTC: 	 Executing command: 'submit'
+DEBUG 2026-02-19 00:28:05.225 UTC: 	 Found CRAB cache file /home/rdelliga/.crab3
+INFO 2026-02-19 00:28:05.230 UTC: 	 Will use CRAB configuration file crab_mc_ZMM_ZZto2L2Nu.py
+DEBUG 2026-02-19 00:28:05.230 UTC: 	 Loading CRAB configuration file.
+DEBUG 2026-02-19 00:28:05.261 UTC: 	 Will use CRAB plugin ANALYSIS (i.e. will run an analysis job type).
+DEBUG 2026-02-19 00:28:05.326 UTC: 	 Checking credentials
+DEBUG 2026-02-19 00:28:05.327 UTC: 	 Found proxy file /home/rdelliga/.globus/x509up_u29745
+DEBUG 2026-02-19 00:28:05.327 UTC: 	 Making sure it has proper VOMS extension
+DEBUG 2026-02-19 00:28:05.327 UTC: 	 Executing command :
+ voms-proxy-info --vo --file /home/rdelliga/.globus/x509up_u29745
+DEBUG 2026-02-19 00:28:05.434 UTC: 	 output : cms
+
+ error: 
+ retcode : 0
+DEBUG 2026-02-19 00:28:05.434 UTC: 	 Getting proxy life time left
+DEBUG 2026-02-19 00:28:05.434 UTC: 	 Executing command :
+ voms-proxy-info --actimeleft --timeleft --file /home/rdelliga/.globus/x509up_u29745
+DEBUG 2026-02-19 00:28:05.507 UTC: 	 output : 547552
+547551
+
+ error: 
+ retcode : 0
+DEBUG 2026-02-19 00:28:05.507 UTC: 	 Proxy valid for 152:05:51 hours
+DEBUG 2026-02-19 00:28:05.508 UTC: 	 Encoded data for curl request: subresource=delegatedn
+DEBUG 2026-02-19 00:28:05.702 UTC: 	 Registering user credentials on myproxy for /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=cmscrab/CN=(817881|373708)/CN=Robot: cms crab|/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=crabint1/CN=373708/CN=Robot: CMS CRAB Integration 1
+DEBUG 2026-02-19 00:28:05.703 UTC: 	 Executing command :
+ voms-proxy-info --identity --file /home/rdelliga/.globus/x509up_u29745
+DEBUG 2026-02-19 00:28:05.777 UTC: 	 output : /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=rdelliga/CN=864426/CN=Raffaele Delli Gatti
+
+ error: 
+ retcode : 0
+DEBUG 2026-02-19 00:28:05.777 UTC: 	 Getting myproxy life time left for a276027c574b34a90617e4fbd0838d04da41d7bd
+DEBUG 2026-02-19 00:28:05.777 UTC: 	 Executing command :
+ myproxy-info -s myproxy.cern.ch -l a276027c574b34a90617e4fbd0838d04da41d7bd
+DEBUG 2026-02-19 00:28:06.235 UTC: 	 output : username: a276027c574b34a90617e4fbd0838d04da41d7bd
+owner: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=rdelliga/CN=864426/CN=Raffaele Delli Gatti
+  renewal policy: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=cmscrab/CN=(817881|373708)/CN=Robot: cms crab|/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=crabint1/CN=373708/CN=Robot: CMS CRAB Integration 1
+  trusted retrieval policy: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=cmscrab/CN=(817881|373708)/CN=Robot: cms crab|/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=crabint1/CN=373708/CN=Robot: CMS CRAB Integration 1
+  timeleft: 513:59:49  (21.4 days)
+
+ error: 
+ retcode : 0
+DEBUG 2026-02-19 00:28:06.236 UTC: 	 Myproxy is valid: 1850340
+DEBUG 2026-02-19 00:28:06.236 UTC: 	 Result of myproxy credential check:
+  Credential exists on myproxy: username: a276027c574b34a90617e4fbd0838d04da41d7bd  - validity: 21 days, 9:59:00
+DEBUG 2026-02-19 00:28:06.236 UTC: 	 Command use: submit
+DEBUG 2026-02-19 00:28:06.236 UTC: 	 Options use: ['-c', 'crab_mc_ZMM_ZZto2L2Nu.py']
+DEBUG 2026-02-19 00:28:06.236 UTC: 	 Encoded data for curl request: subresource=version
+DEBUG 2026-02-19 00:28:06.420 UTC: 	 CRABClient version: v3.251020
+DEBUG 2026-02-19 00:28:06.421 UTC: 	 Instance is prod
+DEBUG 2026-02-19 00:28:06.421 UTC: 	 Server base url is cmsweb.cern.ch
+DEBUG 2026-02-19 00:28:06.421 UTC: 	 Command api workflow
+DEBUG 2026-02-19 00:28:06.421 UTC: 	 Started submission
+DEBUG 2026-02-19 00:28:06.421 UTC: 	 Working on /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test24_mc_ZMM_ZZto2L2Nu
+DEBUG 2026-02-19 00:28:06.470 UTC: 	 Loading required information from the environment
+DEBUG 2026-02-19 00:28:06.470 UTC: 	 Found CMSSW_13_2_13 for el8_amd64_gcc11 with base /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13
+DEBUG 2026-02-19 00:28:06.471 UTC: 	 Loading required information from the environment
+DEBUG 2026-02-19 00:28:06.471 UTC: 	 Found CMSSW_13_2_13 for el8_amd64_gcc11 with base /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13
+DEBUG 2026-02-19 00:28:06.471 UTC: 	 UNIQUE NAME: tarUUID a63dad21-afec-4d2d-bf58-9c8fa8d3e185 
+DEBUG 2026-02-19 00:28:06.471 UTC: 	 self.config: from WMCore.Configuration import Configuration
+config = Configuration()
+config.section_('General')
+config.General.requestName = 'test24_mc_ZMM_ZZto2L2Nu'
+config.section_('JobType')
+config.JobType.psetName = 'forest_miniAOD_run3_MC_ZMM.py'
+config.JobType.allowUndistributedCMSSW = True
+config.JobType.pluginName = 'Analysis'
+config.JobType.maxJobRuntimeMin = 1200
+config.JobType.maxMemoryMB = 2500
+config.section_('Data')
+config.Data.outputDatasetTag = 'CRAB3_Analysis_test24_ZMM_ZZto2L2Nu'
+config.Data.inputDBS = 'global'
+config.Data.inputDataset = '/ZZto2L2Nu_TuneCP5_5p36TeV_powheg-pythia8/HINPbPbSpring23MiniAOD-132X_mcRun3_2023_realistic_HI_v9-v2/MINIAODSIM'
+config.Data.unitsPerJob = 1
+config.Data.splitting = 'FileBased'
+config.Data.publication = False
+config.section_('Site')
+config.Site.storageSite = 'T3_IT_Trieste'
+config.section_('User')
+config.section_('Debug')
+
+DEBUG 2026-02-19 00:28:06.471 UTC: 	 self.config.JobType.psetName: forest_miniAOD_run3_MC_ZMM.py
+INFO 2026-02-19 00:28:06.472 UTC: 	 Importing CMSSW configuration forest_miniAOD_run3_MC_ZMM.py
+INFO 2026-02-19 00:28:08.636 UTC: 	 Finished importing CMSSW configuration forest_miniAOD_run3_MC_ZMM.py
+DEBUG 2026-02-19 00:28:08.637 UTC: 	 Writing CMSSW configuration to /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test24_mc_ZMM_ZZto2L2Nu/inputs/PSet.py
+DEBUG 2026-02-19 00:28:08.741 UTC: 	 The following EDM output files will be collected: []
+DEBUG 2026-02-19 00:28:08.741 UTC: 	 The following TFile output files will be collected: ['HiForestMiniAOD.root']
+DEBUG 2026-02-19 00:28:08.741 UTC: 	 The following user output files (not listed as PoolOuputModule or TFileService in the CMSSW PSet) will be collected: 
+DEBUG 2026-02-19 00:28:08.741 UTC: 	 Loading required information from the environment
+DEBUG 2026-02-19 00:28:08.741 UTC: 	 Found CMSSW_13_2_13 for el8_amd64_gcc11 with base /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13
+DEBUG 2026-02-19 00:28:08.741 UTC: 	 Making tarball in /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test24_mc_ZMM_ZZto2L2Nu/inputs/a63dad21-afec-4d2d-bf58-9c8fa8d3e185default.tgz
+DEBUG 2026-02-19 00:28:08.759 UTC: 	 Checking directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/bin
+DEBUG 2026-02-19 00:28:08.762 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/bin to tarball
+DEBUG 2026-02-19 00:28:08.788 UTC: 	 Checking directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/python
+DEBUG 2026-02-19 00:28:08.789 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/python to tarball
+DEBUG 2026-02-19 00:28:09.085 UTC: 	 Checking directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/cfipython
+DEBUG 2026-02-19 00:28:09.087 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/cfipython to tarball
+DEBUG 2026-02-19 00:28:09.314 UTC: 	 Checking directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/lib
+DEBUG 2026-02-19 00:28:09.314 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/lib to tarball
+DEBUG 2026-02-19 00:28:09.868 UTC: 	 Checking directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/biglib
+DEBUG 2026-02-19 00:28:09.871 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/biglib to tarball
+DEBUG 2026-02-19 00:28:09.889 UTC: 	 Checking directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/module
+DEBUG 2026-02-19 00:28:09.890 UTC: 	 Checking directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/config/SCRAM/hooks
+DEBUG 2026-02-19 00:28:09.897 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/config/SCRAM/hooks to tarball
+DEBUG 2026-02-19 00:28:09.978 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/RecoJets/Configuration/python to tarball
+DEBUG 2026-02-19 00:28:10.088 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/RecoHI/HiJetAlgos/python to tarball
+DEBUG 2026-02-19 00:28:10.144 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/RecoHI/HiJetAlgos/interface to tarball
+DEBUG 2026-02-19 00:28:11.271 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/Configuration/data to tarball
+DEBUG 2026-02-19 00:28:11.289 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/Configuration/python to tarball
+DEBUG 2026-02-19 00:28:11.387 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/JetAnalysis/python to tarball
+DEBUG 2026-02-19 00:28:11.448 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/JetAnalysis/interface to tarball
+DEBUG 2026-02-19 00:28:11.475 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/MuonAnalysis/python to tarball
+DEBUG 2026-02-19 00:28:11.504 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/MuonAnalysis/interface to tarball
+DEBUG 2026-02-19 00:28:11.529 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/MuonAnalysis/data to tarball
+DEBUG 2026-02-19 00:28:12.147 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/EventAnalysis/python to tarball
+DEBUG 2026-02-19 00:28:12.410 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/EGMAnalysis/data to tarball
+DEBUG 2026-02-19 00:28:13.344 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/EGMAnalysis/python to tarball
+DEBUG 2026-02-19 00:28:13.390 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/EGMAnalysis/interface to tarball
+DEBUG 2026-02-19 00:28:13.429 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/TrackAnalysis/python to tarball
+DEBUG 2026-02-19 00:28:13.458 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/TrackAnalysis/interface to tarball
+DEBUG 2026-02-19 00:28:13.492 UTC: 	 Adding directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/ZDCAnalysis/python to tarball
+DEBUG 2026-02-19 00:28:13.686 UTC: 	 Uploading archive /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test24_mc_ZMM_ZZto2L2Nu/inputs/a63dad21-afec-4d2d-bf58-9c8fa8d3e185default.tgz (11 MB) to the CRAB cache.
+DEBUG 2026-02-19 00:28:15.347 UTC: 	 Encoded data for curl request: subresource=upload&objecttype=sandbox&tarballname=e2b795c2210c222bb35d8540017a54f1b2d910e8f6f6bc3cac201ace06df48a8.tar.gz
+DEBUG 2026-02-19 00:28:15.512 UTC: 	 sandbox e2b795c2210c222bb35d8540017a54f1b2d910e8f6f6bc3cac201ace06df48a8.tar.gz is already in the S3 store, will not upload again
+DEBUG 2026-02-19 00:28:15.512 UTC: 	 Loading required information from the environment
+DEBUG 2026-02-19 00:28:15.512 UTC: 	 Found CMSSW_13_2_13 for el8_amd64_gcc11 with base /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13
+DEBUG 2026-02-19 00:28:15.512 UTC: 	 Making tarball in /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test24_mc_ZMM_ZZto2L2Nu/inputs/debugFiles.tgz
+DEBUG 2026-02-19 00:28:15.529 UTC: 	 Uploading archive /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test24_mc_ZMM_ZZto2L2Nu/inputs/debugFiles.tgz (4 KB) to the CRAB cache.
+DEBUG 2026-02-19 00:28:15.533 UTC: 	 Encoded data for curl request: subresource=upload&objecttype=sandbox&tarballname=972f27fe91177fd5d0b990c6b1eb7d6b0ca113cc87aa6e9edadac673ee127553.tar.gz
+DEBUG 2026-02-19 00:28:15.676 UTC: 	 Will execute:
+curl -f -v -X POST  -H "User-Agent: CRAB" -F "key=rdelliga/sandboxes/972f27fe91177fd5d0b990c6b1eb7d6b0ca113cc87aa6e9edadac673ee127553.tar.gz" -F "AWSAccessKeyId=715203df6482458ba839e73e6dab634b" -F "policy=eyJleHBpcmF0aW9uIjogIjIwMjYtMDItMTlUMDE6Mjg6MTVaIiwgImNvbmRpdGlvbnMiOiBbeyJidWNrZXQiOiAiY3JhYmNhY2hlX3Byb2QifSwgeyJrZXkiOiAicmRlbGxpZ2Evc2FuZGJveGVzLzk3MmYyN2ZlOTExNzdmZDVkMGI5OTBjNmIxZWI3ZDZiMGNhMTEzY2M4N2FhNmU5ZWRhZGFjNjczZWUxMjc1NTMudGFyLmd6In1dfQ==" -F "signature=XHSA8JWbIXRm8TtPk4+fIcPS6mQ=" -F "file=@/gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test24_mc_ZMM_ZZto2L2Nu/inputs/debugFiles.tgz" "https://s3.cern.ch/crabcache_prod"
+DEBUG 2026-02-19 00:28:15.888 UTC: 	 exitcode: 0
+stdout: b''
+DEBUG 2026-02-19 00:28:15.888 UTC: 	 upload to S3 of sandbox /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test24_mc_ZMM_ZZto2L2Nu/inputs/debugFiles.tgz completed
+DEBUG 2026-02-19 00:28:15.888 UTC: 	 make sure that object is ready for retrieve
+DEBUG 2026-02-19 00:28:16.890 UTC: 	 Encoded data for curl request: subresource=download&objecttype=sandbox&tarballname=972f27fe91177fd5d0b990c6b1eb7d6b0ca113cc87aa6e9edadac673ee127553.tar.gz&clientmethod=head_object
+DEBUG 2026-02-19 00:28:17.077 UTC: 	 PreSignedUrl to download sandbox received OK
+DEBUG 2026-02-19 00:28:17.081 UTC: 	 Will execute:
+ curl -v -s -f -o /dev/null --head  "https://s3.cern.ch/crabcache_prod/rdelliga/sandboxes/972f27fe91177fd5d0b990c6b1eb7d6b0ca113cc87aa6e9edadac673ee127553.tar.gz?AWSAccessKeyId=715203df6482458ba839e73e6dab634b&Signature=FFb2A4Dj20os2QbxuyrhL5dxyY4%3D&Expires=1771464497"
+DEBUG 2026-02-19 00:28:17.199 UTC: 	 exitcode: 0
+stdout: b''
+DEBUG 2026-02-19 00:28:17.199 UTC: 	 sandbox /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test24_mc_ZMM_ZZto2L2Nu/inputs/debugFiles.tgz successfully uploaded to S3
+DEBUG 2026-02-19 00:28:17.200 UTC: 	 Result uploading input files: e2b795c2210c222bb35d8540017a54f1b2d910e8f6f6bc3cac201ace06df48a8.tar.gz 
+DEBUG 2026-02-19 00:28:17.200 UTC: 	 submit() - self.configuration from WMCore.Configuration import Configuration
+config = Configuration()
+config.section_('General')
+config.General.requestName = 'test24_mc_ZMM_ZZto2L2Nu'
+config.section_('JobType')
+config.JobType.psetName = 'forest_miniAOD_run3_MC_ZMM.py'
+config.JobType.allowUndistributedCMSSW = True
+config.JobType.pluginName = 'Analysis'
+config.JobType.maxJobRuntimeMin = 1200
+config.JobType.maxMemoryMB = 2500
+config.section_('Data')
+config.Data.outputDatasetTag = 'CRAB3_Analysis_test24_ZMM_ZZto2L2Nu'
+config.Data.inputDBS = 'global'
+config.Data.inputDataset = '/ZZto2L2Nu_TuneCP5_5p36TeV_powheg-pythia8/HINPbPbSpring23MiniAOD-132X_mcRun3_2023_realistic_HI_v9-v2/MINIAODSIM'
+config.Data.unitsPerJob = 1
+config.Data.splitting = 'FileBased'
+config.Data.publication = False
+config.section_('Site')
+config.Site.storageSite = 'T3_IT_Trieste'
+config.section_('User')
+config.section_('Debug')
+
+DEBUG 2026-02-19 00:28:17.200 UTC: 	 submit() - self.configreq {'dryrun': 0, 'workflow': 'crab_test24_mc_ZMM_ZZto2L2Nu', 'saveoutput': 1, 'savelogsflag': 0, 'inputdata': '/ZZto2L2Nu_TuneCP5_5p36TeV_powheg-pythia8/HINPbPbSpring23MiniAOD-132X_mcRun3_2023_realistic_HI_v9-v2/MINIAODSIM', 'nonvaliddata': 0, 'userfiles': [], 'dbsurl': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader', 'useparent': 0, 'ignorelocality': 0, 'splitalgo': 'FileBased', 'algoargs': 1, 'totalunits': 0, 'publication': 0, 'publishdbsurl': 'https://cmsweb.cern.ch/dbs/prod/phys03/DBSWriter', 'publishname2': 'CRAB3_Analysis_test24_ZMM_ZZto2L2Nu', 'jobtype': 'Analysis', 'generator': 'pythia', 'addoutputfiles': [], 'maxjobruntime': 1200, 'numcores': 1, 'maxmemory': 2500, 'priority': 10, 'nonprodsw': 1, 'asyncdest': 'T3_IT_Trieste', 'requireaccelerator': 0, 'oneEventMode': 0, 'extrajdl': [], 'ignoreglobalblacklist': 0, 'partialdataset': 0, 'inputblocks': []}
+DEBUG 2026-02-19 00:28:17.201 UTC: 	 submit() - jobconfig {'addoutputfiles': [], 'tfileoutfiles': ['HiForestMiniAOD.root'], 'edmoutfiles': [], 'jobarch': 'el8_amd64_gcc11', 'jobminuarch': 'any', 'jobsw': 'CMSSW_13_2_13', 'inputdata': '/ZZto2L2Nu_TuneCP5_5p36TeV_powheg-pythia8/HINPbPbSpring23MiniAOD-132X_mcRun3_2023_realistic_HI_v9-v2/MINIAODSIM', 'cachefilename': 'e2b795c2210c222bb35d8540017a54f1b2d910e8f6f6bc3cac201ace06df48a8.tar.gz', 'debugfilename': '972f27fe91177fd5d0b990c6b1eb7d6b0ca113cc87aa6e9edadac673ee127553.tar.gz', 'jobtype': 'Analysis'}
+INFO 2026-02-19 00:28:17.201 UTC: 	 Sending the request to the server at cmsweb.cern.ch
+DEBUG 2026-02-19 00:28:17.201 UTC: 	 Submitting {'dryrun': 0, 'workflow': 'crab_test24_mc_ZMM_ZZto2L2Nu', 'saveoutput': 1, 'savelogsflag': 0, 'inputdata': '/ZZto2L2Nu_TuneCP5_5p36TeV_powheg-pythia8/HINPbPbSpring23MiniAOD-132X_mcRun3_2023_realistic_HI_v9-v2/MINIAODSIM', 'nonvaliddata': 0, 'userfiles': [], 'dbsurl': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader', 'useparent': 0, 'ignorelocality': 0, 'splitalgo': 'FileBased', 'algoargs': 1, 'totalunits': 0, 'publication': 0, 'publishdbsurl': 'https://cmsweb.cern.ch/dbs/prod/phys03/DBSWriter', 'publishname2': 'CRAB3_Analysis_test24_ZMM_ZZto2L2Nu', 'jobtype': 'Analysis', 'generator': 'pythia', 'addoutputfiles': [], 'maxjobruntime': 1200, 'numcores': 1, 'maxmemory': 2500, 'priority': 10, 'nonprodsw': 1, 'asyncdest': 'T3_IT_Trieste', 'requireaccelerator': 0, 'oneEventMode': 0, 'extrajdl': [], 'ignoreglobalblacklist': 0, 'partialdataset': 0, 'inputblocks': [], 'tfileoutfiles': ['HiForestMiniAOD.root'], 'edmoutfiles': [], 'jobarch': 'el8_amd64_gcc11', 'jobminuarch': 'any', 'jobsw': 'CMSSW_13_2_13', 'cachefilename': 'e2b795c2210c222bb35d8540017a54f1b2d910e8f6f6bc3cac201ace06df48a8.tar.gz', 'debugfilename': '972f27fe91177fd5d0b990c6b1eb7d6b0ca113cc87aa6e9edadac673ee127553.tar.gz'} 
+DEBUG 2026-02-19 00:28:17.202 UTC: 	 Encoded data for curl request: dryrun=0&workflow=crab_test24_mc_ZMM_ZZto2L2Nu&saveoutput=1&savelogsflag=0&inputdata=%2FZZto2L2Nu_TuneCP5_5p36TeV_powheg-pythia8%2FHINPbPbSpring23MiniAOD-132X_mcRun3_2023_realistic_HI_v9-v2%2FMINIAODSIM&nonvaliddata=0&dbsurl=https%3A%2F%2Fcmsweb.cern.ch%2Fdbs%2Fprod%2Fglobal%2FDBSReader&useparent=0&ignorelocality=0&splitalgo=FileBased&algoargs=1&totalunits=0&publication=0&publishdbsurl=https%3A%2F%2Fcmsweb.cern.ch%2Fdbs%2Fprod%2Fphys03%2FDBSWriter&publishname2=CRAB3_Analysis_test24_ZMM_ZZto2L2Nu&jobtype=Analysis&generator=pythia&maxjobruntime=1200&numcores=1&maxmemory=2500&priority=10&nonprodsw=1&asyncdest=T3_IT_Trieste&requireaccelerator=0&oneEventMode=0&ignoreglobalblacklist=0&partialdataset=0&jobarch=el8_amd64_gcc11&jobminuarch=any&jobsw=CMSSW_13_2_13&cachefilename=e2b795c2210c222bb35d8540017a54f1b2d910e8f6f6bc3cac201ace06df48a8.tar.gz&debugfilename=972f27fe91177fd5d0b990c6b1eb7d6b0ca113cc87aa6e9edadac673ee127553.tar.gz&tfileoutfiles=HiForestMiniAOD.root
+DEBUG 2026-02-19 00:28:17.545 UTC: 	 Result: {'result': [{'RequestName': '260219_002817:rdelliga_crab_test24_mc_ZMM_ZZto2L2Nu'}]}
+INFO 2026-02-19 00:28:17.555 UTC: 	 Success: Your task has been delivered to the prod CRAB3 server.
+INFO 2026-02-19 00:28:17.555 UTC: 	 Task name: 260219_002817:rdelliga_crab_test24_mc_ZMM_ZZto2L2Nu
+INFO 2026-02-19 00:28:17.555 UTC: 	 Project dir: ./crab_test24_mc_ZMM_ZZto2L2Nu
+INFO 2026-02-19 00:28:17.555 UTC: 	 Please use ' crab status -d ./crab_test24_mc_ZMM_ZZto2L2Nu ' to check how the submission process proceeds.
+DEBUG 2026-02-19 00:28:17.555 UTC: 	 About to return
+INFO 2026-02-19 00:28:17.572 UTC: 	 Log file is /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_13_2_13/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test24_mc_ZMM_ZZto2L2Nu/crab.log
