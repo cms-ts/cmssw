@@ -27,9 +27,12 @@ struct BinningConfig_vz {
 // Configuration for combined Vz and Centrality binning
 struct BinningConfig_Combined_Vz_Centrality {
     // Total number of centrality bins (e.g., 30 bins from 0-30% centrality)
-    static const int num_centrality_bins = 30; // 0-30% -> hiBin 0-60 (60/30 = 2 hiBin per bin)
-    static constexpr float centrality_min_hiBin = 0.0f;
-    static constexpr float centrality_max_hiBin = 60.0f; // Corresponds to 30% centrality
+    //static const int num_centrality_bins = 30; // 0-30% -> hiBin 0-60 (60/30 = 2 hiBin per bin)
+    //static constexpr float centrality_min_hiBin = 0.0f;
+    //static constexpr float centrality_max_hiBin = 60.0f; // Corresponds to 30% centrality
+
+    // We will define the min/max and number of bins dynamically in the macro now.
+    // Only keep the Vz specific configs and event limits here.
 
     // Total number of vz bins (e.g., 3 bins)
     static const int num_vz_bins = 3;

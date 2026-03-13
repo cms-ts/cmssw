@@ -1,10 +1,12 @@
 //--------------------------------
 //  Plot data and MC stacks
 //--------------------------------
+// Macro: h_stack.C
+// Arguments: (collision_type, isAlternative, cent_min, cent_max, ptZ_min, ptZ_max)
 
 // To plot all histos defined in histo_par structure:
 
-// 1. Default (PbPb23):
+// 1. Default (PbPb23, Nominal MC, Cent 0-30%, pT > 40):
 root -l -b -q h_stack.C
 
 // 2. For pp reference (ppref24):
@@ -15,3 +17,9 @@ root -l -b -q 'h_stack.C("ppref24", true)'
 // 3. For 2024 PbPb (PbPb24):
 root -l -b -q 'h_stack.C("PbPb24")'
 
+// 4. Example with different kinematics (PbPb23, Cent 30-50%, ptZ > 40):
+root -l -b -q 'h_stack.C("PbPb23", false, 30, 50, 40, 9999)'
+
+// 5. Example for ppref24 with different kinematics (ppref24, ptZ > 60):
+// (Note: Centrality is ignored for pp, but still needs to be passed as an argument)
+root -l -b -q 'h_stack.C("ppref24", false, 0, 30, 60, 9999)'

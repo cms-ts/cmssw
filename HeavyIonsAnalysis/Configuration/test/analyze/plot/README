@@ -1,10 +1,29 @@
 //--------------------------------
+//  Plot iso check
+//--------------------------------
+// Macro: plot_iso_check.C
+// Arguments: (collision_type, cent_min, cent_max, ptZ_min, ptZ_max)
+
+// 1. PbPb23 (Defaults: 0-30%, pT > 40)
+root -l -b -q plot_iso_check.C
+
+// 2. ppref24
+root -l -b -q 'plot_iso_check.C("ppref24")'
+
+// 3. Use "PbPb24" for PbPb24
+root -l -b -q 'plot_iso_check.C("PbPb24")'
+
+// 4. Example for PbPb23 with different kinematics (30-50%, pT > 60)
+root -l -b -q 'plot_iso_check.C("PbPb23", 30, 50, 60, 9999)'
+
+
+//--------------------------------
 //  Plot veto check
 //--------------------------------
 // Macro: plot_veto_check.C
-// Arguments: (collision_type, isData)
+// Arguments: (collision_type, isData, cent_min, cent_max, ptZ_min, ptZ_max)
 
-// 1. PbPb23 (Defaults)
+// 1. PbPb23 (Defaults: 0-30%, pT > 40)
 root -l -b -q plot_veto_check.C                    // Data (Default)
 root -l -b -q 'plot_veto_check.C("PbPb23", false)'  // MC Signal
 
@@ -16,8 +35,12 @@ root -l -b -q 'plot_veto_check.C("ppref24", false)' // MC Signal
 root -l -b -q 'plot_veto_check.C("PbPb24", true)'   // Data
 root -l -b -q 'plot_veto_check.C("PbPb24", false)' // MC Signal
 
-// 4. Specific Background MC (e.g., TT, WZ, etc.)
+// 4. Example for PbPb23 MC Signal with different kinematics (30-50%, pT > 60)
+root -l -b -q 'plot_veto_check.C("PbPb23", false, 30, 50, 60, 9999)'
+
+// 5. Specific Background MC (e.g., TT, WZ, etc.)
 // You can specify MC sample label modifying inside plot_veto_check.C
+
 
 // --- Deprecated ---
 //--------------------------------

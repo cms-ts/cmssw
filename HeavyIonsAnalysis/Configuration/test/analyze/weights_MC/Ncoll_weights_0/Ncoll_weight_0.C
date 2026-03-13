@@ -13,17 +13,22 @@
 //#include "../MC_samples.h" // Include the header file
 #include "../tdrstyle.C"
 
-void Ncoll_weight_0(const char * collision_type = "PbPb23", int after_flag  = 0) {
+void Ncoll_weight_0(const char * collision_type = "PbPb23", int after_flag  = 0, int cent_min = 0, int cent_max = 30, double ptZ_min = 40.0, double ptZ_max = 9999.0) {
 
         //histogram parameters
         std::string histo_name = "h_cen";
-        std::string x_title = "centrality bin";
+        std::string x_title = "centrality";
         std::string y_title = "Events";
         int n_bin = 20;
         double x_min = 0.;
         double x_max = 100.;
 
         setTDRStyle();
+
+        // Build the dynamic run tag
+        TString run_tag;
+        if (ptZ_max > 9000) run_tag = Form("_Cen%d_%d_ptZ%.0f_Inf", cent_min, cent_max, ptZ_min);
+        else run_tag = Form("_Cen%d_%d_ptZ%.0f_%.0f", cent_min, cent_max, ptZ_min, ptZ_max);
 
         double number_A = 208; // Lead
         // Collision name
@@ -39,16 +44,17 @@ void Ncoll_weight_0(const char * collision_type = "PbPb23", int after_flag  = 0)
         TLegend* legend = new TLegend(0.66, 0.7, 0.88, 0.8);
         legend->SetBorderSize(0);
 
-        // Open MC file
+        // Open MC file dynamically using the run tag
         TString name_output = "HI";
         if (collision_name.Contains("PbPb24")) name_output = "HI24";
-        TString MC_file_name = (after_flag == 0) ? "./output_"+name_output+"_mu_MC_Ncoll_weights.root"
-                                                 : "../rho_weights_1/output_"+name_output+"_mu_MC_rho_weights.root";
+        TString MC_file_name = (after_flag == 0) ? "./output_"+name_output+"_mu_MC_Ncoll_weights" + run_tag + ".root"
+                                                 : "../rho_weights_1/output_"+name_output+"_mu_MC_rho_weights" + run_tag + ".root";
         TFile* file_ = TFile::Open(MC_file_name.Data(), "READ");
         TDirectoryFile* dir = (TDirectoryFile*)file_->Get(name_output+"/Muons");
         TH1D* h = (TH1D*)dir->Get(histo_name.c_str());
-        // Get data histogram
-        TFile* file_data = TFile::Open("./output_"+name_output+"_mu_data_Ncoll_weights.root", "READ");
+        
+        // Get data histogram dynamically using the run tag
+        TFile* file_data = TFile::Open("./output_"+name_output+"_mu_data_Ncoll_weights" + run_tag + ".root", "READ");
         TDirectoryFile* dir_data = (TDirectoryFile*)file_data->Get(name_output+"/Muons");
         TH1D* h_data = (TH1D*)dir_data->Get(histo_name.c_str());
 
@@ -104,7 +110,7 @@ void Ncoll_weight_0(const char * collision_type = "PbPb23", int after_flag  = 0)
 
         // Legend
         legend->AddEntry(h_data, "Data", "PE");
-        legend->AddEntry(h, "Drell-Yan", "f");
+        legend->AddEntry(h, "DY + 2j", "f");
 
         TPad *pad = h_ratio->GetUpperPad();
         pad->cd();
@@ -120,7 +126,6 @@ void Ncoll_weight_0(const char * collision_type = "PbPb23", int after_flag  = 0)
         latex->SetTextColor(kBlack); // Set text color (optional)
         latex->SetTextFont(61);
         latex->DrawLatexNDC(0.1,0.92,"CMS");
-
 
         TLatex* latex1 = new TLatex();
         latex1->SetTextSize(0.045); // Set text size (adjust as needed)
@@ -143,9 +148,8 @@ void Ncoll_weight_0(const char * collision_type = "PbPb23", int after_flag  = 0)
 
         c->Update();
 
-        // Print the canvas
+        // Print the canvas with the tag
         std::string is_bef_or_aft = "_before.pdf";
         if (after_flag == 1) is_bef_or_aft = "_after.pdf";
-        c->Print((histo_name + "_" + name_output.Data() + is_bef_or_aft).c_str());
+        c->Print((histo_name + "_" + name_output.Data() + run_tag.Data() + is_bef_or_aft).c_str());
 }
-

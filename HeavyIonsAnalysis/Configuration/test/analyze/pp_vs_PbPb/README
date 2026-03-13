@@ -3,9 +3,16 @@
 //--------------------------------
 
 //--------------------------------
-// To run vs_PbPb.C (before mixed event subtraction)
-root -l vs_PbPb.C
-// after subtraction
-root -l 'vs_PbPb.c(true)'
-// inside the macro choose which hist to compare
+// To run vs_PbPb.C with default kinematics (0-30%, pT_Z > 40)
+// before mixed event subtraction:
+root -l -b -q vs_PbPb.C
+
+// after subtraction:
+root -l -b -q 'vs_PbPb.C(true)'
+
+// To run with specific collision systems, centrality, and pT cuts:
+// Arguments: (subtracted, pb_type, pp_type, cent_min, cent_max, ptZ_min, ptZ_max)
+root -l 'vs_PbPb.C(true, "PbPb24", "ppref24", 30, 50, 60.0, 9999.0)'
+
+// Note: inside the macro, comment/uncomment `histo_name` to choose which hist to compare.
 //--------------------------------

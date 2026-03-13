@@ -4,7 +4,7 @@
 #include "TH1D.h"
 #include "../helpers.h"           // for getLumiFromSummary, cen tables, etc.
 
-TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool isData, const char * histo_name, const char * x_title, const char * y_title, int bin, double min, double max);
+TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool isData, const char * histo_name, const char * x_title, const char * y_title, int bin, double min, double max, int cent_min, int cent_max, double ptZ_min, double ptZ_max);
 
 // Use a map to store histogram parameters
 std::map<std::string, std::tuple<const char*, const char*, int, double, double>> histo_params = {
@@ -13,7 +13,7 @@ std::map<std::string, std::tuple<const char*, const char*, int, double, double>>
     {"h_xZj", {"x_{Zj}", "Events", 5, 0, 2}},
 };
 
-void plot_MinBias(const char* collision_type = "PbPb23", const char* h_n = "h_deltaPhi_Zj", bool isData = true) {
+void plot_MinBias(const char* collision_type = "PbPb23", const char* h_n = "h_deltaPhi_Zj", bool isData = true, int cent_min = 0, int cent_max = 30, double ptZ_min = 40.0, double ptZ_max = 9999.0) {
 // Check if the histogram name exists in the map
     if (histo_params.find(h_n) == histo_params.end()) {
         std::cerr << "Error: Histogram '" << h_n << "' not found in parameter map." << std::endl;
@@ -56,20 +56,20 @@ void plot_MinBias(const char* collision_type = "PbPb23", const char* h_n = "h_de
   // mode generally : 
   //   iPos = 10*(alignement 1/2/3) + position (1/2/3 = left/center/right)
 
-  example_plot( iPeriod, 0 , collision_type, isData, h_n, x_title, y_title, bin, min, max);   // out of frame (in exceptional cases)
+  example_plot( iPeriod, 0 , collision_type, isData, h_n, x_title, y_title, bin, min, max, cent_min, cent_max, ptZ_min, ptZ_max);    // out of frame (in exceptional cases)
   //  example_plot( iPeriod, 11 );  // left-aligned
   //  example_plot( iPeriod, 33 );  // right-aligned
 
   //  writeExtraText = false;       // remove Preliminary
   
-  //  example_plot( iPeriod, 0 );   // out of frame (in exceptional cases)
+  //  example_plot( iPeriod, 0 );    // out of frame (in exceptional cases)
 
   //  example_plot( iPeriod, 11 );  // default: left-aligned
   //  example_plot( iPeriod, 22 );  // centered
-  //  example_plot( iPeriod, 33 );  // right-aligned  
+  //  example_plot( iPeriod, 33 );  // right-aligned   
 }
 
-TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool isData, const char * histo_name, const char * x_title, const char * y_title, int bin, double min, double max)
+TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool isData, const char * histo_name, const char * x_title, const char * y_title, int bin, double min, double max, int cent_min, int cent_max, double ptZ_min, double ptZ_max)
 { 
   //  if( iPos==0 ) relPosX = 0.12;
 
@@ -81,8 +81,8 @@ TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool i
   //  (this script does not pretend to work in all configurations)
   // iPeriod = 1*(0/1 7 TeV) + 2*(0/1 8 TeV)  + 4*(0/1 13 TeV) 
   // For instance: 
-  //               iPeriod = 3 means: 7 TeV + 8 TeV
-  //               iPeriod = 7 means: 7 TeV + 8 TeV + 13 TeV 
+  //                iPeriod = 3 means: 7 TeV + 8 TeV
+  //                iPeriod = 7 means: 7 TeV + 8 TeV + 13 TeV 
   // Initiated by: Gautier Hamel de Monchenault (Saclay)
   // Updated by:   Dinko Ferencek (Rutgers)
   //
@@ -95,14 +95,19 @@ TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool i
   float L = 0.12*W_ref;
   float R = 0.04*W_ref;
 
+  // --- Build Run Tag ---
+  TString run_tag;
+  if (ptZ_max > 9000) run_tag = Form("_Cen%d_%d_ptZ%.0f_Inf", cent_min, cent_max, ptZ_min);
+  else run_tag = Form("_Cen%d_%d_ptZ%.0f_%.0f", cent_min, cent_max, ptZ_min, ptZ_max);
+
   TString canvName = histo_name;
   //canvName += "_";
   //canvName += W;
   //canvName += "-";
   //canvName += H;
-  //canvName += "_";  
+  //canvName += "_";   
   //canvName += iPeriod;
-  canvName += "_MinBias";
+  canvName += "_MinBias" + run_tag;
   if (isData) canvName += "_data"; else canvName += "_MC";
   //if( writeExtraText ) canvName += "-prelim";
   //if( iPos%10==0 ) canvName += "-out";
@@ -149,8 +154,8 @@ TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool i
     if (s_coll.Contains("PbPb23")) name_prefix = "HI";
     else if (s_coll.Contains("PbPb24"))  name_prefix = "HI24";
 
-    if (isData) fname.Form("../plot/output_%s_mu_data.root", name_prefix.Data());
-    else        fname.Form("../plot/output_%s_mu_MC_signal.root", name_prefix.Data());
+    if (isData) fname.Form("../plot/output_%s_mu_data%s.root", name_prefix.Data(), run_tag.Data());
+    else        fname.Form("../plot/output_%s_mu_MC_signal%s.root", name_prefix.Data(), run_tag.Data());
 
     cout << "Opening " << fname << endl;
     TFile* file = TFile::Open(fname, "READ");
@@ -236,8 +241,9 @@ TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool i
     TLatex* latex1 = new TLatex();
     latex1->SetTextFont(42);
     latex1->SetTextSize(0.036); // Set text size (adjust as needed)
-    latex1->DrawLatexNDC(x_min,0.6,"Centrality: 0-30%");
-    latex1->DrawLatexNDC(x_min,0.55,"p_{T}^{Z} > 40 GeV");
+    latex1->DrawLatexNDC(x_min,0.6, Form("Centrality: %d-%d%%", cent_min, cent_max));
+    if (ptZ_max > 9000) latex1->DrawLatexNDC(x_min,0.55, Form("p_{T}^{Z} > %.0f GeV", ptZ_min));
+    else latex1->DrawLatexNDC(x_min,0.55, Form("p_{T}^{Z}: %.0f-%.0f GeV", ptZ_min, ptZ_max));
     latex1->DrawLatexNDC(x_min,0.49,"p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.5");
     if (!canvName.Contains("delta")) latex1->DrawLatexNDC(x_min,0.44,"#Delta#phi_{Zj} > 7#pi/8"); // Use normalized device coordinates NDC (0-1)
 

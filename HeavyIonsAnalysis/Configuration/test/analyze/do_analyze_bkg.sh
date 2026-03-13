@@ -2,15 +2,18 @@
 # Wrapper script for analyzing Background MC samples using the final analysis step (Phase 3).
 # Dynamically reads sample labels from MC_samples.h
 
-# --- CONFIGURATION SECTION ---
-# Uncomment ONE of the following lines to select the collision type
-#COLLISION="PbPb23"
-COLLISION="ppref24"
-#COLLISION="PbPb24"
-
+# --- ARGUMENT SECTION ---
+# Usage: ./do_analyze_bkg.sh [collision] [cent_min] [cent_max] [ptZ_min] [ptZ_max]
+# Default: PbPb23 0 30 40 9999
+COLLISION=${1:-"PbPb23"}
+CENT_MIN=${2:-0}
+CENT_MAX=${3:-30}
+PTZ_MIN=${4:-40.0}
+PTZ_MAX=${5:-9999.0}
 
 echo "------------------------------------------------"
 echo "Analyzing backgrounds for: $COLLISION"
+echo "Kinematics: Cent $CENT_MIN-$CENT_MAX%, ptZ $PTZ_MIN-$PTZ_MAX"
 echo "------------------------------------------------"
 
 # 1. Determine which C++ vector to read from the header file
@@ -29,8 +32,8 @@ fi
 # - Finds the line starting with the vector definition
 # - Reads until the closing brace '};'
 # - Skips lines starting with '//'
-# - Splits by quotes (") and takes the 6th field (path="1", out="3", label="5" -> actually index 6 in 1-based split includes quotes)
-# - Filters out "signal"
+# - Splits by quotes (") and takes the 6th field
+# - Filters out "signal" and "alternative"
 echo "Reading sample list from MC_samples.h (Vector: $CPP_VECTOR)..."
 
 input_name=($(awk -v vname="$CPP_VECTOR" '
@@ -42,17 +45,16 @@ input_name=($(awk -v vname="$CPP_VECTOR" '
 
     # Process lines inside the block
     in_block {
-        # Skip commented lines (start with optional whitespace then //)
+        # Skip commented lines
         if ($0 ~ /^[ \t]*\/\//) next
 
         # Check if line contains quotes (valid entry)
         if ($0 ~ /"/) {
             # Split line by quotes.
-            # Field 2 = path, Field 4 = output file, Field 6 = Label
             split($0, arr, "\"")
             label = arr[6]
 
-            # Print label if it is valid and not signal
+            # Print label if it is valid and not signal/alternative
             if (label != "" && label != "signal" && label != "alternative") {
                 print label
             }
@@ -73,8 +75,8 @@ echo "------------------------------------------------"
 for k in "${input_name[@]}"; do
   echo "-> Analyzing MC Sample: $k"
   # Run the analyzer in Phase 3 (Final Analysis with weights applied)
-  # Syntax: analyze_HI_TTreeReader_ZMM.C(collision, sample_name, weight_phase, systFlag)
-  root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"$COLLISION\", \"$k\", 3, 0)"
+  # Updated to pass: (collision, sample, weight_phase, systFlag, cent_min, cent_max, ptZ_min, ptZ_max)
+  root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"$COLLISION\", \"$k\", 3, 0, $CENT_MIN, $CENT_MAX, $PTZ_MIN, $PTZ_MAX)"
 done
 
 echo "------------------------------------------------"

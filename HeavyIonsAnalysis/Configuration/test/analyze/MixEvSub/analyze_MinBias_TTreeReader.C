@@ -9,16 +9,17 @@
 //                                                                                                                            //
 //   DESCRIPTION:                                                                                                             //
 //   Creates a library of MinBias events to be used for Mixed Event Background Subtraction in the Z+Jet analysis.             //
-//   It reads MinBias tuples, processes jets, and stores event info (HF, VZ, Cen) and Leading Jet info into a flat TTree.     //
+//   It reads MinBias tuples, processes jets, stores event info (HF, VZ, Cen) and Leading Jet info into a flat TTree.         //
+//   Now supports dynamic centrality slicing for VZ and Combined binning options.                                             //
 //                                                                                                                            //
 //   CORE WORKFLOW:                                                                                                           //
-//   1. Initialization:   Load Chains, JEC, JER, and Jet Selectors.    2. Bin Setup:     Define mixing bins (HF, VZ, VZ+Cen). //
-//   3. Event Loop:       Apply filters, calculate Centrality/Rho.     4. Jet Process:   Apply JEC/JER, cuts cleaning.        //
+//   1. Initialization:   Load Chains, JEC, JER, and Jet Selectors.    2. Bin Setup:    Define mixing bins (HF, VZ, VZ+Cen).  //
+//   3. Event Loop:       Apply filters, calculate Centrality/Rho.     4. Jet Process:  Apply JEC/JER, cuts cleaning.         //
 //   5. Storage:          Fill 'jet_tree' with event data and jet_l.                                                          //
 //                                                                                                                            //
 //   USAGE EXAMPLES for PbPb23:                                                                                               //
-//   root -l 'analyze_MinBias_TTreeReader.C("PbPb23", true, 0)'   // Data (HF Binning)                                        //
-//   root -l 'analyze_MinBias_TTreeReader.C("PbPb23", false, 2)'  // MC (VZ + Cen Binning)                                    //
+//   root -l 'analyze_MinBias_TTreeReader.C("PbPb23", true, 0, 0, 100)' // Data (HF Binning - Cent cuts ignored)              //
+//   root -l 'analyze_MinBias_TTreeReader.C("PbPb23", false, 2, 0, 30)' // MC (VZ + Cen Binning, 0-30% Centrality)            //
 //                                                                                                                            //
 //   PARAMETERS:                                                                                                              //
 //   ------------------------------------------------------------------------------                                           //
@@ -28,6 +29,9 @@
 //                                                                                                                            //
 //   [use_binning_option]   Controls the binning scheme for mixing:                                                           //
 //    0: HF binning only           1: VZ binning only             2: VZ + Cen (Combined - Recommended for Analysis)           //
+//                                                                                                                            //
+//   [cent_min] (int)       Minimum centrality percentage (e.g., 0).                                                          //
+//   [cent_max] (int)       Maximum centrality percentage (e.g., 30).                                                         //
 //                                                                                                                            //
 //   DEPENDENCIES:                                                                                                            //
 //   - JetCorrector.h, JERProvider.h, JetSelection_PbPb.h         - binning_config.h                                          //
@@ -69,7 +73,7 @@
 
 using namespace std;
 
-void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = true, int use_binning_option = 2) {
+void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = true, int use_binning_option = 2, int cent_min = 0, int cent_max = 30) {
 
   TString s_year = year_str;
   bool is2023 = s_year.Contains("23");
@@ -83,7 +87,7 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
   if (isData) {
     cout << "Running on DATA - Year: " << s_year << endl;
     if (is2023) {
-        glob("/eos/infnts/cms/store/user/kdeleo/HIMinimumBias0/CRAB3_Analysis_test15_MinBias0/250522_121447/0000/HiForestMiniAOD_DATA_*.root", GLOB_NOSORT, NULL, &globlist);
+        glob("/eos/infnts/cms/store/user/rdelliga/HIMinimumBias0/CRAB3_Analysis_test24_data_MinBias/*/*/HiForestMiniAOD_*.root", GLOB_NOSORT, NULL, &globlist);
     }
     else if (is2024) {
         glob("/eos/infnts/cms/store/user/rdelliga/HIMinimumBias0/CRAB3_Analysis_test23_PbPb24*MinBias*/*/*/HiForestMiniAOD_DATA_*.root", GLOB_NOSORT, NULL, &globlist);
@@ -92,7 +96,7 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
   else {
     cout << "Running on MC - Year: " << s_year << endl;
     if (is2023) {
-        glob("/eos/infnts/cms/store/user/kdeleo/MinBias_Drum5F_5p36TeV_hydjet/CRAB3_Analysis_test15_mc_MinBias/250523_135118/0000/HiForestMiniAOD_MC_*.root", GLOB_NOSORT, NULL, &globlist);
+        glob("/eos/infnts/cms/store/user/rdelliga/MinBias_Drum5F_5p36TeV_hydjet/CRAB3_Analysis_test24_mc_MinBias/260219_162314/0000/HiForestMiniAOD_*.root", GLOB_NOSORT, NULL, &globlist);
     }
     else if (is2024) {
         glob("/eos/infnts/cms/store/user/rdelliga/MinBias_Drum5F_5p36TeV_hydjet/CRAB3_Analysis_test20_mc_PbPb24_MinBias/260109_102927/0000/HiForestMiniAOD_*.root", GLOB_NOSORT, NULL, &globlist);
@@ -281,9 +285,14 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
     }
   } else if (use_binning_option == 2) { // VZ + Centrality binning
     // Centrality bins based on hiBin (e.g., 30 bins from 0-30% centrality)
-    float cen_bin_width_hiBin = (BinningConfig_Combined_Vz_Centrality::centrality_max_hiBin - BinningConfig_Combined_Vz_Centrality::centrality_min_hiBin) / BinningConfig_Combined_Vz_Centrality::num_centrality_bins;
-    for (int i = 0; i < BinningConfig_Combined_Vz_Centrality::num_centrality_bins; ++i) {
-      float min_hiBin = BinningConfig_Combined_Vz_Centrality::centrality_min_hiBin + i * cen_bin_width_hiBin;
+    // Define dynamic centrality bounds based on function arguments
+    float min_hiBin_global = cent_min * 2.0;
+    float max_hiBin_global = cent_max * 2.0;
+    int num_centrality_bins = cent_max - cent_min; // e.g., 30 bins for 0-30, 20 bins for 30-50
+
+    float cen_bin_width_hiBin = (max_hiBin_global - min_hiBin_global) / num_centrality_bins;
+    for (int i = 0; i < num_centrality_bins; ++i) {
+      float min_hiBin = min_hiBin_global + i * cen_bin_width_hiBin;
       float max_hiBin = min_hiBin + cen_bin_width_hiBin;
       centrality_bins_combined.push_back({min_hiBin, max_hiBin});
     }
@@ -293,7 +302,7 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
       vz_bins_combined.push_back({BinningConfig_Combined_Vz_Centrality::vz_bin_edges[i], BinningConfig_Combined_Vz_Centrality::vz_bin_edges[i+1]});
     }
 
-    total_bins_count = BinningConfig_Combined_Vz_Centrality::num_centrality_bins * BinningConfig_Combined_Vz_Centrality::num_vz_bins;
+    total_bins_count = num_centrality_bins * BinningConfig_Combined_Vz_Centrality::num_vz_bins;
     events_per_bin_limit = BinningConfig_Combined_Vz_Centrality::ev_per_combined_bin;
 
     std::cout << "Defined combined Centrality-VZ bins (" << total_bins_count << " total):" << std::endl;
@@ -399,7 +408,8 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
     } else if (use_binning_option == 1) { // VZ binning only
       float current_val = *vz;
       // Apply centrality cut for VZ only (e.g., 0-30%)
-      if(*hiBin > 59) continue; // hiBin is centrality*2, so >59 means >29.5%
+      //if(*hiBin > 59) continue; // hiBin is centrality*2, so >59 means >29.5%
+      if(*hiBin < cent_min * 2 || *hiBin >= cent_max * 2) continue;
       int bin_n = 0;
       for (const auto& bin_range : primary_bins) {
         if (current_val >= bin_range.first && current_val < bin_range.second) {
@@ -412,7 +422,8 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
       }
     } else if (use_binning_option == 2) { // VZ + Centrality binning
       // Apply overall centrality cut relevant to the combined binning scheme (e.g., 0-30%)
-      if(*hiBin > 59) continue;
+      //if(*hiBin > 59) continue;
+      if(*hiBin < cent_min * 2 || *hiBin >= cent_max * 2) continue;
 
       int cen_bin_idx = -1;
       int vz_bin_idx = -1;
@@ -559,17 +570,25 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
   TString prefix = "";
   if (is2024) prefix = "HI24_"; // Add prefix for 2024 files
 
+  // Create a centrality tag for the filename, applied only to VZ and Combined binning
+  TString cent_tag = "";
+  if (use_binning_option == 1 || use_binning_option == 2) {
+      // Formats the string to look like "_Cen0_30", "_Cen30_50", etc.
+      cent_tag = Form("_Cen%d_%d", cent_min, cent_max);
+  }
+
   if (isData) {
-    if (use_binning_option == 0) output_filename = "./MinBias_" + prefix + "leading_jets_data_HF.root";
-    else if (use_binning_option == 1) output_filename = "./MinBias_" + prefix + "leading_jets_data_VZ.root";
-    else if (use_binning_option == 2) output_filename = "./MinBias_" + prefix + "leading_jets_data_VZ_Cen_Combined.root";
+    if (use_binning_option == 0) output_filename = "./MinBias_" + prefix + "leading_jets_data_HF.root"; // No cent tag needed for HF
+    else if (use_binning_option == 1) output_filename = "./MinBias_" + prefix + "leading_jets_data_VZ" + cent_tag + ".root";
+    else if (use_binning_option == 2) output_filename = "./MinBias_" + prefix + "leading_jets_data_VZ_Cen_Combined" + cent_tag + ".root";
     else output_filename = "./MinBias_" + prefix + "leading_jets_data_UnknownOption.root";
   } else {
-    if (use_binning_option == 0) output_filename = "./MinBias_" + prefix + "leading_jets_MC_HF.root";
-    else if (use_binning_option == 1) output_filename = "./MinBias_" + prefix + "leading_jets_MC_VZ.root";
-    else if (use_binning_option == 2) output_filename = "./MinBias_" + prefix + "leading_jets_MC_VZ_Cen_Combined.root";
+    if (use_binning_option == 0) output_filename = "./MinBias_" + prefix + "leading_jets_MC_HF.root"; // No cent tag needed for HF
+    else if (use_binning_option == 1) output_filename = "./MinBias_" + prefix + "leading_jets_MC_VZ" + cent_tag + ".root";
+    else if (use_binning_option == 2) output_filename = "./MinBias_" + prefix + "leading_jets_MC_VZ_Cen_Combined" + cent_tag + ".root";
     else output_filename = "./MinBias_" + prefix + "leading_jets_MC_UnknownOption.root";
   }
+  
   outputFile = new TFile(output_filename, "RECREATE");
 
   // Write the TTree

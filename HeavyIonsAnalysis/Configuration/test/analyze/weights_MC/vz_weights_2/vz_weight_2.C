@@ -13,7 +13,7 @@
 //#include "../MC_samples.h" // Include the header file
 #include "../tdrstyle.C"
 
-void vz_weight_2(const char * collision_type = "PbPb23", int after_flag  = 0) {
+void vz_weight_2(const char * collision_type = "PbPb23", int after_flag  = 0, int cent_min = 0, int cent_max = 30, double ptZ_min = 40.0, double ptZ_max = 9999.0) {
 
         //histogram parameters
         std::string histo_name = "h_vz";
@@ -25,10 +25,20 @@ void vz_weight_2(const char * collision_type = "PbPb23", int after_flag  = 0) {
 
         setTDRStyle();
 
+        // Build the dynamic run tag
+        bool isPbPb = TString(collision_type).Contains("PbPb");
+        TString run_tag;
+        if (isPbPb) {
+          if (ptZ_max > 9000) run_tag = Form("_Cen%d_%d_ptZ%.0f_Inf", cent_min, cent_max, ptZ_min);
+          else run_tag = Form("_Cen%d_%d_ptZ%.0f_%.0f", cent_min, cent_max, ptZ_min, ptZ_max);
+        } else {
+          if (ptZ_max > 9000) run_tag = Form("_ptZ%.0f_Inf", ptZ_min);
+          else run_tag = Form("_ptZ%.0f_%.0f", ptZ_min, ptZ_max);
+        }
+
         double number_A = 208; // Lead
         // Collision name
         TString collision_name = collision_type; // Collision name
-        bool isPbPb = collision_name.Contains("PbPb");
         // --- Read Lumi Automatically ---
         double Lumi = 1;
         if (collision_name.Contains("PbPb23")) Lumi = getLumiFromSummary("../../brilcalc_Collisions2023HI.csv"); // nb-1
@@ -41,19 +51,21 @@ void vz_weight_2(const char * collision_type = "PbPb23", int after_flag  = 0) {
         TLegend* legend = new TLegend(0.7, 0.7, 0.9, 0.8);
         legend->SetBorderSize(0);
 
-        // Open MC file
+        // Open MC file dynamically using the run tag
         TString name_output = "HI";
         if (collision_name.Contains("PbPb24")) name_output = "HI24";
         else if (collision_name.Contains("ppref24")) name_output = "ppref";
-        TString MC_file_name = (after_flag == 0) ? "./output_"+name_output+"_mu_MC_vz_weights.root"
-                                                 : "../../plot/output_"+name_output+"_mu_MC_signal.root";
+        TString MC_file_name = (after_flag == 0) ? "./output_"+name_output+"_mu_MC_vz_weights" + run_tag + ".root"
+                                                 : "../../plot/output_"+name_output+"_mu_MC_signal" + run_tag + ".root";
         TFile* file_ = TFile::Open(MC_file_name.Data(), "READ");
         TDirectoryFile* dir = (TDirectoryFile*)file_->Get(name_output+"/Muons");
         TH1D* h = (TH1D*)dir->Get(histo_name.c_str());
-        // Get data histogram
-        TFile* file_data = TFile::Open("../../plot/output_"+name_output+"_mu_data.root", "READ");
+        
+        // Get data histogram dynamically using the run tag
+        TFile* file_data = TFile::Open("../../plot/output_"+name_output+"_mu_data" + run_tag + ".root", "READ");
         TDirectoryFile* dir_data = (TDirectoryFile*)file_data->Get(name_output+"/Muons");
         TH1D* h_data = (TH1D*)dir_data->Get(histo_name.c_str());
+        
         // Calculate normalization
         cout << "before norm MC: " << h->Integral(0, h->GetNbinsX()+1) << " data: " << h_data->Integral(0, h_data->GetNbinsX()+1) << endl; 
         double norm_MC = h->Integral(0, h->GetNbinsX()+1);
@@ -112,7 +124,7 @@ void vz_weight_2(const char * collision_type = "PbPb23", int after_flag  = 0) {
 
         // Legend
         legend->AddEntry(h_data, "Data", "PE");
-        legend->AddEntry(h, "Drell-Yan", "f");
+        legend->AddEntry(h, "DY + 2j", "f");
 
         TPad *pad = h_ratio->GetUpperPad();
         pad->cd();
@@ -163,16 +175,16 @@ void vz_weight_2(const char * collision_type = "PbPb23", int after_flag  = 0) {
         h_weight_vz->SetMaximum(5.2);
 
         if (after_flag == 0) {
-          TString out_name = "weight_"+name_output+"_vz.root";
+          // Add the run_tag to the output weight file
+          TString out_name = "weight_"+name_output+"_vz" + run_tag + ".root";
           TFile* file_weight_vz = new TFile(out_name, "RECREATE");
           h_weight_vz->Write("h_weight_vz");
           file_weight_vz->Close();
           std::cout << "Weight file created: " << out_name << std::endl;
         }
 
-        // Print the canvas
+        // Print the canvas with the tag
         std::string is_bef_or_aft = "_before.pdf";
         if (after_flag == 1) is_bef_or_aft = "_after.pdf";
-        c->Print((histo_name + "_" + name_output.Data() + is_bef_or_aft).c_str());
+        c->Print((histo_name + "_" + name_output.Data() + run_tag.Data() + is_bef_or_aft).c_str());
 }
-

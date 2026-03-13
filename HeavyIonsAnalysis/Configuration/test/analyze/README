@@ -2,42 +2,49 @@
 //   Z+Jet Analysis Framework - README
 //==============================================================================
 
+//----------------------------------
+// 0. Shortcut: to run on everything
+//----------------------------------
+./do_analyze_all.sh
+
 //--------------------------------
 // 1. Basic Analysis (Interactive)
 //--------------------------------
 // Run the main analyzer macro directly.
-// Arguments: (collision_type, sample_name, weight_phase, systFlag)
+// Arguments: (collision_type, sample_name, weight_phase, systFlag, cent_min, cent_max, ptZ_min, ptZ_max)
 //
 // weight_phase: 1=Data(default), 3=Final MC Analysis
 // systFlag: 0=Nominal
 
-// --- PbPb 2023 ---
-root -l -b -q 'analyze_HI_TTreeReader_ZMM.C("PbPb23", "data", 1, 0)'    // Data
-root -l -b -q 'analyze_HI_TTreeReader_ZMM.C("PbPb23", "signal", 3, 0)'  // MC Signal (Final)
+// --- PbPb 2023 (Example with default cuts: 0-30%, pT > 40) ---
+root -l -b -q 'analyze_HI_TTreeReader_ZMM.C("PbPb23", "data", 1, 0, 0, 30, 40, 9999)'    // Data
+root -l -b -q 'analyze_HI_TTreeReader_ZMM.C("PbPb23", "signal", 3, 0, 0, 30, 40, 9999)'  // MC Signal (Final)
 
 // --- pp Ref 2024 ---
-root -l -b -q 'analyze_HI_TTreeReader_ZMM.C("ppref24", "data", 1, 0)'   // Data
-root -l -b -q 'analyze_HI_TTreeReader_ZMM.C("ppref24", "signal", 3, 0)' // MC Signal
+root -l -b -q 'analyze_HI_TTreeReader_ZMM.C("ppref24", "data", 1, 0, 0, 30, 40, 9999)'   // Data
+root -l -b -q 'analyze_HI_TTreeReader_ZMM.C("ppref24", "signal", 3, 0, 0, 30, 40, 9999)' // MC Signal
 
-// --- PbPb 2024 ---
-root -l -b -q 'analyze_HI_TTreeReader_ZMM.C("PbPb24", "data", 1, 0)'    // Data
-root -l -b -q 'analyze_HI_TTreeReader_ZMM.C("PbPb24", "signal", 3, 0)' // MC Signal
 
-// IMPORTANT: Open the following wrappers and uncomment the desired COLLISION type at the top.
-
+//==============================================================================
+// WRAPPER SCRIPTS (Automated Workflows)
+// All wrappers use the same argument structure:
+// Usage: ./script_name.sh [collision] [cent_min] [cent_max] [ptZ_min] [ptZ_max]
+// Default if no arguments passed: PbPb23 0 30 40 9999
+//==============================================================================
 
 //--------------------------------
 // 2. Workflow Weights calculation
 //--------------------------------
-
-// Before, to recompute MC_all_weights, go to folder
-cd weights_MC/MC_all_weights/
-// and follow the README
-
-// Runs Data and MC Signal to compute Ncoll, Rho, and Vz weights,
-// then produces final histograms.
+// Before, to recompute MC_all_weights, go to folder: cd weights_MC/MC_all_weights/ and follow README.
+//
+// Runs Data and MC Signal to compute Ncoll, Rho, and Vz weights, then produces final histograms.
 chmod +x do_analyze_weights.sh
-./do_analyze_weights.sh
+
+// Examples:
+./do_analyze_weights.sh                        // Runs PbPb23, 0-30%, pT > 40 (Default)
+./do_analyze_weights.sh ppref24                // Runs ppref24 (centrality is ignored internally)
+./do_analyze_weights.sh PbPb23 30 50 40 9999   // Runs PbPb23, 30-50% centrality, pT > 40
+./do_analyze_weights.sh PbPb23 0 30 60 80      // Runs PbPb23, 0-30% centrality, pT 60-80
 // Outputs saved in: weights_MC/ and plot/
 
 
@@ -45,9 +52,12 @@ chmod +x do_analyze_weights.sh
 // 3. Background MC Analysis
 //--------------------------------
 // Runs the analyzer over background samples (TT, WZ, ZZ, etc.) defined in the script.
-
 chmod +x do_analyze_bkg.sh
-./do_analyze_bkg.sh
+
+// Examples:
+./do_analyze_bkg.sh                            // Runs PbPb23, 0-30%, pT > 40 (Default)
+./do_analyze_bkg.sh ppref24
+./do_analyze_bkg.sh PbPb23 30 50 40 9999
 // Outputs saved in: plot/
 
 
@@ -56,9 +66,12 @@ chmod +x do_analyze_bkg.sh
 //--------------------------------
 // Runs loops over Data and MC for various systematic variations 
 // (JEC, JER, SF, Centrality, etc.).
-
 chmod +x do_analyze_syst.sh
-./do_analyze_syst.sh
+
+// Examples:
+./do_analyze_syst.sh                           // Runs PbPb23, 0-30%, pT > 40 (Default)
+./do_analyze_syst.sh ppref24
+./do_analyze_syst.sh PbPb23 30 50 40 9999
 // Outputs saved in: plot/, syst_JEC/, syst_JER/, syst_SF_muon/, etc.
 
 
@@ -69,4 +82,3 @@ chmod +x old_do_analyze_stack.sh
 ./old_do_analyze_stack.sh
 //the output root files are saved in stack/ folder
 //--------------------------------
-

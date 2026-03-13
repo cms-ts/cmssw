@@ -28,10 +28,10 @@
 //   [sample_name]  Input label (e.g., "data" or MC label).                                                                   //
 //                                                                                                                            //
 //   [weight_phase] Control Flag:                                  [systFlag]     Systematic Variations:                      //
-//       0: Ncoll weights                                              0: Nominal              8: Binning                     //
-//       1: Rho weights only                                           1,2: Muon SF Down/Up    9,10: JEC Down/Up              //
-//       2: Vz weights                                                 4: Prior/Shape          11,12: JER Down/Up             //
-//       3: Final Analysis (Rho + Vz + Systematics)                    6,7: Centrality Down/Up 13,14: Shape Down/Up           //
+//       0: Ncoll weights                                              0: Nominal                    8: Binning               //
+//       1: Rho weights only                                           1,2,15-18: Muon SF Down/Up    9,10: JEC Down/Up        //
+//       2: Vz weights                                                 4: Prior/Shape                11,12: JER Down/Up       //
+//       3: Final Analysis (Rho + Vz + Systematics)                    6,7: Centrality Down/Up       13,14: Shape Down/Up     //
 //                                                                                                                            //
 //   DEPENDENCIES:                                                                                                            //
 //   - helpers.h, MC_samples.h, CorrectionSF.h                                                                                //
@@ -87,7 +87,9 @@ using json = nlohmann::json;   // Use the nlohmann::json namespace
 using namespace std;
 
 void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const char * sample_name = "data",
-                                int weight_phase = 1, int systFlag = 0) {
+                                int weight_phase = 1, int systFlag = 0,
+                                int cent_min = 0, int cent_max = 30,
+                                double ptZ_min = 40.0, double ptZ_max = 9999.0) {
 
   // --- Initialize TTrees ---
   TChain data("data"), EventTree("EventTree"), HiTree("HiTree"),
@@ -116,6 +118,23 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   double Xsec = 1;
   double Ngen = 1;
 
+  // --- ADD RUN TAG FOR DYNAMIC CUTS ---
+  TString run_tag;
+  if (isPbPb) {
+      if (ptZ_max > 9000) {
+          run_tag = Form("_Cen%d_%d_ptZ%.0f_Inf", cent_min, cent_max, ptZ_min);
+      } else {
+          run_tag = Form("_Cen%d_%d_ptZ%.0f_%.0f", cent_min, cent_max, ptZ_min, ptZ_max);
+      }
+  } else {
+      // For pp collisions, omit the centrality tags
+      if (ptZ_max > 9000) {
+          run_tag = Form("_ptZ%.0f_Inf", ptZ_min);
+      } else {
+          run_tag = Form("_ptZ%.0f_%.0f", ptZ_min, ptZ_max);
+      }
+  }
+
   // Create a pointer to the vector of MC samples we want to use
   const std::vector<FileInfo>* targetVector = nullptr;
   if (collision_name.Contains("PbPb24")) {
@@ -136,7 +155,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     isData = true;
     if (isPbPb) {
       if (is2023)
-        glob("/eos/infnts/cms/store/user/kdeleo/HIPhysicsRawPrime*/CRAB3_Analysis_test13_ZMM_Prime*/*/*.root", GLOB_NOSORT, NULL, &globlist);
+        glob("/eos/infnts/cms/store/user/rdelliga/HIPhysicsRawPrime*/CRAB3_Analysis_test24_ZMM_Prime*/*/*.root", GLOB_NOSORT, NULL, &globlist);
       else
           // Pattern "PbPb24[AB]_" matches "PbPb24A_..." and "PbPb24B_..." but EXCLUDES "PbPb24_..."
         glob("/eos/infnts/cms/store/user/rdelliga/HIPhysicsRawPrime*/CRAB3_Analysis_test21_ZMM_PbPb24[AB]_*/*/*.root", GLOB_NOSORT, NULL, &globlist);
@@ -144,9 +163,14 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       // Dynamic Prefix for MinBias files
       TString mb_prefix = (is2023) ? "" : "HI24_";
 
+      TString cent_tag = "";
+      if (binning_option == 1 || binning_option == 2) {
+          cent_tag = Form("_Cen%d_%d", cent_min, cent_max);
+      }
+      
       if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_data_HF.root");
-      else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_data_VZ.root");
-      else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_data_VZ_Cen_Combined.root");
+      else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_data_VZ" + cent_tag + ".root");
+      else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_data_VZ_Cen_Combined" + cent_tag + ".root");
       else { cerr << "Invalid binning_option for data MinBias file." << endl; return; }
       cout << "This is PbPb data (" << (is2023 ? "2023" : "2024") << ")" << endl;
     } else {
@@ -166,9 +190,15 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     }
     if (isPbPb) {
       TString mb_prefix = (is2023) ? "" : "HI24_";
+
+      TString cent_tag = "";
+      if (binning_option == 1 || binning_option == 2) {
+          cent_tag = Form("_Cen%d_%d", cent_min, cent_max);
+      }
+
       if (binning_option == 0)      inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_MC_HF.root");
-      else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_MC_VZ.root");
-      else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_MC_VZ_Cen_Combined.root");
+      else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_MC_VZ" + cent_tag + ".root");
+      else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_MC_VZ_Cen_Combined" + cent_tag + ".root");
       else { cerr << "Invalid binning_option for MC MinBias file." << endl; return; }
     }
   }
@@ -209,30 +239,30 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TH1D* h_weight_vz    = nullptr;
   TH1D* h_weight_JEWEL = nullptr;
 
-   // Only load weights if running on MC
+  // Only load weights if running on MC
   if (!isData && weight_phase!=0) {
     // 1. Rho Weight (Only for PbPb MC, specific to year)
     if (isPbPb && weight_phase!=1) {
-      std::string name_weight_rho = (is2023) ? "weights_MC/rho_weights_1/weight_HI_rho.root"
-                                             : "weights_MC/rho_weights_1/weight_HI24_rho.root";
+      std::string name_weight_rho = (is2023) ? Form("weights_MC/rho_weights_1/weight_HI_rho%s.root", run_tag.Data())
+                                             : Form("weights_MC/rho_weights_1/weight_HI24_rho%s.root", run_tag.Data());
       h_weight_rho = loadWeightHist(name_weight_rho, "h_weight_rho");
     }
 
     // 2. Vz Weight (Specific to each campaign: PbPb23, PbPb24, ppref)
     if (weight_phase!=2) {
       std::string name_weight_vz;
-      if (collision_name.Contains("PbPb23"))           name_weight_vz = "weights_MC/vz_weights_2/weight_HI_vz.root";
-      else if (collision_name.Contains("PbPb24"))      name_weight_vz = "weights_MC/vz_weights_2/weight_HI24_vz.root";
-      else if (collision_name.Contains("ppref24"))     name_weight_vz = "weights_MC/vz_weights_2/weight_ppref_vz.root";
+      if (collision_name.Contains("PbPb23"))           name_weight_vz = Form("weights_MC/vz_weights_2/weight_HI_vz%s.root", run_tag.Data());
+      else if (collision_name.Contains("PbPb24"))      name_weight_vz = Form("weights_MC/vz_weights_2/weight_HI24_vz%s.root", run_tag.Data());
+      else if (collision_name.Contains("ppref24"))     name_weight_vz = Form("weights_MC/vz_weights_2/weight_ppref_vz%s.root", run_tag.Data());
       h_weight_vz = loadWeightHist(name_weight_vz, "h_weight_vz");
     }
 
     // 3. JEWEL Weight (Only for Systematics)
     if (systFlag == 4) {
       std::string name_weight_JEWEL;
-      if (collision_name.Contains("PbPb23"))       name_weight_JEWEL = "weights_MC/final_weight_3/weight_HI_JEWEL.root";
-      else if (collision_name.Contains("PbPb24"))  name_weight_JEWEL = "weights_MC/final_weight_3/weight_HI24_JEWEL.root";
-      else if (collision_name.Contains("ppref24")) name_weight_JEWEL = "weights_MC/final_weight_3/weight_ppref_JEWEL.root";
+      if (collision_name.Contains("PbPb23"))       name_weight_JEWEL = Form("weights_MC/final_weight_3/weight_HI_JEWEL%s.root", run_tag.Data());
+      else if (collision_name.Contains("PbPb24"))  name_weight_JEWEL = Form("weights_MC/final_weight_3/weight_HI24_JEWEL%s.root", run_tag.Data());
+      else if (collision_name.Contains("ppref24")) name_weight_JEWEL = Form("weights_MC/final_weight_3/weight_ppref_JEWEL%s.root", run_tag.Data());
       h_weight_JEWEL = loadWeightHist(name_weight_JEWEL, "h_weight_JEWEL");
       std::cout << "JEWEL file needed for syst variation" << std::endl;
     }
@@ -405,12 +435,35 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TTreeReaderArray<Float_t> recoPhi = {fReader, "recoPhi"};
   TTreeReaderArray<Int_t> recoCharge = {fReader, "recoCharge"};
   TTreeReaderArray<bool> recoIDTight = {fReader, "recoIDTight"};
+  TTreeReaderArray<bool>* recoMVAIsoWP95 = nullptr;
+  TTreeReaderArray<Float_t>* recoMVAIso = nullptr;
+
+  // --- ADDED THIS BLOCK FOR PP ISOLATION BRANCHES ---
+  TTreeReaderArray<Float_t>* recoPFChIso = nullptr;
+  TTreeReaderArray<Float_t>* recoPFNeuIso = nullptr;
+  TTreeReaderArray<Float_t>* recoPFPhoIso = nullptr;
+  TTreeReaderArray<Float_t>* recoPFPUIso = nullptr;
+  // --------------------------------------------------
+
+  if (isPbPb) {
+      recoMVAIsoWP95 = new TTreeReaderArray<bool>(fReader, "recoMVAIsoWP95");
+      recoMVAIso = new TTreeReaderArray<Float_t>(fReader, "recoMVAIso");
+  }
+  else {
+      // --- ADDED THIS BLOCK FOR PP ISOLATION INITIALIZATION ---
+      recoPFChIso = new TTreeReaderArray<Float_t>(fReader, "recoPFChIso");
+      recoPFNeuIso = new TTreeReaderArray<Float_t>(fReader, "recoPFNeuIso");
+      recoPFPhoIso = new TTreeReaderArray<Float_t>(fReader, "recoPFPhoIso");
+      recoPFPUIso = new TTreeReaderArray<Float_t>(fReader, "recoPFPUIso");
+      // --------------------------------------------------------
+  }
   const double muonMass = 0.1056583755; //From PDG 2024
 
   // --- Load Muon Scale Factors from JSON ---
   std::cout << "Loading Muon Scale Factors from JSON..." << std::endl;
   CorrectionSF tightID_SF;
   CorrectionSF hlt_SF;
+  CorrectionSF iso_SF;
 
   std::string json_filename;
   if (collision_name.Contains("PbPb23")) json_filename = "HLT_HIL2SingleMu7_and_TightID_abseta1_pt1_cutAndCount_schemaV2.json";
@@ -456,6 +509,30 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     if (!hlt_loaded) std::cerr << "  'NUM_HLT_HIL2SingleMu7_v_DEN_TightID' was not found." << std::endl;
     return;
   }
+
+  // --- ADDED THIS BLOCK TO LOAD ISO SF ---
+  std::string iso_json_filename = "NUM_Iso_DEN_TightID_abseta_pt_schemaV2.json"; // <--- CHANGED FILENAME
+  std::ifstream iso_json_file(iso_json_filename);
+  if (iso_json_file.is_open()) {
+      json iso_data;
+      try {
+          iso_data = json::parse(iso_json_file);
+          for (const auto& corr : iso_data["corrections"]) {
+              // Extract ONLY the WP95 scale factors, ignoring WP80, WP85, etc.
+              if (corr["name"] == "NUM_IsoWP95_DEN_TightID") {
+                  iso_SF.load(corr["data"]);
+                  std::cout << "Loaded 'NUM_IsoWP95_DEN_TightID' SFs from " << iso_json_filename << std::endl;
+              }
+          }
+      } catch (json::parse_error& e) {
+          std::cerr << "[Error] Failed to parse Isolation JSON file: " << iso_json_filename << std::endl;
+          std::cerr << e.what() << std::endl;
+      }
+  } else {
+      std::cerr << "Warning: Could not open Isolation JSON file: " << iso_json_filename << std::endl;
+  }
+  // ----------------------------------------
+
   std::cout << "JSON Scale Factors loaded successfully." << std::endl;
   // --- End Load Muon Scale Factors from JSON ---
 
@@ -695,12 +772,19 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       }
       std::cout << "Defined VZ bins for MinBias matching (" << primary_bins.size() << " total)." << std::endl;
     } else if (binning_option == 2) { // VZ + Centrality binning
-      // Centrality bins based on hiBin
-      float cen_bin_width_hiBin = (BinningConfig_Combined_Vz_Centrality::centrality_max_hiBin - BinningConfig_Combined_Vz_Centrality::centrality_min_hiBin) / BinningConfig_Combined_Vz_Centrality::num_centrality_bins;
-      for (int i = 0; i < BinningConfig_Combined_Vz_Centrality::num_centrality_bins; ++i) {
-        float min_hiBin = BinningConfig_Combined_Vz_Centrality::centrality_min_hiBin + i * cen_bin_width_hiBin;
-        float max_hiBin = min_hiBin + cen_bin_width_hiBin;
-        centrality_bins_combined.push_back({min_hiBin, max_hiBin});
+      // --- FIXED: Calculate bins based on user arguments ---
+      float min_hiBin_limit = cent_min * 2;
+      float max_hiBin_limit = cent_max * 2;
+
+      // Define how many bins to divide the range into. 
+      // If you want 1% bins, the number of bins is just (cent_max - cent_min)
+      int n_cen_bins = (cent_max - cent_min); 
+      float cen_bin_width_hiBin = (max_hiBin_limit - min_hiBin_limit) / n_cen_bins;
+
+      for (int i = 0; i < n_cen_bins; ++i) {
+        float min_hiBin_edge = min_hiBin_limit + i * cen_bin_width_hiBin;
+        float max_hiBin_edge = min_hiBin_edge + cen_bin_width_hiBin;
+        centrality_bins_combined.push_back({min_hiBin_edge, max_hiBin_edge});
       }
 
       // Vz bins based on explicit edges
@@ -708,7 +792,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         vz_bins_combined.push_back({BinningConfig_Combined_Vz_Centrality::vz_bin_edges[i], BinningConfig_Combined_Vz_Centrality::vz_bin_edges[i+1]});
       }
 
-      total_mixed_bins_expected = BinningConfig_Combined_Vz_Centrality::num_centrality_bins * BinningConfig_Combined_Vz_Centrality::num_vz_bins;
+      total_mixed_bins_expected = n_cen_bins * BinningConfig_Combined_Vz_Centrality::num_vz_bins;
       events_per_mixed_bin_limit = BinningConfig_Combined_Vz_Centrality::ev_per_combined_bin;
       std::cout << "Defined combined Centrality-VZ bins for MinBias matching (" << total_mixed_bins_expected << " total)." << std::endl;
     } else {
@@ -737,18 +821,18 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   c7->Divide(1,1);
 
   // Histograms
-
+  const double pi_value = std::acos(-1);;
   // Define binning for xZj unfolding.
-  const int nbins_xZj = 5; // Number of bins (number of edges - 1)
-  double xZj_bins[nbins_xZj + 1] = {0, 0.6, 0.9, 1.2, 1.5, 2.};
+  const int nbins_xZj = 7; // Number of bins (number of edges - 1)
+  double xZj_bins[nbins_xZj + 1] = {0., 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 2.};
   const int nbins_xZj_meas = (systFlag != 8) ? nbins_xZj : nbins_xZj-1;
 
   // Define the bins using a vector so we can initialize conditionally
   std::vector<double> xZj_bins_meas_vec;
   if (systFlag != 8) {
-    xZj_bins_meas_vec = {0., 0.6, 0.9, 1.2, 1.5, 2.};
+    xZj_bins_meas_vec = {0., 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 2.};
   } else {
-    xZj_bins_meas_vec = {0., 0.6, 0.9, 1.2, 1.5};
+    xZj_bins_meas_vec = {0., 0.5, 0.7, 0.9, 1.1, 1.3, 1.5};
   }
 
   // Create a pointer to the vector's data (compatible with TH1D constructors)
@@ -767,21 +851,22 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TH1D *h_jet_pt_lj_2pi_3 = new TH1D("h_jet_pt_lj_2pi_3", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
   TH1D *h_cen_j = new TH1D("h_cen_j", "Hist; centrality bin; Entries", 20, 0, 100);
   TH1D *h_HF_j = new TH1D("h_HF_j", "Hist; HF; Entries", 80, 0, 8000);
-  TH1D *h_deltaPhi_Zj = new TH1D("h_deltaPhi_Zj", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
+  TH1D *h_deltaPhi_Zj = new TH1D("h_deltaPhi_Zj", "Hist;#Delta#phi_{Zj}; Entries", 20, 0, pi_value);
   TH1D *h_xZj = new TH1D("h_xZj", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
   TH1D *h_xZj_fixbinw = new TH1D("h_xZj_fixbinw", "Hist;x_{Zj}; Entries", 30, 0., 3.);
-  TH2F *h_jet_etaphi_before = new TH2F("h_jet_etaphi_before", "Jets Before Veto;#eta;#phi", 40, -2.5, 2.5, 40, -TMath::Pi(), TMath::Pi());
-  TH2F *h_jet_etaphi_after  = new TH2F("h_jet_etaphi_after",  "Jets After Veto;#eta;#phi",  40, -2.5, 2.5, 40, -TMath::Pi(), TMath::Pi());
+  TH2F *h_jet_etaphi_before = new TH2F("h_jet_etaphi_before", "Jets Before Veto;#eta;#phi", 40, -2.5, 2.5, 40, -pi_value, pi_value);
+  TH2F *h_jet_etaphi_after  = new TH2F("h_jet_etaphi_after",  "Jets After Veto;#eta;#phi",  40, -2.5, 2.5, 40, -pi_value, pi_value);
+  TH1D *h_muon_iso_nocut = new TH1D("h_muon_iso_nocut", "Muon Isolation (before cut); recoMVAIso; Entries", 20, 0, 1.0);
 
   TH1D *h_vz = new TH1D("h_vz", "Hist; vz; Entries", 30, -20, 20);
   TH1D *h_avg_rho = new TH1D("h_avg_rho", "Hist; <#rho>; Entries", 50, 0, 400);
   auto *h_avg_rho_vs_cen = new TProfile("h_avg_rho_vs_cen", "Profile of <#rho> vs centrality bin", 200, 0, 200, 0, 400);
 
-  TH1D *h_deltaPhi_Zj_MinBias = new TH1D("h_deltaPhi_Zj_MinBias", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
+  TH1D *h_deltaPhi_Zj_MinBias = new TH1D("h_deltaPhi_Zj_MinBias", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,pi_value);
   TH1D *h_jet_pt_lj_MinBias = new TH1D("h_jet_pt_lj_MinBias", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
   TH1D *h_xZj_MinBias = new TH1D("h_xZj_MinBias", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
 
-  TH1D *h_deltaPhi_Zj_matched = new TH1D("h_deltaPhi_Zj_matched", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,TMath::Pi());
+  TH1D *h_deltaPhi_Zj_matched = new TH1D("h_deltaPhi_Zj_matched", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,pi_value);
   TH1D *h_jet_pt_lj_matched = new TH1D("h_jet_pt_lj_matched", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
   TH1D *h_xZj_matched = new TH1D("h_xZj_matched", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
 
@@ -818,38 +903,39 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TString name_output = "HI";
   if (collision_name.Contains("PbPb24")) name_output = "HI24";
   else if (collision_name.Contains("ppref24")) name_output = "ppref";
+
   if (isData && weight_phase != 0) {
-    if (systFlag == 0) file_output_HI_mu = new TFile("./plot/output_"+name_output+"_mu_data.root", "RECREATE");
+    if (systFlag == 0) file_output_HI_mu = new TFile("./plot/output_"+name_output+"_mu_data" + run_tag + ".root", "RECREATE");
     if (isPbPb) {
       if (systFlag == 6) {
         cout << "Running Systematic (Centrality) down-variation (systFlag = 6)" << endl;
-        file_output_HI_mu = new TFile("./syst_cen/output_"+name_output+"_mu_data_cen_down.root", "RECREATE");
+        file_output_HI_mu = new TFile("./syst_cen/output_"+name_output+"_mu_data_cen_down" + run_tag + ".root", "RECREATE");
       }
       else if (systFlag == 7) {
         cout << "Running Systematic (Centrality) up-variation (systFlag = 7)" << endl;
-        file_output_HI_mu = new TFile("./syst_cen/output_"+name_output+"_mu_data_cen_up.root", "RECREATE");
+        file_output_HI_mu = new TFile("./syst_cen/output_"+name_output+"_mu_data_cen_up" + run_tag + ".root", "RECREATE");
       }
     }
     if (systFlag == 8) {
       cout << "Running binning variation (systFlag = 8)" << endl;
-      file_output_HI_mu = new TFile("./syst_binning/output_"+name_output+"_mu_data_binning.root", "RECREATE");
+      file_output_HI_mu = new TFile("./syst_binning/output_"+name_output+"_mu_data_binning" + run_tag + ".root", "RECREATE");
     }
   }
 
   if (weight_phase == 0 && isPbPb) {
   cout << "Running weight_phase " << weight_phase << " for computing Ncoll_weights" << endl;
     if (isData) {
-      file_output_HI_mu = new TFile("./weights_MC/Ncoll_weights_0/output_"+name_output+"_mu_data_Ncoll_weights.root", "RECREATE");
+      file_output_HI_mu = new TFile("./weights_MC/Ncoll_weights_0/output_"+name_output+"_mu_data_Ncoll_weights" + run_tag + ".root", "RECREATE");
     }
     if (!isData) {
-      file_output_HI_mu = new TFile("./weights_MC/Ncoll_weights_0/output_"+name_output+"_mu_MC_Ncoll_weights.root", "RECREATE");
+      file_output_HI_mu = new TFile("./weights_MC/Ncoll_weights_0/output_"+name_output+"_mu_MC_Ncoll_weights" + run_tag + ".root", "RECREATE");
     }
   }
 
   if (weight_phase == 1 && isPbPb) {
     if (!isData) {
       cout << "Running weight_phase " << weight_phase << " for computing rho_weights" << endl;
-      file_output_HI_mu = new TFile("./weights_MC/rho_weights_1/output_"+name_output+"_mu_MC_rho_weights.root", "RECREATE");
+      file_output_HI_mu = new TFile("./weights_MC/rho_weights_1/output_"+name_output+"_mu_MC_rho_weights" + run_tag + ".root", "RECREATE");
     }
   }
 
@@ -857,59 +943,75 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   if (weight_phase == -1 && isPbPb) {
     if (!isData) {
       cout << "Running weight_phase " << weight_phase << " for plotting rho distributions after reweighting" << endl;
-      file_output_HI_mu = new TFile("./weights_MC/vz_weights_2/output_"+name_output+"_mu_MC_rho_weights_after.root", "RECREATE");
+      file_output_HI_mu = new TFile("./weights_MC/vz_weights_2/output_"+name_output+"_mu_MC_rho_weights_after" + run_tag + ".root", "RECREATE");
     }
   }
 
   if (weight_phase == 2) {
     if (!isData) {
       cout << "Running weight_phase " << weight_phase << " for computing vz_weights" << endl;
-      file_output_HI_mu = new TFile("./weights_MC/vz_weights_2/output_"+name_output+"_mu_MC_vz_weights.root", "RECREATE");
+      file_output_HI_mu = new TFile("./weights_MC/vz_weights_2/output_"+name_output+"_mu_MC_vz_weights" + run_tag + ".root", "RECREATE");
     }
   }
 
   else if (weight_phase == 3) {
     if (!isData) {
-      if (systFlag == 0) file_output_HI_mu = new TFile("./plot/output_"+name_output+"_mu_MC_"+file_name+".root", "RECREATE");
+      if (systFlag == 0) file_output_HI_mu = new TFile("./plot/output_"+name_output+"_mu_MC_"+file_name + run_tag + ".root", "RECREATE");
       else if (systFlag == 1) {
-        cout << "Running Systematic (SF muon) - DOWN variation (systFlag = 1)" << endl;
-        file_output_HI_mu = new TFile("./syst_SF_muon/output_"+name_output+"_mu_MC_SF_down.root", "RECREATE");
+        cout << "Running Systematic (SF ID) - DOWN variation (systFlag = 1)" << endl;
+        file_output_HI_mu = new TFile("./syst_SF_muon/output_"+name_output+"_mu_MC_SF_ID_down" + run_tag + ".root", "RECREATE");
       }
       else if (systFlag == 2) {
-        cout << "Running Systematic (SF muon) - UP variation (systFlag = 2)" << endl;
-        file_output_HI_mu = new TFile("./syst_SF_muon/output_"+name_output+"_mu_MC_SF_up.root", "RECREATE");
+        cout << "Running Systematic (SF ID) - UP variation (systFlag = 2)" << endl;
+        file_output_HI_mu = new TFile("./syst_SF_muon/output_"+name_output+"_mu_MC_SF_ID_up" + run_tag + ".root", "RECREATE");
       }
       else if (systFlag == 4) {
         cout << "Running Systematic (Prior model) variation (systFlag = 4)" << endl;
-        file_output_HI_mu = new TFile("./syst_prior_model/output_"+name_output+"_mu_MC_prior_model.root", "RECREATE");
+        file_output_HI_mu = new TFile("./syst_prior_model/output_"+name_output+"_mu_MC_prior_model" + run_tag + ".root", "RECREATE");
       }
       else if (systFlag == 8) {
         cout << "Running  binning variation (systFlag = 8)" << endl;
-        file_output_HI_mu = new TFile("./syst_binning/output_"+name_output+"_mu_MC_binning.root", "RECREATE");
+        file_output_HI_mu = new TFile("./syst_binning/output_"+name_output+"_mu_MC_binning" + run_tag + ".root", "RECREATE");
       }
       else if (systFlag == 9) {
         cout << "Running Systematic JEC - DOWN variation (systFlag = 9)" << endl;
-        file_output_HI_mu = new TFile("./syst_JEC/output_"+name_output+"_mu_MC_JEC_down.root", "RECREATE");
+        file_output_HI_mu = new TFile("./syst_JEC/output_"+name_output+"_mu_MC_JEC_down" + run_tag + ".root", "RECREATE");
       }
       else if (systFlag == 10) {
         cout << "Running Systematic JEC - UP variation (systFlag = 10)" << endl;
-        file_output_HI_mu = new TFile("./syst_JEC/output_"+name_output+"_mu_MC_JEC_up.root", "RECREATE");
+        file_output_HI_mu = new TFile("./syst_JEC/output_"+name_output+"_mu_MC_JEC_up" + run_tag + ".root", "RECREATE");
       }
       else if (systFlag == 11) {
         cout << "Running Systematic JER - DOWN variation (systFlag = 11)" << endl;
-        file_output_HI_mu = new TFile("./syst_JER/output_"+name_output+"_mu_MC_JER_down.root", "RECREATE");
+        file_output_HI_mu = new TFile("./syst_JER/output_"+name_output+"_mu_MC_JER_down" + run_tag + ".root", "RECREATE");
       }
       else if (systFlag == 12) {
         cout << "Running Systematic JER - UP variation (systFlag = 12)" << endl;
-        file_output_HI_mu = new TFile("./syst_JER/output_"+name_output+"_mu_MC_JER_up.root", "RECREATE");
+        file_output_HI_mu = new TFile("./syst_JER/output_"+name_output+"_mu_MC_JER_up" + run_tag + ".root", "RECREATE");
       }
       else if (systFlag == 13) {
         cout << "Running Systematic shape - DOWN variation (systFlag = 13)" << endl;
-        file_output_HI_mu = new TFile("./syst_shape/output_"+name_output+"_mu_MC_shape_down.root", "RECREATE");
+        file_output_HI_mu = new TFile("./syst_shape/output_"+name_output+"_mu_MC_shape_down" + run_tag + ".root", "RECREATE");
       }
       else if (systFlag == 14) {
         cout << "Running Systematic shape - UP variation (systFlag = 14)" << endl;
-        file_output_HI_mu = new TFile("./syst_shape/output_"+name_output+"_mu_MC_shape_up.root", "RECREATE");
+        file_output_HI_mu = new TFile("./syst_shape/output_"+name_output+"_mu_MC_shape_up" + run_tag + ".root", "RECREATE");
+      }
+      else if (systFlag == 15) {
+        cout << "Running Systematic (SF iso) - DOWN variation (systFlag = 15)" << endl;
+        file_output_HI_mu = new TFile("./syst_SF_muon/output_"+name_output+"_mu_MC_Iso_down" + run_tag + ".root", "RECREATE");
+      }
+      else if (systFlag == 16) {
+        cout << "Running Systematic (SF iso) - UP variation (systFlag = 16)" << endl;
+        file_output_HI_mu = new TFile("./syst_SF_muon/output_"+name_output+"_mu_MC_Iso_up" + run_tag + ".root", "RECREATE");
+      }
+      else if (systFlag == 17) {
+        cout << "Running Systematic (SF HLT) - DOWN variation (systFlag = 17)" << endl;
+        file_output_HI_mu = new TFile("./syst_SF_muon/output_"+name_output+"_mu_MC_SF_HLT_down" + run_tag + ".root", "RECREATE");
+      }
+      else if (systFlag == 18) {
+        cout << "Running Systematic (SF HLT) - UP variation (systFlag = 18)" << endl;
+        file_output_HI_mu = new TFile("./syst_SF_muon/output_"+name_output+"_mu_MC_SF_HLT_up" + run_tag + ".root", "RECREATE");
       }
     }
   }
@@ -940,6 +1042,14 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
                   << " (" << std::fixed << std::setprecision(2) << progress << "%)" << std::flush;
     }
     // --- end of Progress Bar ---
+
+    // Stop at 1/10 of statistics, ONLY if it is MC
+    bool stop_early = false;
+    if (stop_early && !isData && itotev >= total_events / 10) {
+        std::cout << "\n\033[1;31mSTOPPING EARLY ACTIVATED\033[0m" << std::endl;
+        break;
+    }
+
     if (isPbPb) {
       if(**pprimaryVertexFilter<=0) continue;
       if(**pclusterCompatibilityFilter<=0) continue;
@@ -975,6 +1085,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     float weight_cent = isPbPb ? Ncoll[hiBin_to_use] : 1;
     // Scale MC
     float scale = 1;
+    if (stop_early && !isData) scale*=10;
     if (isPbPb) {
       if (!isData && weight_phase == 0)
         scale*=norm_MC_w*(**weight);
@@ -988,11 +1099,11 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     // Selection on centrality bin only for PbPb
     if (isPbPb) {
       if (weight_phase > 1 ) {
-        if(hiBin_to_use>59) continue;
+        if (hiBin_to_use < cent_min * 2 || hiBin_to_use >= cent_max * 2) continue;
       }
-      if (weight_phase == 1 || weight_phase == - 1) {
+      if (weight_phase == 1 || weight_phase == -1) {
         if (isData) {
-          if(hiBin_to_use>59) continue;
+          if (hiBin_to_use < cent_min * 2 || hiBin_to_use >= cent_max * 2) continue;
         }
       }
     }
@@ -1055,7 +1166,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         genmuMinus.SetPtEtaPhiM(genMuPt[iHighPtgenMu], genMuEta[iHighPtgenMu], genMuPhi[iHighPtgenMu], muonMass);
         genmuPlus.SetPtEtaPhiM(genMuPt[iHighPtgenAntiMu], genMuEta[iHighPtgenAntiMu], genMuPhi[iHighPtgenAntiMu], muonMass);
         gen_Z = genmuPlus + genmuMinus;
-        if (gen_Z.M() >= 60 && gen_Z.M() <= 120 && gen_Z.Pt() >= 40) {
+        if (gen_Z.M() >= 60 && gen_Z.M() <= 120 && gen_Z.Pt() >= ptZ_min && gen_Z.Pt() < ptZ_max) {
           if (genmuMinus.Pt() >= 20 && abs(genmuMinus.Eta()) <= 2.4 && genmuPlus.Pt() >= 20 && abs(genmuPlus.Eta()) <= 2.4) {
             h_mumu_true->Fill(gen_Z.M(), scale);
             // Loop over gen jets
@@ -1070,7 +1181,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
             }
             if (ijetGenLeading_unfold != -1) {
               dPhi_Zj_Gen = RelativePhi(gen_Z.Phi(), genphi[ijetGenLeading_unfold]);
-              if (dPhi_Zj_Gen > 7 * TMath::Pi() / 8) {
+              if (dPhi_Zj_Gen > 7 * pi_value / 8) {
                 // Calculate true x_Zj
                 true_xZj = genpt[ijetGenLeading_unfold] / gen_Z.Pt();
                 // Scale MC to JEWEL for check unfolding dependance on shape
@@ -1093,7 +1204,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
                 //Remove overflow and put it in the last bin
                 //if (true_xZj > xZj_max) true_xZj = xZj_max - 0.01;
                 h_xZj_true->Fill(true_xZj, scale);
-                if (itotev < 0.7*Ngen) h_xZj_true_train_closure->Fill(true_xZj, scale);
+                if (itotev < 0.6*Ngen) h_xZj_true_train_closure->Fill(true_xZj, scale);
                 else h_xZj_true_test_closure->Fill(true_xZj, scale);
               }
             }
@@ -1120,6 +1231,28 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     //cout << "-----------------------------" << endl;
     for (unsigned int iMu = 0; iMu < *nReco; ++iMu) {
       if (recoIDTight[iMu]) {
+        if (isPbPb && recoMVAIso) {
+             h_muon_iso_nocut->Fill((*recoMVAIso)[iMu], scale);
+        }
+        if (isPbPb && !(*recoMVAIsoWP95)[iMu]) continue;
+        // --- ADDED THIS BLOCK FOR PP ISOLATION ---
+        if (!isPbPb && recoPFChIso && recoPFNeuIso && recoPFPhoIso && recoPFPUIso) {
+            float chIso = (*recoPFChIso)[iMu];
+            float neuIso = (*recoPFNeuIso)[iMu];
+            float phoIso = (*recoPFPhoIso)[iMu];
+            float puIso = (*recoPFPUIso)[iMu];
+            float pt = recoPt[iMu];
+
+            // Formula: (chHad + max(0, neutHad + phot - 0.5*PU)) / pt
+            float relIso = (chIso + std::max(0.0f, neuIso + phoIso - 0.5f * puIso)) / pt;
+
+            // Fill the histogram so you can check Data vs MC for ppref too!
+            h_muon_iso_nocut->Fill(relIso, scale);
+
+            // Apply Tight WP cut (0.15) for ~95% efficiency
+            if (relIso > 0.15) continue;
+        }
+        // -----------------------------------------
         //cout << "iMu: " << iMu << " pt = " << recoPt[iMu] <<  " Q = " << recoCharge[iMu] << endl;
         if (iHighPtMu == -1 || recoPt[iMu] > recoPt[iHighPtMu]) {
           if (recoCharge[iMu] == -1) iHighPtMu = iMu;
@@ -1136,21 +1269,31 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
 
     // Apply Muon Scale Factors
     if (!isData) {
-      std::string sf_flag = (systFlag == 1) ? "systdown" : (systFlag == 2 ? "systup" : "nominal");
-      // Apply TightID scale factors for both muons in the Z candidate
-      double id_sf_mu_p = tightID_SF.getValue(abs(recoEta[iHighPtAntiMu]), recoPt[iHighPtAntiMu], sf_flag);
-      double id_sf_mu_m = tightID_SF.getValue(abs(recoEta[iHighPtMu]), recoPt[iHighPtMu], sf_flag);
+      // 1. Define separate flags for each source
+      std::string id_sf_flag  = (systFlag == 1) ? "systdown" : (systFlag == 2 ? "systup" : "nominal");
+      std::string iso_sf_flag = (systFlag == 15) ? "systdown" : (systFlag == 16 ? "systup" : "nominal");
+      std::string hlt_sf_flag = (systFlag == 17) ? "systdown" : (systFlag == 18 ? "systup" : "nominal");
+
+      // 2. Apply TightID scale factors (using id_sf_flag) for both muons in the Z candidate
+      double id_sf_mu_p = tightID_SF.getValue(abs(recoEta[iHighPtAntiMu]), recoPt[iHighPtAntiMu], id_sf_flag);
+      double id_sf_mu_m = tightID_SF.getValue(abs(recoEta[iHighPtMu]), recoPt[iHighPtMu], id_sf_flag);
       scale *= id_sf_mu_p * id_sf_mu_m;
-      // Apply HLT scale factor combining them as SF1 + SF2 - (SF1 * SF2)
+
+      // 3. Apply HLT scale factor (using hlt_sf_flag) combining them as SF1 + SF2 - (SF1 * SF2)
       // For trigger we only need one to lepton to have fired, so we use the addition rule of probability
-      double hlt_sf_mu_p = hlt_SF.getValue(abs(recoEta[iHighPtAntiMu]), recoPt[iHighPtAntiMu], sf_flag);
-      double hlt_sf_mu_m = hlt_SF.getValue(abs(recoEta[iHighPtMu]), recoPt[iHighPtMu], sf_flag);
+      double hlt_sf_mu_p = hlt_SF.getValue(abs(recoEta[iHighPtAntiMu]), recoPt[iHighPtAntiMu], hlt_sf_flag);
+      double hlt_sf_mu_m = hlt_SF.getValue(abs(recoEta[iHighPtMu]), recoPt[iHighPtMu], hlt_sf_flag);
       scale *= (hlt_sf_mu_p + hlt_sf_mu_m - (hlt_sf_mu_p * hlt_sf_mu_m));
+
+      // 4. Apply ISO SF (using iso_sf_flag)
+      double iso_sf_mu_p = iso_SF.getValue(abs(recoEta[iHighPtAntiMu]), recoPt[iHighPtAntiMu], iso_sf_flag);
+      double iso_sf_mu_m = iso_SF.getValue(abs(recoEta[iHighPtMu]), recoPt[iHighPtMu], iso_sf_flag);
+      scale *= iso_sf_mu_p * iso_sf_mu_m;
     }
 
     // Z from muon-antimuon pairs
     TLorentzVector Z = muPlus + muMinus;
-    if (Z.M() < 60 || Z.M() > 120 || Z.Pt() < 40) continue;
+    if (Z.M() < 60 || Z.M() > 120 || Z.Pt() < ptZ_min || Z.Pt() >= ptZ_max) continue;
     if (muMinus.Pt() < 20 || abs(muMinus.Eta()) > 2.4 || muPlus.Pt() < 20 || abs(muPlus.Eta()) > 2.4) continue;
 
     h_vz->Fill(*vz, scale);
@@ -1278,6 +1421,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         }
       }
     } //cout << "ijetLeading = " << ijetLeading << endl;
+    h_njet->Fill(njets, scale);
     // --- end loop over jets ---
 
     // --- Reco leading jet selection ---
@@ -1358,15 +1502,15 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
                   h_deltaPhi_Zj_MinBias->Fill(dPhi_Zj_MinBias, scale * mixing_weight);
                   //Remove overflow and put it in the last bin
                   //if (xZj_MinBias > xZj_max) xZj_MinBias = xZj_max - 0.01;
-                  if (dPhi_Zj_MinBias > 7 * TMath::Pi() / 8) {
+                  if (dPhi_Zj_MinBias > 7 * pi_value / 8) {
                     h_jet_pt_lj_MinBias->Fill(mbJet.pt, scale * mixing_weight);
                     h_xZj_MinBias->Fill(xZj_MinBias, scale * mixing_weight);
-                    if (itotev < 0.7*Ngen) h_xZj_MinBias_train_closure->Fill(xZj_MinBias, scale * mixing_weight);
+                    if (itotev < 0.6*Ngen) h_xZj_MinBias_train_closure->Fill(xZj_MinBias, scale * mixing_weight);
                     else h_xZj_MinBias_test_closure->Fill(xZj_MinBias, scale * mixing_weight);
-                    if (!isData && ijetGenLeading_unfold != -1 && dPhi_Zj_Gen > 7 * TMath::Pi() / 8) {
+                    if (!isData && ijetGenLeading_unfold != -1 && dPhi_Zj_Gen > 7 * pi_value / 8) {
                       //if (ijetGenLeading_unfold == iGenjetMatchedtoLeadingReco) {
                       h_response_MinBias->Fill(xZj_MinBias, true_xZj, scale * mixing_weight);
-                      if (itotev < 0.7*Ngen) h_response_MinBias_closure->Fill(xZj_MinBias, true_xZj, scale * mixing_weight);
+                      if (itotev < 0.6*Ngen) h_response_MinBias_closure->Fill(xZj_MinBias, true_xZj, scale * mixing_weight);
                       //}
                     }
                   }
@@ -1387,18 +1531,17 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         h_deltaPhi_Zj_matched->Fill(dPhi_Zj_matched, scale);
       }
 
-      if (dPhi_Zj > 7 * TMath::Pi() / 8) {
-        h_njet->Fill(njets, scale);
+      if (dPhi_Zj > 7 * pi_value / 8) {
         h_mumu_j->Fill(Z.M(), scale);
         h_Z_pt_j->Fill(Z.Pt(), scale);
         h_jet_pt_lj->Fill(jtpt_corr[ijetLeading], scale);
         h_xZj->Fill(xZj, scale);
         h_xZj_fixbinw->Fill(xZj, scale);
-        if (!isData && ijetGenLeading_unfold != -1 && dPhi_Zj_Gen > 7 * TMath::Pi() / 8) {
+        if (!isData && ijetGenLeading_unfold != -1 && dPhi_Zj_Gen > 7 * pi_value / 8) {
           h_response_unmatched->Fill(xZj, true_xZj, scale);
-          if (itotev < 0.7*Ngen) h_response_closure_unmatched->Fill(xZj, true_xZj, scale);
+          if (itotev < 0.6*Ngen) h_response_closure_unmatched->Fill(xZj, true_xZj, scale);
         }
-        if (itotev < 0.7*Ngen) h_xZj_train_closure->Fill(xZj, scale);
+        if (itotev < 0.6*Ngen) h_xZj_train_closure->Fill(xZj, scale);
         else h_xZj_test_closure->Fill(xZj, scale);
         h_cen_j->Fill((hiBin_to_use)/2, scale);
         h_HF_j->Fill(*hiHF, scale);
@@ -1409,18 +1552,18 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         }
       }
 
-      if (dPhi_Zj > 2 * TMath::Pi() / 3) h_jet_pt_lj_2pi_3->Fill(jtpt_corr[ijetLeading], scale);
+      if (dPhi_Zj > 2 * pi_value / 3) h_jet_pt_lj_2pi_3->Fill(jtpt_corr[ijetLeading], scale);
       h_jet_pt_lj_nocut->Fill(jtpt_corr[ijetLeading], scale);
 
       // --- Fill information for unfolding ---
-      if (RelativePhi(Z.Phi(), jtphi[ijetLeading]) > 7 * TMath::Pi() / 8) {
-        if (!isData && ijetGenLeading_unfold != -1 && dPhi_Zj_Gen > 7 * TMath::Pi() / 8) {
+      if (RelativePhi(Z.Phi(), jtphi[ijetLeading]) > 7 * pi_value / 8) {
+        if (!isData && ijetGenLeading_unfold != -1 && dPhi_Zj_Gen > 7 * pi_value / 8) {
           // Calculate true x_Zj
           // Check if the leading gen jet is matched to leading reconstructed jet
           if (ijetGenLeading_unfold == iGenjetMatchedtoLeadingReco) {
             h_response->Fill(xZj, true_xZj, scale);
             h_xZj_reco->Fill(xZj, scale);
-            if (itotev < 0.7*Ngen) {
+            if (itotev < 0.6*Ngen) {
               h_response_closure->Fill(xZj, true_xZj, scale);
               h_xZj_train_closure_matched->Fill(xZj, scale);
             } else h_xZj_test_closure_matched->Fill(xZj, scale);
@@ -1554,6 +1697,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   h_xZj_fixbinw->Write();
   h_jet_etaphi_before->Write();
   h_jet_etaphi_after->Write();
+  h_muon_iso_nocut->Write();
   h_vz->Write();
   h_avg_rho->Write();
   if (isPbPb) {

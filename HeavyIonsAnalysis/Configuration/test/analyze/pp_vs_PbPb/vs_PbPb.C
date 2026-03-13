@@ -10,8 +10,10 @@
 #include "TLatex.h"
 #include "TGraph.h"
 #include "tdrstyle.C"
+#include "../helpers.h"
 
-void vs_PbPb(bool subtracted = false) {
+void vs_PbPb(bool subtracted = false, const char* pb_type = "PbPb23", const char* pp_type = "ppref24", 
+             int cent_min = 0, int cent_max = 30, double ptZ_min = 40.0, double ptZ_max = 9999.0) {
 
         std::string string_subtracted = "";
         if (subtracted) string_subtracted = "_subtracted";
@@ -29,8 +31,21 @@ void vs_PbPb(bool subtracted = false) {
 
         setTDRStyle();
 
-        double Lumi_PbPb = 1.64; // nb-1
-        double Lumi_pp = 479; // pb-1
+        TString s_pb = pb_type;
+        TString s_pp = pp_type;
+        TString pb_prefix = s_pb.Contains("PbPb24") ? "HI24" : "HI";
+
+        TString run_tag_pb, run_tag_pp;
+        if (ptZ_max > 9000) {
+            run_tag_pb = Form("_Cen%d_%d_ptZ%.0f_Inf", cent_min, cent_max, ptZ_min);
+            run_tag_pp = Form("_ptZ%.0f_Inf", ptZ_min);
+        } else {
+            run_tag_pb = Form("_Cen%d_%d_ptZ%.0f_%.0f", cent_min, cent_max, ptZ_min, ptZ_max);
+            run_tag_pp = Form("_ptZ%.0f_%.0f", ptZ_min, ptZ_max);
+        }
+
+        double Lumi_PbPb = s_pb.Contains("PbPb23") ? getLumiFromSummary("../brilcalc_Collisions2023HI.csv") : (s_pb.Contains("PbPb24") ? getLumiFromSummary("../brilcalc_Collisions2024_HI.csv") : 1.64);
+        double Lumi_pp = s_pp.Contains("ppref24") ? getLumiFromSummary("../brilcalc_Collisions2024_ppref.csv") : 479;
         double number_A = 208; // Lead
 
         // Create legend
@@ -38,12 +53,12 @@ void vs_PbPb(bool subtracted = false) {
         legend->SetBorderSize(0);
 
         // Open PbPb file
-        TFile* file_ = TFile::Open("../plot/output_HI_mu_data.root", "READ");
-        TDirectoryFile* dir = (TDirectoryFile*)file_->Get("HI/Muons");
+        TFile* file_ = TFile::Open(Form("../plot/output_%s_mu_data%s.root", pb_prefix.Data(), run_tag_pb.Data()), "READ");
+        TDirectoryFile* dir = (TDirectoryFile*)file_->Get(pb_prefix + "/Muons");
         TH1D* h = (TH1D*)dir->Get((histo_name+string_subtracted).c_str());
         TH1D* h_norm = (TH1D*)dir->Get((histo_norm_name+string_subtracted).c_str());
         // Get ppref histograms
-        TFile* file_pp = TFile::Open("../plot/output_ppref_mu_data.root", "READ");
+        TFile* file_pp = TFile::Open(Form("../plot/output_ppref_mu_data%s.root", run_tag_pp.Data()), "READ");
         TDirectoryFile* dir_pp = (TDirectoryFile*)file_pp->Get("ppref/Muons");
         TH1D* h_pp = (TH1D*)dir_pp->Get(histo_name.c_str());
         TH1D* h_pp_norm = (TH1D*)dir_pp->Get(histo_norm_name.c_str());
@@ -133,8 +148,8 @@ void vs_PbPb(bool subtracted = false) {
         h_pp->SetMarkerColor(2);
 
         // Legend
-        if (!subtracted) legend->AddEntry(h, "PbPb Raw (0-30%)", "PE");
-        if (subtracted) legend->AddEntry(h, "PbPb Raw-Bkg (0-30%)", "PE");
+        if (!subtracted) legend->AddEntry(h, Form("PbPb Raw (%d-%d%%)", cent_min, cent_max), "PE");
+        if (subtracted) legend->AddEntry(h, Form("PbPb Raw-Bkg (%d-%d%%)", cent_min, cent_max), "PE");
         legend->AddEntry(h_pp, "ppRef", "PE");
 
         TPad *pad = h_ratio->GetUpperPad();
@@ -166,6 +181,14 @@ void vs_PbPb(bool subtracted = false) {
 
         latex2->DrawLatexNDC(0.375,0.92,TString::Format("PbPb %.2f nb^{-1}, pp %.0f pb^{-1} (5.36 TeV)", Lumi_PbPb, Lumi_pp));
 
+        latex2->SetTextSize(0.035);
+        float textX = 0.15;
+        float textY = 0.60;
+        if (ptZ_max > 9000) latex2->DrawLatexNDC(textX, textY, Form("p_{T}^{Z} > %.0f GeV", ptZ_min));
+        else latex2->DrawLatexNDC(textX, textY, Form("p_{T}^{Z}: %.0f-%.0f GeV", ptZ_min, ptZ_max));
+        latex2->DrawLatexNDC(textX, textY-0.05, "AK2 jets");
+        latex2->DrawLatexNDC(textX, textY-0.10, "p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.5");
+
         // Set titles and labels and lines
         h_ratio->GetLowerRefYaxis()->SetTitle("PbPb/ppRef");
         h_ratio->GetUpperRefYaxis()->SetTitle(y_title.c_str());
@@ -175,6 +198,5 @@ void vs_PbPb(bool subtracted = false) {
         c->Update();
 
         // Print the canvas
-        c->Print(("compare_" + histo_name + string_subtracted + ".pdf").c_str());
+        c->Print(Form("compare_%s%s%s.pdf", histo_name.c_str(), string_subtracted.c_str(), run_tag_pb.Data()));
 }
-

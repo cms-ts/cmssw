@@ -1,0 +1,65 @@
+{
+    "type" : "iso",
+    "efficiencies": [
+        ["IsoWP80","TightID"],
+        ["IsoWP85","TightID"],
+        ["IsoWP90","TightID"],
+        ["IsoWP95","TightID"]
+    ],
+    "__comment__": [],
+    "selection": "tag_pt>15 and abs(tag_eta)<2.4 and tag_isTight==1 and tag_HLT_HIL2SingleMu7_v==1 and probe_pt>20 and abs(probe_eta)<2.4 and abs(pair_dz)<0.5",
+    "mc_selection":"tag_isMatchedGen==1",
+    "definitions": {
+        "probe_abseta": "abs(probe_eta)",
+        "TightIDTRIGMuons" : "(probe_HLT_HIL2SingleMu7_v == 1) and (probe_CutBasedIdTight == 1)",
+        "TightID": "probe_CutBasedIdTight == 1",
+        "IsoWP95" : "probe_hiIsoWP95 == 1",
+        "IsoWP90" : "probe_hiIsoWP90 == 1",
+        "IsoWP85" : "probe_hiIsoWP85 == 1",
+        "IsoWP80" : "probe_hiIsoWP80 == 1",
+        "cent": "hi_cBin/2.0"
+    },
+    "binning": {
+        "cent": [0,90],
+        "pt": [20,30,45,200],
+        "abseta": [0,1.6,1.8,2.4],
+        "mass": "np.array(range(60*4, 140*4+1)) * 0.25",
+        "mcmass": "np.array(range(60*4, 140*4+1)) * 0.25"
+    },
+    "variables": {
+        "cent": {"variable": "cent", "pretty": "cent (%)"},
+        "pt": {"variable": "probe_pt", "pretty": "p_{T} (GeV)"},
+        "abseta": {"variable": "probe_abseta", "pretty": "#left|#eta#right|"},
+        "mass": {"variable": "pair_mass", "pretty": "m(#mu#mu) (GeV)"},
+        "mcmass": {"variable": "pair_mass", "pretty": "m(#mu#mu) (GeV)"}
+    },
+    "fitVariable": "mass",
+    "fitVariableGen": "mcmass",
+    "binVariables": [
+        ["cent", "abseta", "pt"]
+    ],
+    "shifts": {
+    },
+    "fitShifts": { 
+        "AltBkg" : {"fitType" : "AltBkg"},
+        "AltSig" : {"fitType" : "AltSig"},
+        "massBinUp": {"shiftType": "massBinUp"},
+        "massBinDown": {"shiftType": "massBinDown"}, 
+        "massRangeUp": {"shiftType": "massRangeUp"},
+        "massRangeDown": {"shiftType": "massRangeDown"}
+    },
+    "systematics" : {
+        "SF": {
+        "fitTypes" : ["AltSig","AltBkg"],
+        "shiftTypes" :["massBin","massRange"]
+        },
+        "dataEff": {
+        "fitTypes" : ["AltSig","AltBkg"],
+        "shiftTypes" :["massBin","massRange"]
+        },
+        "mcEff": {
+        "fitTypes" : ["AltSig","AltBkg"],
+        "shiftTypes" :["massBin","massRange"]
+        }
+    }   
+}
