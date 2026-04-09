@@ -1,7 +1,7 @@
 from CRABClient.UserUtilities import config
 config = config()
 
-config.General.requestName = 'test22_run3_ppref_MC_ZMM_ZZTo4L'
+config.General.requestName = 'test25_run3_ppref_MC_ZMM_ZZTo4L'
 
 config.JobType.pluginName = 'Analysis'
 # Name of the CMSSW configuration file
@@ -16,7 +16,7 @@ config.Data.unitsPerJob = 1
 config.Data.publication = False
 config.Data.inputDBS = 'global'
 # This string is used to construct the output dataset name
-config.Data.outputDatasetTag = 'CRAB3_Analysis_test22_run3_ppref_MC_ZMM_ZZTo4L'
+config.Data.outputDatasetTag = 'CRAB3_Analysis_test25_run3_ppref_MC_ZMM_ZZTo4L'
 
 # These values only make sense for processing data
 #    Select input data based on a lumi mask

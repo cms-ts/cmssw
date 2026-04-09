@@ -86,6 +86,7 @@ process.hiEvtAnalyzer.doCentrality = cms.bool(False)
 process.hiFJGridEmptyAreaCalculatorFinerBins.doCentrality = cms.bool(False)
 process.hiEvtAnalyzer.doEvtPlane = cms.bool(False)
 process.hiEvtAnalyzer.doEvtPlaneFlat = cms.bool(False)
+process.hiEvtAnalyzer.doMET = cms.bool(False)   ## Missing Et
 process.hiEvtAnalyzer.doMC = cms.bool(True) # general MC info
 process.hiEvtAnalyzer.doHiMC = cms.bool(False) # HI specific MC info
 process.hiEvtAnalyzer.doHFfilters = cms.bool(False) # Disable HF filters for ppRef
@@ -186,7 +187,7 @@ doBtagging  =  False         # Note that setting to True increases computing tim
 # Generator level jets in original miniAOD jets contain neutrinos
 # You will need to do reclustering with R-value to get generator level jets without neutrinos
 # Add all the values you want to process to the list
-jetLabels = ["2"]
+jetLabels = ["2", "3"]
 # add candidate tagging for all selected jet radii
 from HeavyIonsAnalysis.JetAnalysis.setupJets_ppRef_cff import candidateBtaggingMiniAOD
 
