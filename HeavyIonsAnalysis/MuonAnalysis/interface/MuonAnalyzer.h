@@ -125,6 +125,7 @@ private:
   std::vector<bool> recoIDMedium_;
   std::vector<bool> recoIDMediumPrompt_;
   std::vector<bool> recoIDTight_;
+  std::vector<bool> recoPFIsoTight_;
   std::vector<bool> recoIDGlobalHighPt_;
   std::vector<bool> recoIDTrkHighPt_;
   std::vector<bool> recoIDInTime_;

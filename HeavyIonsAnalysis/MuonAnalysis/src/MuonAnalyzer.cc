@@ -89,6 +89,7 @@ MuonAnalyzer::MuonAnalyzer(const edm::ParameterSet& ps) {
   tree_->Branch("recoMVAIDTight", &recoMVAIDTight_);
   tree_->Branch("recoMVAIDLooseLowPt", &recoMVAIDLooseLowPt_);
   tree_->Branch("recoMVAIDMediumLowPt", &recoMVAIDMediumLowPt_);
+  tree_->Branch("recoPFIsoTight", &recoPFIsoTight_);
 
   // inner tracks
   tree_->Branch("nInner", &nInner_);
@@ -186,6 +187,8 @@ void MuonAnalyzer::analyze(const edm::Event& e, const edm::EventSetup& es) {
   recoMVAIDTight_.clear();
   recoMVAIDLooseLowPt_.clear();
   recoMVAIDMediumLowPt_.clear();
+
+  recoPFIsoTight_.clear();
 
   nInner_ = 0;
   innerDxy_.clear();
@@ -441,6 +444,7 @@ void MuonAnalyzer::analyze(const edm::Event& e, const edm::EventSetup& es) {
       recoIDMedium_.push_back(mu.passed(reco::Muon::CutBasedIdMedium));
       recoIDMediumPrompt_.push_back(mu.passed(reco::Muon::CutBasedIdMediumPrompt));
       recoIDTight_.push_back(mu.passed(reco::Muon::CutBasedIdTight));
+      recoPFIsoTight_.push_back(mu.passed(reco::Muon::PFIsoTight));
       recoIDGlobalHighPt_.push_back(mu.passed(reco::Muon::CutBasedIdGlobalHighPt));
       recoIDTrkHighPt_.push_back(mu.passed(reco::Muon::CutBasedIdTrkHighPt));
       recoIDInTime_.push_back(mu.passed(reco::Muon::InTimeMuon));

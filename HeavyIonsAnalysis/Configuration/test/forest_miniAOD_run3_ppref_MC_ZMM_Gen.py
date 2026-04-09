@@ -22,14 +22,14 @@ process.HiForestInfo.info = cms.vstring("HiForest, miniAOD, 141X, mc")
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
     fileNames = cms.untracked.vstring(
-'/store/mc/RunIIIpp5p36Winter24MiniAOD/DYToTauTau_M-50_TuneCP5_5p36TeV_powheg-pythia8/MINIAODSIM/141X_mcRun3_2024_realistic_ppRef5TeV_v7-v1/110000/006d7083-9ab2-431c-9369-0e1c9d701bc3.root'
+'/store/mc/RunIIIpp5p36Winter24MiniAOD/DYto2L-2Jets_MLL-50_TuneCP5_5p36TeV_amcatnloFXFX-pythia8/MINIAODSIM/141X_mcRun3_2024_realistic_ppRef5TeV_v7-v1/2810000/01137b1a-5ae8-4b09-9ace-73592ce0ac72.root'
 #        '/store/user/bharikri/Run3MC_pp/MINIAOD/2024_Mar_21_Pythia8_ppRef_QCDPhoton30_PU10_TuneCP5_14_0_0_LLR/Pythia8_ppRef_QCDPhoton30_TuneCP5/2024_Mar_21_step3_RAW2DIGI_MINIAODSIM_Pythia8_ppRef_QCDPhoton30_PU10_TuneCP5_14_0_0/240326_082338/0000/step3_pp_673.root'
 )
 )
 
 # Number of events we want to process, -1 = all events
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(10000)
 )
 
 #####################################################################################
