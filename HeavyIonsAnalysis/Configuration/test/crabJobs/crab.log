@@ -19,3 +19,87 @@ Traceback (most recent call last):
     raise ConfigurationException(msg)
 CRABClient.ClientExceptions.ConfigurationException: [91mError[0m: ./crab_run3_ppref_MC_ZMM_ZZTo4L.py is not a valid CRAB project directory.
 INFO 2026-03-08 19:12:31.694 UTC: 	 Log file is /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab.log
+DEBUG 2026-04-11 14:36:22.629 UTC: 	 CRAB Client version: v3.251020
+DEBUG 2026-04-11 14:36:22.630 UTC: 	 Running on: Linux farmui01.ts.infn.it 3.10.0-1160.119.1.el7.x86_64 #1 SMP Tue Jun 4 14:43:51 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-04-11 14:36:22.630 UTC: 	 Using SINGULARITY image: el8:x86_64
+DEBUG 2026-04-11 14:36:22.630 UTC: 	 Operating System: AlmaLinux 8.10 (Cerulean Leopard)
+DEBUG 2026-04-11 14:36:22.630 UTC: 	 Executing command: 'submit'
+DEBUG 2026-04-11 14:36:22.631 UTC: 	 Found CRAB cache file /home/rdelliga/.crab3
+ERROR 2026-04-11 14:36:22.633 UTC: 	 CRAB configuration file crab_run3_ppref_DATA_ZMM_PPRefSingleMuon0 not found.
+ERROR 2026-04-11 14:36:22.633 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/bin/crab.py", line 157, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/bin/crab.py", line 135, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])  # the crab command to be executed
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/submit.py", line 37, in __init__
+    SubCommand.__init__(self, logger, cmdargs, disable_interspersed_args=True)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/SubCommand.py", line 326, in __init__
+    self.loadConfig(self.options.config, self.args)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/SubCommand.py", line 52, in loadConfig
+    raise ConfigurationException("CRAB configuration file %s not found." % (configname))
+CRABClient.ClientExceptions.ConfigurationException: CRAB configuration file crab_run3_ppref_DATA_ZMM_PPRefSingleMuon0 not found.
+INFO 2026-04-11 14:36:22.646 UTC: 	 Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab.log
+DEBUG 2026-04-11 19:36:28.001 UTC: 	 CRAB Client version: v3.251020
+DEBUG 2026-04-11 19:36:28.002 UTC: 	 Running on: Linux farmui01.ts.infn.it 3.10.0-1160.119.1.el7.x86_64 #1 SMP Tue Jun 4 14:43:51 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-04-11 19:36:28.002 UTC: 	 Using SINGULARITY image: el8:x86_64
+DEBUG 2026-04-11 19:36:28.002 UTC: 	 Operating System: AlmaLinux 8.10 (Cerulean Leopard)
+DEBUG 2026-04-11 19:36:28.002 UTC: 	 Executing command: 'submit'
+DEBUG 2026-04-11 19:36:28.016 UTC: 	 Found CRAB cache file /home/rdelliga/.crab3
+ERROR 2026-04-11 19:36:28.018 UTC: 	 CRAB configuration file crab_run3_ppref_DATA_ZMM_PPRefSingleMuon1 not found.
+ERROR 2026-04-11 19:36:28.019 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/bin/crab.py", line 157, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/bin/crab.py", line 135, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])  # the crab command to be executed
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/submit.py", line 37, in __init__
+    SubCommand.__init__(self, logger, cmdargs, disable_interspersed_args=True)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/SubCommand.py", line 326, in __init__
+    self.loadConfig(self.options.config, self.args)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/SubCommand.py", line 52, in loadConfig
+    raise ConfigurationException("CRAB configuration file %s not found." % (configname))
+CRABClient.ClientExceptions.ConfigurationException: CRAB configuration file crab_run3_ppref_DATA_ZMM_PPRefSingleMuon1 not found.
+INFO 2026-04-11 19:36:28.047 UTC: 	 Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab.log
+DEBUG 2026-04-12 00:36:33.308 UTC: 	 CRAB Client version: v3.251020
+DEBUG 2026-04-12 00:36:33.308 UTC: 	 Running on: Linux farmui01.ts.infn.it 3.10.0-1160.119.1.el7.x86_64 #1 SMP Tue Jun 4 14:43:51 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-04-12 00:36:33.308 UTC: 	 Using SINGULARITY image: el8:x86_64
+DEBUG 2026-04-12 00:36:33.308 UTC: 	 Operating System: AlmaLinux 8.10 (Cerulean Leopard)
+DEBUG 2026-04-12 00:36:33.308 UTC: 	 Executing command: 'submit'
+DEBUG 2026-04-12 00:36:33.328 UTC: 	 Found CRAB cache file /home/rdelliga/.crab3
+ERROR 2026-04-12 00:36:33.331 UTC: 	 CRAB configuration file crab_run3_ppref_DATA_ZMM_PPRefSingleMuon2 not found.
+ERROR 2026-04-12 00:36:33.331 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/bin/crab.py", line 157, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/bin/crab.py", line 135, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])  # the crab command to be executed
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/submit.py", line 37, in __init__
+    SubCommand.__init__(self, logger, cmdargs, disable_interspersed_args=True)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/SubCommand.py", line 326, in __init__
+    self.loadConfig(self.options.config, self.args)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/SubCommand.py", line 52, in loadConfig
+    raise ConfigurationException("CRAB configuration file %s not found." % (configname))
+CRABClient.ClientExceptions.ConfigurationException: CRAB configuration file crab_run3_ppref_DATA_ZMM_PPRefSingleMuon2 not found.
+INFO 2026-04-12 00:36:33.335 UTC: 	 Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab.log
+DEBUG 2026-04-12 05:36:38.595 UTC: 	 CRAB Client version: v3.251020
+DEBUG 2026-04-12 05:36:38.596 UTC: 	 Running on: Linux farmui01.ts.infn.it 3.10.0-1160.119.1.el7.x86_64 #1 SMP Tue Jun 4 14:43:51 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-04-12 05:36:38.596 UTC: 	 Using SINGULARITY image: el8:x86_64
+DEBUG 2026-04-12 05:36:38.596 UTC: 	 Operating System: AlmaLinux 8.10 (Cerulean Leopard)
+DEBUG 2026-04-12 05:36:38.596 UTC: 	 Executing command: 'submit'
+DEBUG 2026-04-12 05:36:38.596 UTC: 	 Found CRAB cache file /home/rdelliga/.crab3
+ERROR 2026-04-12 05:36:38.598 UTC: 	 CRAB configuration file crab_run3_ppref_DATA_ZMM_PPRefSingleMuon3 not found.
+ERROR 2026-04-12 05:36:38.599 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/bin/crab.py", line 157, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/bin/crab.py", line 135, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])  # the crab command to be executed
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/submit.py", line 37, in __init__
+    SubCommand.__init__(self, logger, cmdargs, disable_interspersed_args=True)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/SubCommand.py", line 326, in __init__
+    self.loadConfig(self.options.config, self.args)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/SubCommand.py", line 52, in loadConfig
+    raise ConfigurationException("CRAB configuration file %s not found." % (configname))
+CRABClient.ClientExceptions.ConfigurationException: CRAB configuration file crab_run3_ppref_DATA_ZMM_PPRefSingleMuon3 not found.
+INFO 2026-04-12 05:36:38.627 UTC: 	 Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab.log

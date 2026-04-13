@@ -1,0 +1,54 @@
+nohup: ignoring input
+--------------------------------------------------
+Submitting: crab_run3_ppref_DATA_ZMM_PPRefSingleMuon0.py
+Time: Sun Apr 12 13:53:36 CEST 2026
+Will use CRAB configuration file crab_run3_ppref_DATA_ZMM_PPRefSingleMuon0.py
+Importing CMSSW configuration forest_miniAOD_run3_ppref_DATA_ZMM.py
+Finished importing CMSSW configuration forest_miniAOD_run3_ppref_DATA_ZMM.py
+Sending the request to the server at cmsweb.cern.ch
+Success: Your task has been delivered to the prod CRAB3 server.
+Task name: 260412_115406:rdelliga_crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon0
+Project dir: ./crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon0
+Please use ' crab status -d ./crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon0 ' to check how the submission process proceeds.
+Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon0/crab.log
+Submission finished. Waiting 2 hours...
+--------------------------------------------------
+Submitting: crab_run3_ppref_DATA_ZMM_PPRefSingleMuon1.py
+Time: Sun Apr 12 18:54:06 CEST 2026
+Will use CRAB configuration file crab_run3_ppref_DATA_ZMM_PPRefSingleMuon1.py
+Importing CMSSW configuration forest_miniAOD_run3_ppref_DATA_ZMM.py
+Finished importing CMSSW configuration forest_miniAOD_run3_ppref_DATA_ZMM.py
+Sending the request to the server at cmsweb.cern.ch
+Success: Your task has been delivered to the prod CRAB3 server.
+Task name: 260412_165430:rdelliga_crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon1
+Project dir: ./crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon1
+Please use ' crab status -d ./crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon1 ' to check how the submission process proceeds.
+Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon1/crab.log
+Submission finished. Waiting 2 hours...
+--------------------------------------------------
+Submitting: crab_run3_ppref_DATA_ZMM_PPRefSingleMuon2.py
+Time: Sun Apr 12 23:54:30 CEST 2026
+Will use CRAB configuration file crab_run3_ppref_DATA_ZMM_PPRefSingleMuon2.py
+Importing CMSSW configuration forest_miniAOD_run3_ppref_DATA_ZMM.py
+Finished importing CMSSW configuration forest_miniAOD_run3_ppref_DATA_ZMM.py
+Sending the request to the server at cmsweb.cern.ch
+Success: Your task has been delivered to the prod CRAB3 server.
+Task name: 260412_215456:rdelliga_crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon2
+Project dir: ./crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon2
+Please use ' crab status -d ./crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon2 ' to check how the submission process proceeds.
+Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon2/crab.log
+Submission finished. Waiting 2 hours...
+--------------------------------------------------
+Submitting: crab_run3_ppref_DATA_ZMM_PPRefSingleMuon3.py
+Time: Mon Apr 13 04:54:57 CEST 2026
+Will use CRAB configuration file crab_run3_ppref_DATA_ZMM_PPRefSingleMuon3.py
+Importing CMSSW configuration forest_miniAOD_run3_ppref_DATA_ZMM.py
+Finished importing CMSSW configuration forest_miniAOD_run3_ppref_DATA_ZMM.py
+Sending the request to the server at cmsweb.cern.ch
+Success: Your task has been delivered to the prod CRAB3 server.
+Task name: 260413_025523:rdelliga_crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon3
+Project dir: ./crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon3
+Please use ' crab status -d ./crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon3 ' to check how the submission process proceeds.
+Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon3/crab.log
+Submission finished. Waiting 2 hours...
+All tasks have been submitted.

@@ -1,0 +1,14 @@
+# How to submit in background
+nohup ./submit_all_data.sh > submission_data.log 2>&1 &
+
+# You can check the progress anytime by running
+tail -f submission_data.log
+
+# How to kill the process
+pkill -f submit_all_data.sh
+
+# Cleaning up the "Sleep" process
+pkill -f "sleep 5h"
+
+# How to verify itâis gone
+pgrep -f submit_all_data.sh

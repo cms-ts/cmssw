@@ -1,0 +1,119 @@
+nohup: ignoring input
+--------------------------------------------------
+Submitting: crab_run3_ppref_MC_ZMM_ZZTo4L.py
+Time: Fri Apr 10 21:10:28 CEST 2026
+Will use CRAB configuration file crab_run3_ppref_MC_ZMM_ZZTo4L.py
+Importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Finished importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Sending the request to the server at cmsweb.cern.ch
+Success: Your task has been delivered to the prod CRAB3 server.
+Task name: 260410_191057:rdelliga_crab_test25_run3_ppref_MC_ZMM_ZZTo4L
+Project dir: ./crab_test25_run3_ppref_MC_ZMM_ZZTo4L
+Please use ' crab status -d ./crab_test25_run3_ppref_MC_ZMM_ZZTo4L ' to check how the submission process proceeds.
+Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_ZMM_ZZTo4L/crab.log
+Submission finished. Waiting 2 hours...
+--------------------------------------------------
+Submitting: crab_run3_ppref_MC_ZMM_ZZTo2L2Nu.py
+Time: Fri Apr 10 23:10:57 CEST 2026
+Will use CRAB configuration file crab_run3_ppref_MC_ZMM_ZZTo2L2Nu.py
+Importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Finished importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Sending the request to the server at cmsweb.cern.ch
+Success: Your task has been delivered to the prod CRAB3 server.
+Task name: 260410_211120:rdelliga_crab_test25_run3_ppref_MC_ZMM_ZZTo2L2Nu
+Project dir: ./crab_test25_run3_ppref_MC_ZMM_ZZTo2L2Nu
+Please use ' crab status -d ./crab_test25_run3_ppref_MC_ZMM_ZZTo2L2Nu ' to check how the submission process proceeds.
+Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_ZMM_ZZTo2L2Nu/crab.log
+Submission finished. Waiting 2 hours...
+--------------------------------------------------
+Submitting: crab_run3_ppref_MC_ZMM_WWTo2L2Nu.py
+Time: Sat Apr 11 01:11:21 CEST 2026
+Will use CRAB configuration file crab_run3_ppref_MC_ZMM_WWTo2L2Nu.py
+Importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Finished importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Sending the request to the server at cmsweb.cern.ch
+Success: Your task has been delivered to the prod CRAB3 server.
+Task name: 260410_231147:rdelliga_crab_test25_run3_ppref_MC_ZMM_WWTo2L2Nu
+Project dir: ./crab_test25_run3_ppref_MC_ZMM_WWTo2L2Nu
+Please use ' crab status -d ./crab_test25_run3_ppref_MC_ZMM_WWTo2L2Nu ' to check how the submission process proceeds.
+Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_ZMM_WWTo2L2Nu/crab.log
+Submission finished. Waiting 2 hours...
+--------------------------------------------------
+Submitting: crab_run3_ppref_MC_ZMM_T.py
+Time: Sat Apr 11 03:11:48 CEST 2026
+Will use CRAB configuration file crab_run3_ppref_MC_ZMM_T.py
+Importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Finished importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Sending the request to the server at cmsweb.cern.ch
+Success: Your task has been delivered to the prod CRAB3 server.
+Task name: 260411_011212:rdelliga_crab_test25_run3_ppref_MC_ZMM_T
+Project dir: ./crab_test25_run3_ppref_MC_ZMM_T
+Please use ' crab status -d ./crab_test25_run3_ppref_MC_ZMM_T ' to check how the submission process proceeds.
+Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_ZMM_T/crab.log
+Submission finished. Waiting 2 hours...
+--------------------------------------------------
+Submitting: crab_run3_ppref_MC_ZMM_TT.py
+Time: Sat Apr 11 05:12:13 CEST 2026
+Will use CRAB configuration file crab_run3_ppref_MC_ZMM_TT.py
+Importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Finished importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Sending the request to the server at cmsweb.cern.ch
+Success: Your task has been delivered to the prod CRAB3 server.
+Task name: 260411_031237:rdelliga_crab_test25_run3_ppref_MC_ZMM_TT
+Project dir: ./crab_test25_run3_ppref_MC_ZMM_TT
+Please use ' crab status -d ./crab_test25_run3_ppref_MC_ZMM_TT ' to check how the submission process proceeds.
+Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_ZMM_TT/crab.log
+Submission finished. Waiting 2 hours...
+--------------------------------------------------
+Submitting: crab_run3_ppref_MC_ZMM_Tbar.py
+Time: Sat Apr 11 07:12:38 CEST 2026
+Will use CRAB configuration file crab_run3_ppref_MC_ZMM_Tbar.py
+Importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Finished importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Sending the request to the server at cmsweb.cern.ch
+Success: Your task has been delivered to the prod CRAB3 server.
+Task name: 260411_051305:rdelliga_crab_test25_run3_ppref_MC_ZMM_Tbar
+Project dir: ./crab_test25_run3_ppref_MC_ZMM_Tbar
+Please use ' crab status -d ./crab_test25_run3_ppref_MC_ZMM_Tbar ' to check how the submission process proceeds.
+Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_ZMM_Tbar/crab.log
+Submission finished. Waiting 2 hours...
+--------------------------------------------------
+Submitting: crab_run3_ppref_MC_ZMM_DYto2Tau.py
+Time: Sat Apr 11 09:13:05 CEST 2026
+Will use CRAB configuration file crab_run3_ppref_MC_ZMM_DYto2Tau.py
+Importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Finished importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Sending the request to the server at cmsweb.cern.ch
+Success: Your task has been delivered to the prod CRAB3 server.
+Task name: 260411_071330:rdelliga_crab_test25_run3_ppref_MC_ZMM_DYtoTauTau
+Project dir: ./crab_test25_run3_ppref_MC_ZMM_DYtoTauTau
+Please use ' crab status -d ./crab_test25_run3_ppref_MC_ZMM_DYtoTauTau ' to check how the submission process proceeds.
+Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_ZMM_DYtoTauTau/crab.log
+Submission finished. Waiting 2 hours...
+--------------------------------------------------
+Submitting: crab_run3_ppref_MC_ZMM_WminusToMuminusNu.py
+Time: Sat Apr 11 11:13:31 CEST 2026
+Will use CRAB configuration file crab_run3_ppref_MC_ZMM_WminusToMuminusNu.py
+Importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Finished importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Sending the request to the server at cmsweb.cern.ch
+Success: Your task has been delivered to the prod CRAB3 server.
+Task name: 260411_091355:rdelliga_crab_test25_run3_ppref_MC_ZMM_WminusToMuminusNu
+Project dir: ./crab_test25_run3_ppref_MC_ZMM_WminusToMuminusNu
+Please use ' crab status -d ./crab_test25_run3_ppref_MC_ZMM_WminusToMuminusNu ' to check how the submission process proceeds.
+Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_ZMM_WminusToMuminusNu/crab.log
+Submission finished. Waiting 2 hours...
+--------------------------------------------------
+Submitting: crab_run3_ppref_MC_ZMM_WplusToMuplusNu.py
+Time: Sat Apr 11 13:13:56 CEST 2026
+Will use CRAB configuration file crab_run3_ppref_MC_ZMM_WplusToMuplusNu.py
+Importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Finished importing CMSSW configuration forest_miniAOD_run3_ppref_MC_ZMM.py
+Sending the request to the server at cmsweb.cern.ch
+Success: Your task has been delivered to the prod CRAB3 server.
+Task name: 260411_111430:rdelliga_crab_test25_run3_ppref_MC_ZMM_WplusToMuplusNu
+Project dir: ./crab_test25_run3_ppref_MC_ZMM_WplusToMuplusNu
+Please use ' crab status -d ./crab_test25_run3_ppref_MC_ZMM_WplusToMuplusNu ' to check how the submission process proceeds.
+Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_ZMM_WplusToMuplusNu/crab.log
+Submission finished. Waiting 2 hours...
+All tasks have been submitted.
