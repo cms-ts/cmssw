@@ -199,7 +199,7 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
         std::cout << "------------------------------------------------" << std::endl;
         std::cout << "Histogram: " << histo_name << std::endl;
         std::cout << "data:    " << std::fixed << std::setprecision(2) << h_data->Integral(0, h_data->GetNbinsX()+1) << std::endl
-                  << "DYMM:    " << std::fixed << std::setprecision(2) << h_DYMM->Integral(0, h_DYMM->GetNbinsX()+1) << std::endl
+                  << "DY+2j:    " << std::fixed << std::setprecision(2) << h_DYMM->Integral(0, h_DYMM->GetNbinsX()+1) << std::endl
                   << "diboson: " << std::fixed << std::setprecision(2) << h_diboson->Integral(0, h_diboson->GetNbinsX()+1) << std::endl
                   << "TT:      " << std::fixed << std::setprecision(2) << h_TT->Integral(0, h_TT->GetNbinsX()+1) << std::endl
                   << "others:  " << std::fixed << std::setprecision(2) << h_others->Integral(0, h_others->GetNbinsX()+1) << std::endl;

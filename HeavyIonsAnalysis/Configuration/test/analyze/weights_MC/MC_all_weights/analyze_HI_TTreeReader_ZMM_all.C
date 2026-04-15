@@ -23,15 +23,15 @@
 
 using namespace std;
 
-//To run, root -l analyze_HI_TTreeReader_ZMM_all.C
+//To run, root -l 'analyze_HI_TTreeReader_ZMM_all.C("PbPb23_alternative")'
 void analyze_HI_TTreeReader_ZMM_all(const char* collision_type = "PbPb23") {
 
   TString s_coll = collision_type;
   bool isPbPb = s_coll.Contains("PbPb");
+  bool isAlternative = s_coll.Contains("alternative"); // Generalized check
 
   TString input_path = "";
-  bool found_signal = false;
-  bool found_alternative = false;
+  bool found_file = false;
 
   // --- 1. Select MC File Vector from MC_samples.h ---
   const std::vector<FileInfo>* targetVector = nullptr;
@@ -39,52 +39,34 @@ void analyze_HI_TTreeReader_ZMM_all(const char* collision_type = "PbPb23") {
     targetVector = &files;
   }
   else if (s_coll.Contains("PbPb24")) {
-    targetVector = &files_PbPb24;;
+    targetVector = &files_PbPb24;
   }
   else if (s_coll.Contains("ppref24")) {
     targetVector = &files_ppref;
   }
-  else if (s_coll.Contains("ppref24_alternative")) {
-    targetVector = &files_ppref;
-  } else {
+  else {
     std::cerr << "Error: Unknown collision type " << s_coll << std::endl;
     return;
   }
 
-  if (!s_coll.Contains("ppref24_alternative")) {
-    // Loop to find the "signal" label in the selected vector
-    if (targetVector) {
-      for (const auto& file : *targetVector) {
-        if (file.label == "signal") {
-          input_path = file.path_miniaod; // This contains the /path/to/*.root
-          cout << "Found signal path in MC_samples.h for " << s_coll << ": " << input_path << endl;
-          found_signal = true;
-          break;
-        }
+  // --- 2. Search for the correct label ---
+  TString search_label = isAlternative ? "alternative" : "signal";
+  
+  if (targetVector) {
+    for (const auto& file : *targetVector) {
+      if (file.label == search_label.Data()) {
+        input_path = file.path_miniaod; // This contains the /path/to/*.root
+        cout << "Found " << search_label << " path in MC_samples.h for " << s_coll << ": " << input_path << endl;
+        found_file = true;
+        break;
       }
     }
   }
-  else {
-    // Loop to find the "alternative" label in the selected vector
-    if (targetVector) {
-      for (const auto& file : *targetVector) {
-        if (file.label == "alternative") {
-          input_path = file.path_miniaod; // This contains the /path/to/*.root
-          cout << "Found alternative path in MC_samples.h for " << s_coll << ": " << input_path << endl;
-          found_alternative = true;
-          break;
-        }
-      }
-    }
 
-  }
-
-  if (!found_signal && !found_alternative) {
-      cerr << "[ERROR] Could not find 'signal' or 'alternative' label in MC_samples.h for " << s_coll << endl;
-      // Fallback/Default paths if needed (optional)
+  if (!found_file) {
+      cerr << "[ERROR] Could not find '" << search_label << "' label in MC_samples.h for " << s_coll << endl;
       return;
   }
-
 
   //TTrees
   TChain  HiTree("HiTree");
@@ -136,10 +118,9 @@ void analyze_HI_TTreeReader_ZMM_all(const char* collision_type = "PbPb23") {
   if (s_coll.Contains("PbPb24")) name_output = "HI24";
   else if (s_coll.Contains("ppref24")) name_output = "ppref";
 
-  TString name_alternative = "";
-  if (s_coll.Contains("ppref24_alternative")) name_alternative = "_alternative";
+  TString name_alternative_suffix = isAlternative ? "_alternative" : "";
 
-  TString out_file_path = "./output_" + name_output + "_mu_MC_all" + name_alternative + ".root";
+  TString out_file_path = "./output_" + name_output + "_mu_MC_all" + name_alternative_suffix + ".root";
   TFile *file_output_HI_mu = new TFile(out_file_path, "RECREATE");
 
   // Loop over events to access and analyze the data

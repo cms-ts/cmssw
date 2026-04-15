@@ -41,6 +41,27 @@ root -l -b -q 'plot_veto_check.C("PbPb23", false, 30, 50, 60, 9999)'
 // 5. Specific Background MC (e.g., TT, WZ, etc.)
 // You can specify MC sample label modifying inside plot_veto_check.C
 
+//--------------------------------
+//  Plot SF
+//--------------------------------
+// Macro: plot_sf_2d.C
+// Arguments: (collision_type, Lumi)
+// 1. PbPb23 (Default)
+root -l -b -q plot_sf_2d.C
+
+// 2. ppref24
+root -l -b -q 'plot_sf_2d.C("ppref24")'
+
+//--------------------------------
+//  Plot JES_JER_Performance
+//--------------------------------
+// Macro: plot_JES_JER.C
+// Arguments: (test_pt, test_rho)
+// Default test_pt = 40, test_rho = 80 for Pb 23
+root -l -b -q plot_JES_JER.C
+
+// test_pt = 50, test_rho = 50
+root -l -b -q 'plot_JES_JER.C(50.0, 50.0)'
 
 // --- Deprecated ---
 //--------------------------------

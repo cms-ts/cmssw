@@ -1,12 +1,17 @@
-#include "../plot/tdrstyle.C"
-#include "CMS_lumi.C"
-#include "TH1.h"
+#include "TFile.h"
+#include "TDirectoryFile.h"
 #include "TH1D.h"
-#include "../helpers.h"           // for getLumiFromSummary, cen tables, etc.
+#include "TCanvas.h"
+#include <iostream>
+#include <iomanip>
+#include "TLegend.h"
+#include "TMath.h"
+#include "TRatioPlot.h"
+#include "TLatex.h"
+#include "TGraph.h"
+#include "../helpers.h" 
+#include "tdrstyle.C"
 
-TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool isData, const char * histo_name, const char * x_title, const char * y_title, int bin, double min, double max, int cent_min, int cent_max, double ptZ_min, double ptZ_max);
-
-// Use a map to store histogram parameters
 std::map<std::string, std::tuple<const char*, const char*, int, double, double>> histo_params = {
     {"h_jet_pt_lj", {"leading jet p_{T} [GeV]", "Events", 30, 0, 300}},
     {"h_deltaPhi_Zj", {"#Delta#phi_{Zj}", "Events" , 20, 0, TMath::Pi()}},
@@ -14,264 +19,134 @@ std::map<std::string, std::tuple<const char*, const char*, int, double, double>>
 };
 
 void plot_MinBias(const char* collision_type = "PbPb23", const char* h_n = "h_deltaPhi_Zj", bool isData = true, int cent_min = 0, int cent_max = 30, double ptZ_min = 40.0, double ptZ_max = 9999.0) {
-// Check if the histogram name exists in the map
+    
     if (histo_params.find(h_n) == histo_params.end()) {
-        std::cerr << "Error: Histogram '" << h_n << "' not found in parameter map." << std::endl;
+        std::cerr << "Error: Histogram '" << h_n << "' not found." << std::endl;
         return;
     }
-// Retrieve parameters from the map
-    const char* x_title;
-    const char* y_title;
-    int bin;
-    double min;
-    double max;
+    const char* x_title; const char* y_title; int bin; double min; double max;
     std::tie(x_title, y_title, bin, min, max) = histo_params[h_n];
-//std::string h_n = "h_cen", x_title = "cen", y_title = "Events";
-//if (nn = 1) {h_n = "h_mumu"; x_title = "m_{#mu#mu} [GeV]"; y_title = "Events";}
 
-    //gROOT->LoadMacro("tdrstyle.C");
-  setTDRStyle();
+    setTDRStyle();
+    
+    // --- Graphical Setup ---
+    gStyle->SetErrorX(0.5);      // Enables horizontal error bars
+    gStyle->SetEndErrorSize(0);  // Removes transversal lines (caps)
 
-    //gROOT->LoadMacro("CMS_lumi.C");
+    TString run_tag;
+    if (ptZ_max > 9000) run_tag = Form("_Cen%d_%d_ptZ%.0f_Inf", cent_min, cent_max, ptZ_min);
+    else run_tag = Form("_Cen%d_%d_ptZ%.0f_%.0f", cent_min, cent_max, ptZ_min, ptZ_max);
 
-  writeExtraText = true;       // if extra text
-  extraText  = "Preliminary";  // default extra text is "Preliminary"
-  //lumi_8TeV  = "19.1 fb^{-1}"; // default is "19.7 fb^{-1}"
-  //lumi_7TeV  = "4.9 fb^{-1}";  // default is "5.1 fb^{-1}"
-  TString s_coll = collision_type;
-  if (s_coll.Contains("PbPb23")) {
-      lumi_sqrtS = TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", getLumiFromSummary("../brilcalc_Collisions2023HI.csv"));
-  }
-  else if (s_coll.Contains("PbPb24")) {
-      lumi_sqrtS = TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", getLumiFromSummary("../brilcalc_Collisions2024_HI.csv"));
-  }
-  // used with iPeriod = 0, e.g. for simulation-only plots (default is an empty string)
-
-  int iPeriod = 0;    // 1=7TeV, 2=8TeV, 3=7+8TeV, 7=7+8+13TeV, 0=free form (uses lumi_sqrtS)
-
-  // second parameter in example_plot is iPos, which drives the position of the CMS logo in the plot
-  // iPos=11 : top-left, left-aligned
-  // iPos=33 : top-right, right-aligned
-  // iPos=22 : center, centered
-  // mode generally : 
-  //   iPos = 10*(alignement 1/2/3) + position (1/2/3 = left/center/right)
-
-  example_plot( iPeriod, 0 , collision_type, isData, h_n, x_title, y_title, bin, min, max, cent_min, cent_max, ptZ_min, ptZ_max);    // out of frame (in exceptional cases)
-  //  example_plot( iPeriod, 11 );  // left-aligned
-  //  example_plot( iPeriod, 33 );  // right-aligned
-
-  //  writeExtraText = false;       // remove Preliminary
-  
-  //  example_plot( iPeriod, 0 );    // out of frame (in exceptional cases)
-
-  //  example_plot( iPeriod, 11 );  // default: left-aligned
-  //  example_plot( iPeriod, 22 );  // centered
-  //  example_plot( iPeriod, 33 );  // right-aligned   
-}
-
-TCanvas* example_plot( int iPeriod, int iPos, const char* collision_type, bool isData, const char * histo_name, const char * x_title, const char * y_title, int bin, double min, double max, int cent_min, int cent_max, double ptZ_min, double ptZ_max)
-{ 
-  //  if( iPos==0 ) relPosX = 0.12;
-
-  int W = 800;
-  int H = 600;
-
-  // 
-  // Simple example of macro: plot with CMS name and lumi text
-  //  (this script does not pretend to work in all configurations)
-  // iPeriod = 1*(0/1 7 TeV) + 2*(0/1 8 TeV)  + 4*(0/1 13 TeV) 
-  // For instance: 
-  //                iPeriod = 3 means: 7 TeV + 8 TeV
-  //                iPeriod = 7 means: 7 TeV + 8 TeV + 13 TeV 
-  // Initiated by: Gautier Hamel de Monchenault (Saclay)
-  // Updated by:   Dinko Ferencek (Rutgers)
-  //
-  int H_ref = 600; 
-  int W_ref = 800; 
-
-  // references for T, B, L, R
-  float T = 0.08*H_ref;
-  float B = 0.12*H_ref; 
-  float L = 0.12*W_ref;
-  float R = 0.04*W_ref;
-
-  // --- Build Run Tag ---
-  TString run_tag;
-  if (ptZ_max > 9000) run_tag = Form("_Cen%d_%d_ptZ%.0f_Inf", cent_min, cent_max, ptZ_min);
-  else run_tag = Form("_Cen%d_%d_ptZ%.0f_%.0f", cent_min, cent_max, ptZ_min, ptZ_max);
-
-  TString canvName = histo_name;
-  //canvName += "_";
-  //canvName += W;
-  //canvName += "-";
-  //canvName += H;
-  //canvName += "_";   
-  //canvName += iPeriod;
-  canvName += "_MinBias" + run_tag;
-  if (isData) canvName += "_data"; else canvName += "_MC";
-  //if( writeExtraText ) canvName += "-prelim";
-  //if( iPos%10==0 ) canvName += "-out";
-  //else if( iPos%10==1 ) canvName += "-left";
-  //else if( iPos%10==2 )  canvName += "-center";
-  //else if( iPos%10==3 )  canvName += "-right";
-
-  TCanvas* canv = new TCanvas(canvName,canvName,50,50,W,H);
-  canv->SetFillColor(0);
-  canv->SetBorderMode(0);
-  canv->SetFrameFillStyle(0);
-  canv->SetFrameBorderMode(0);
-  canv->SetLeftMargin( L/W );
-  canv->SetRightMargin( R/W );
-  canv->SetTopMargin( T/H );
-  canv->SetBottomMargin( B/H );
-  canv->SetTickx(0);
-  canv->SetTicky(0);
-  //canv->SetLogy();
-  
-  TH1* h = new TH1D("h","h",bin,min,max);
-  h->GetXaxis()->SetNdivisions(6,5,0);
-  h->GetXaxis()->SetTitle(x_title);  
-  h->GetYaxis()->SetNdivisions(6,5,0);
-  h->GetYaxis()->SetTitleOffset(1);
-  h->GetYaxis()->SetTitle(y_title);  
-
-  //h->SetMaximum( 900 );
-  //h->SetMaximum( 20000 );
-  //h->SetMinimum( 1.0 );
-  //h->SetAxisRange(-1., 1., "X");
-  //if( iPos==1 ) h->SetMaximum( 300 );
-  h->Draw();
-
-  int histLineColor = TColor::GetColor("#7a21dd");
-  int histFillColor = TColor::GetColor("#7a21dd");
-  float markerSize  = 0.8;
-
-  {
-    // Dynamic Filename
-    TString s_coll = collision_type;
+    TString canvName = TString(h_n) + "_MinBias" + run_tag + (isData ? "_data" : "_MC");
+    TString name_prefix = TString(collision_type).Contains("PbPb24") ? "HI24" : "HI";
+    
     TString fname;
-    TString name_prefix;
-    if (s_coll.Contains("PbPb23")) name_prefix = "HI";
-    else if (s_coll.Contains("PbPb24"))  name_prefix = "HI24";
-
     if (isData) fname.Form("../plot/output_%s_mu_data%s.root", name_prefix.Data(), run_tag.Data());
     else        fname.Form("../plot/output_%s_mu_MC_signal%s.root", name_prefix.Data(), run_tag.Data());
 
-    cout << "Opening " << fname << endl;
     TFile* file = TFile::Open(fname, "READ");
-    // and take its directories
-    TDirectoryFile* dir_HI = (TDirectoryFile*)file->Get(name_prefix);
-    if (!dir_HI)
-      cout << "Cannot find dir_HI" << endl;
-    TDirectoryFile* dir_Muons = (TDirectoryFile*)dir_HI->Get("Muons");
-    if (!dir_Muons)
-      cout << "Cannot find dir_Muons" << endl;
-    else cout << "Yes Muons";
-    if (isData) cout << " data" << endl; else cout << " MC" << endl;
+    TDirectoryFile* dir_Muons = (TDirectoryFile*)file->Get(Form("%s/Muons", name_prefix.Data()));
 
-    // Take the trees with the method Get()
-    TH1D* h_ = (TH1D*)dir_Muons->Get(histo_name);
-    std::string bkg_name = std::string(histo_name) + "_MinBias";
-    std::string subtracted_name = std::string(histo_name) + "_subtracted";
-    std::string matched_name = std::string(histo_name) + "_matched";
-    TH1D* h_MinBias = (TH1D*)dir_Muons->Get(bkg_name.c_str());
-    TH1D* h_subtracted = (TH1D*)dir_Muons->Get(subtracted_name.c_str());
-    TH1D* h_matched = nullptr;
-    if (!isData) h_matched = (TH1D*)dir_Muons->Get(matched_name.c_str());
+    TH1D* h_raw = (TH1D*)dir_Muons->Get(h_n);
+    TH1D* h_MinBias = (TH1D*)dir_Muons->Get((std::string(h_n) + "_MinBias").c_str());
+    TH1D* h_subtracted = (TH1D*)dir_Muons->Get((std::string(h_n) + "_subtracted").c_str());
+    TH1D* h_matched = (!isData) ? (TH1D*)dir_Muons->Get((std::string(h_n) + "_matched").c_str()) : nullptr;
 
+    // --- Styling ---
+    int bkgColor = TColor::GetColor("#7a21dd");
+    int sigColor = TColor::GetColor("#e42536"); 
 
-    //TFile file_("histo.root","READ");
-    //Int_t c_blue = TColor::GetColor("#5790fc");
-    //Int_t c_red = TColor::GetColor("#e42536");
- 
-    h_->SetDirectory(0);
-    h_MinBias->SetDirectory(0);
-    h_subtracted->SetDirectory(0);
-    if (!isData) h_matched->SetDirectory(0);
-    //h_MC->SetMarkerStyle(23);
-    //h_MC->SetMarkerSize(markerSize);
-    h_->SetLineColor(kBlack);
-    h_MinBias->SetLineColor(histLineColor);
-    h_subtracted->SetLineColor(TColor::GetColor("#e42536"));
-    h_subtracted->SetMarkerStyle(20);
-    h_subtracted->SetMarkerColor(TColor::GetColor("#e42536"));
-    h_subtracted->SetMarkerSize(markerSize);
-    if (isData) {
-      h_->SetMarkerStyle(20);
-      h_->SetMarkerColor(kBlack);
-      h_->SetMarkerSize(markerSize);
-      h_MinBias->SetMarkerStyle(20);
-      h_MinBias->SetMarkerColor(histLineColor);
-      h_MinBias->SetMarkerSize(markerSize);
-    }
+    // Both Data and MC get markers for Raw and Bkg now
+    h_raw->SetLineColor(kBlack); h_raw->SetMarkerStyle(20); h_raw->SetMarkerColor(kBlack); h_raw->SetMarkerSize(0.8);
+    h_MinBias->SetLineColor(bkgColor); h_MinBias->SetMarkerStyle(20); h_MinBias->SetMarkerColor(bkgColor); h_MinBias->SetMarkerSize(0.8);
+    
+    h_subtracted->SetLineColor(sigColor); h_subtracted->SetMarkerStyle(20); h_subtracted->SetMarkerColor(sigColor); h_subtracted->SetMarkerSize(0.8);
+
     if (!isData) {
-      h_matched->SetLineColor(TColor::GetColor("#e42536"));
-      h_matched->SetMarkerStyle(20);
-      h_matched->SetMarkerColor(TColor::GetColor("#e42536"));
-      h_matched->SetMarkerSize(markerSize);
-     }
-    //h_->SetFillColor(histFillColor); // Choose a suitable color
-    //h_->SetFillStyle(1001); // Choose a fill style (solid)
-    //h_MC->SetMarkerColor(TColor::GetColor("#e42536"));
+        h_matched->SetLineColor(sigColor);
+        h_matched->SetMarkerSize(0); // Simple histogram (line) for True
+    }
 
+    TCanvas *c = new TCanvas("c", "c", 800, 800);
+    c->SetLeftMargin(0.12); c->SetRightMargin(0.04);
+    c->SetTopMargin(0.08); c->SetBottomMargin(0.12);
 
-    //TH1D *MC   = static_cast<TH1D*>(file_.Get("MC")->Clone());
-    //h_data->SetDirectory(0);
-    //h_data->SetMarkerStyle(20);
-    //h_data->SetMarkerSize(markerSize);
-    //h_data->SetLineColor(1);
-    //h_data->SetMarkerColor(1);
-    //h_data->SetLineColor(histLineColor);
-    //h_data->SetFillColor(histFillColor);
-    
-    cout << "Events : " << h_->Integral(0, h_->GetNbinsX()+1) << endl;
+    // TRatioPlot Configuration: Bkg / Raw
+    TRatioPlot *h_ratio = new TRatioPlot(h_MinBias, h_raw, "divsym");
+    h_ratio->SetH1DrawOpt("E P"); 
+    h_ratio->SetH2DrawOpt("E P");
+    h_ratio->Draw();
 
-    
-    if (isData) h_->Draw("esame"); else h_->Draw("histsame");
-    if (isData) h_MinBias->Draw("esame"); else h_MinBias->Draw("histsame");
-    h_subtracted->Draw("esame");
-    if (!isData) h_matched->Draw("histsame");
-    //h_data->Draw("e1samex0");
+    // Range and Axis
+    double y_max_val = h_raw->GetBinContent(h_raw->GetMaximumBin());
+    h_ratio->GetUpperRefYaxis()->SetRangeUser(0, 1.4 * y_max_val);
+    h_ratio->GetUpperRefYaxis()->SetTitle(y_title);
+    h_ratio->GetLowerRefYaxis()->SetTitle("Bkg Fraction");
+    h_ratio->GetLowerRefGraph()->SetMinimum(0.0);
+    if (canvName.Contains("delta")) h_ratio->GetLowerRefGraph()->SetMaximum(1.);
+    else h_ratio->GetLowerRefGraph()->SetMaximum(0.2);
 
-    double y_max = h_->GetBinContent(h_->GetMaximumBin());
-    h->SetMaximum(1.2*y_max);
+    // Style the ratio points (matches numerator/Bkg styling)
+    h_ratio->GetLowerRefGraph()->SetMarkerStyle(20);
+    h_ratio->GetLowerRefGraph()->SetMarkerColor(bkgColor);
+    h_ratio->GetLowerRefGraph()->SetLineColor(bkgColor);
 
-    double x_min = 0.59;
-    if (!canvName.Contains("delta")) x_min = 0.69;
+    std::vector<double> gridlines = {}; 
+    h_ratio->SetGridlines(gridlines);
+
+    // --- Draw Content (Upper Pad) ---
+    h_ratio->GetUpperPad()->cd();
+    // Raw, Bkg, and Subtracted all drawn with E P for horizontal and vertical bars
+    h_raw->Draw("E P same");      
+    h_MinBias->Draw("E P same");
+    h_subtracted->Draw("E P same"); 
+    if (!isData) h_matched->Draw("HIST same"); // True is simple line
+
+    // --- LaTeX logic ---
+    double x_min_lat = canvName.Contains("delta") ? 0.49 : 0.61;
+
     TLatex* latex1 = new TLatex();
-    latex1->SetTextFont(42);
-    latex1->SetTextSize(0.036); // Set text size (adjust as needed)
-    latex1->DrawLatexNDC(x_min,0.6, Form("Centrality: %d-%d%%", cent_min, cent_max));
-    if (ptZ_max > 9000) latex1->DrawLatexNDC(x_min,0.55, Form("p_{T}^{Z} > %.0f GeV", ptZ_min));
-    else latex1->DrawLatexNDC(x_min,0.55, Form("p_{T}^{Z}: %.0f-%.0f GeV", ptZ_min, ptZ_max));
-    latex1->DrawLatexNDC(x_min,0.49,"p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.5");
-    if (!canvName.Contains("delta")) latex1->DrawLatexNDC(x_min,0.44,"#Delta#phi_{Zj} > 7#pi/8"); // Use normalized device coordinates NDC (0-1)
+    latex1->SetTextFont(42); latex1->SetTextSize(0.035);
+    latex1->DrawLatexNDC(x_min_lat, 0.6, Form("Centrality: %d-%d%%", cent_min, cent_max));
+    latex1->DrawLatexNDC(x_min_lat, 0.54, (ptZ_max > 9000) ? Form("p_{T}^{Z} > %.0f GeV", ptZ_min) : Form("p_{T}^{Z}: %.0f-%.0f GeV", ptZ_min, ptZ_max));
+    latex1->DrawLatexNDC(x_min_lat, 0.48, "p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.5");
+    
+    if (!canvName.Contains("delta")) latex1->DrawLatexNDC(x_min_lat, 0.44, "#Delta#phi_{Zj} > 7#pi/8");
 
-    TLegend* legend = new TLegend(x_min-0.01, 0.7, x_min+0.21, 0.86); // Example: Top-right corner
-    legend->SetBorderSize(0);
-    if (isData) legend->AddEntry(h_, "Raw", "epl"); else legend->AddEntry(h_, "Raw", "l"); // "l" for line
-    if (isData) legend->AddEntry(h_MinBias, "Bkg", "epl"); else legend->AddEntry(h_MinBias, "Bkg", "l");
-    if (isData) legend->AddEntry(h_subtracted, "Raw - Bkg", "epl"); else legend->AddEntry(h_subtracted, "Raw - Bkg", "epl");
-    legend->SetTextFont(42);
-    legend->SetTextColor(kBlack);
-    legend->SetTextSize(0.036);
-    if (!isData) {
-      legend->AddEntry(h_matched, "True", "l");
-    }
+    // Legend
+    TLegend* legend = new TLegend(x_min_lat-0.01, 0.7, x_min_lat+0.21, 0.86);
+    legend->SetBorderSize(0); legend->SetTextSize(0.035);
+    legend->SetTextFont(42); // 42 is standard; 62 is bold
+    legend->AddEntry(h_raw, "Raw", "epl");
+    legend->AddEntry(h_MinBias, "Bkg Estimate", "epl");
+    legend->AddEntry(h_subtracted, "Raw - Bkg", "epl");
+    if (!isData) legend->AddEntry(h_matched, "True (Signal)", "l");
     legend->Draw();
 
-    file->Close();
-  }
+    // CMS Header
+    TLatex* l_header = new TLatex();
+    l_header->SetTextFont(61); l_header->SetTextSize(0.06);
+    l_header->DrawLatexNDC(0.1, 0.92, "CMS");
+    l_header->SetTextFont(52); l_header->SetTextSize(0.045);
+    l_header->DrawLatexNDC(0.19, 0.92, "Preliminary");
 
-  // writing the lumi information and the CMS "logo"
-  CMS_lumi( canv, iPeriod, iPos );
+    double Lumi = getLumiFromSummary(TString(collision_type).Contains("24") ? "../brilcalc_Collisions2024_HI.csv" : "../brilcalc_Collisions2023HI.csv");
+    l_header->SetTextFont(42); l_header->SetTextSize(0.05);
+    l_header->DrawLatexNDC(0.54, 0.92, TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", Lumi));
 
-  canv->Update();
-  canv->RedrawAxis();
-  canv->GetFrame()->Draw();
+    // --- MC Closure (Lower Pad) ---
+    if (!isData) {
+        h_ratio->GetLowerPad()->cd();
+        TH1D* h_ratio_closure = (TH1D*)h_raw->Clone("h_ratio_closure");
+        h_ratio_closure->Add(h_matched, -1);
+        h_ratio_closure->Divide(h_raw);
+        
+        h_ratio_closure->SetLineColor(sigColor);
+        h_ratio_closure->SetLineWidth(1); 
+        h_ratio_closure->SetMarkerSize(0);
+        h_ratio_closure->Draw("same HIST");
+    }
 
-  canv->Print(canvName+".pdf",".pdf");
-  //canv->Print(canvName+".png",".png");
-
-  return canv;
+    c->Update();
+    c->Print(canvName + ".pdf");
 }

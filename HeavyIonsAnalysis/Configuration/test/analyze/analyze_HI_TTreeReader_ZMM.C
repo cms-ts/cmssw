@@ -239,7 +239,10 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TH1D* h_weight_vz    = nullptr;
   TH1D* h_weight_JEWEL = nullptr;
 
+  bool use_data_driven_cen = true;
+
   // Only load weights if running on MC
+
   if (!isData && weight_phase!=0) {
     // 1. Rho Weight (Only for PbPb MC, specific to year)
     if (isPbPb && weight_phase!=1) {
@@ -351,7 +354,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     // Since TTree weights are ~Xsec [pb], we normalize by (Lumi / N_gen) if !isSignal, since we don't have sum_w total
     norm_MC_w_ncoll = isSignal ? number_A*number_A*Lumi*Xsec*(n_ev/sum_ncoll)/sum_w
                                : number_A*number_A*Lumi*(n_ev/sum_ncoll)/Ngen/1000; // :1000 since weights are ~Xsec in pb
-    norm_MC_w = isPbPb ? number_A*number_A*Lumi*Xsec/sum_w
+    norm_MC_w = isPbPb ? ( isSignal ? number_A*number_A*Lumi*Xsec/sum_w
+                                    : number_A*number_A*Lumi/Ngen/1000 )
                        : ( isSignal ? Lumi*Xsec/sum_w
                                     : ( isAlternative ? Lumi*Xsec/sum_w_alternative : Lumi/Ngen ) );
 
@@ -823,16 +827,16 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   // Histograms
   const double pi_value = std::acos(-1);;
   // Define binning for xZj unfolding.
-  const int nbins_xZj = 7; // Number of bins (number of edges - 1)
-  double xZj_bins[nbins_xZj + 1] = {0., 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 2.};
+  const int nbins_xZj = 6; // Number of bins (number of edges - 1)
+  double xZj_bins[nbins_xZj + 1] = {0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 2.};
   const int nbins_xZj_meas = (systFlag != 8) ? nbins_xZj : nbins_xZj-1;
 
   // Define the bins using a vector so we can initialize conditionally
   std::vector<double> xZj_bins_meas_vec;
   if (systFlag != 8) {
-    xZj_bins_meas_vec = {0., 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 2.};
+    xZj_bins_meas_vec = {0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 2.};
   } else {
-    xZj_bins_meas_vec = {0., 0.5, 0.7, 0.9, 1.1, 1.3, 1.5};
+    xZj_bins_meas_vec = {0.5, 0.7, 0.9, 1.1, 1.3, 1.5};
   }
 
   // Create a pointer to the vector's data (compatible with TH1D constructors)
@@ -871,6 +875,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TH1D *h_xZj_matched = new TH1D("h_xZj_matched", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
 
   // --- RooUnfold Histograms ---
+
+  TH1D *h_deltaR_gen_reco = new TH1D("h_deltaR_gen_reco", "Matching Distance;#DeltaR(Reco, Gen);Entries", 50, 0, 0.5);
 
   TH1D* h_xZj_true = new TH1D("h_xZj_true", "True x_{Zj};x_{Zj};Entries", nbins_xZj, xZj_bins);     // For true MC
   TH1D *h_xZj_for_JEWEL_w = new TH1D("h_xZj_for_JEWEL_w", "True x_{Zj};Entries", 60, 0.,3.);
@@ -1043,7 +1049,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     }
     // --- end of Progress Bar ---
 
-    // Stop at 1/10 of statistics, ONLY if it is MC
+    // Stop at 1/10 of statistics, ONLY if it is MC and stop_early is true
     bool stop_early = false;
     if (stop_early && !isData && itotev >= total_events / 10) {
         std::cout << "\n\033[1;31mSTOPPING EARLY ACTIVATED\033[0m" << std::endl;
@@ -1058,6 +1064,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     else {
       if(**goodvertex<=0) continue;
     }
+    //vz cut
+    if (*vz < -15.0 || *vz > 15.0) continue;
     // Use hiHF to recalculate hiBin for systematics
     int hiBin_to_use = 1;
     if (isPbPb) hiBin_to_use = **hiBin; // Start with the nominal hiBin
@@ -1065,6 +1073,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     if (isData && isPbPb) {
       int calculated_nominal = is2023 ? getHiBin(*hiHF, cenHF_2023PbPb_nominal)
                                       : getHiBin(*hiHF, cenHF_2024PbPb_nominal);
+
       if (**hiBin != calculated_nominal) {
         cout << "!!! WARNING: hiBin = " << **hiBin
              << " hiHF = " << *hiHF
@@ -1081,19 +1090,30 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     if (isData && isPbPb && systFlag == 7)
       hiBin_to_use = is2023 ? getHiBin(*hiHF, cenHF_2023PbPb_up)
                             : getHiBin(*hiHF, cenHF_2024PbPb_up);
+
     // Centrality weight
     float weight_cent = isPbPb ? Ncoll[hiBin_to_use] : 1;
     // Scale MC
     float scale = 1;
     if (stop_early && !isData) scale*=10;
-    if (isPbPb) {
-      if (!isData && weight_phase == 0)
-        scale*=norm_MC_w*(**weight);
-      if (!isData && weight_phase != 0)
-        scale*=norm_MC_w_ncoll*weight_cent*(**weight);
-    }
-    else {
-      if (!isData) scale*=norm_MC_w*(**weight);
+    if (use_data_driven_cen == true) {
+      // --- PURE DATA-DRIVEN PATH ---
+      // No Ncoll, no centrality weights. 
+      // Just the base cross-section and generator weight for all phases.
+      if (!isData) {
+        scale *= norm_MC_w * (**weight);
+      }
+    } else {
+      // --- GLAUBER PATH ---
+      if (isPbPb) {
+        if (!isData && weight_phase == 0)
+          scale*=norm_MC_w*(**weight);
+        if (!isData && weight_phase != 0)
+          scale*=norm_MC_w_ncoll*weight_cent*(**weight);
+      }
+      else {
+        if (!isData) scale*=norm_MC_w*(**weight);
+      }
     }
 
     // Selection on centrality bin only for PbPb
@@ -1410,6 +1430,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         ijetLeading = ijet;
         // Check if a match was found within a reasonable dR cone
         if (!isData) {
+          h_deltaR_gen_reco->Fill(min_dR, scale);
           if (min_dR < 0.1) {
             isLeadingJetMatched = true;
             iGenjetMatchedtoLeadingReco = matched_gen_jet_idx;
@@ -1577,6 +1598,11 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   //   END MAIN EVENT LOOP
   // =================================================================================
 
+  // Create a plot of "Efficiency vs DeltaR Cut"
+  TH1 * h_eff_curve = h_deltaR_gen_reco->GetCumulative();
+  h_eff_curve->Scale(1.0 / h_deltaR_gen_reco->Integral(0, h_deltaR_gen_reco->GetNbinsX() + 1));
+  h_eff_curve->SetTitle("Matching Efficiency vs. #DeltaR Cut; #DeltaR Cut; Efficiency");
+
   // Finalize histograms by subtracting MinBias
   TH1D* h_deltaPhi_Zj_subtracted = (TH1D*)h_deltaPhi_Zj->Clone("h_deltaPhi_Zj_subtracted");
   h_deltaPhi_Zj_subtracted->SetDirectory(0);
@@ -1711,6 +1737,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
 
   // Write unfolding specific histograms
   if (!isData) {
+    h_deltaR_gen_reco->Write();
+    h_eff_curve->Write();
     h_jet_pt_lj_matched->Write();
     h_deltaPhi_Zj_matched->Write();
     h_xZj_matched->Write();
