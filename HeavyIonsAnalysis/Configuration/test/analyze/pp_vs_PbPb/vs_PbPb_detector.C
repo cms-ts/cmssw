@@ -96,10 +96,10 @@ void vs_PbPb_detector(std::string variable = "xZj", const char* pb_type = "PbPb2
     h_pp->Scale(1.0, "width");
 
     // --- DRAWING ---
-    int color_pb = TColor::GetColor("#c91f16");
-    int color_pp = TColor::GetColor("#1845fb");
-    h_pb->SetMarkerStyle(20); h_pb->SetMarkerSize(1.2); h_pb->SetMarkerColor(color_pb); h_pb->SetLineColor(color_pb);
-    h_pp->SetMarkerStyle(24); h_pp->SetMarkerSize(1.2); h_pp->SetMarkerColor(color_pp); h_pp->SetLineColor(color_pp);
+    int color_pp = TColor::GetColor("#c91f16");
+    int color_pb = TColor::GetColor("#1845fb");
+    h_pb->SetMarkerStyle(24); h_pb->SetMarkerSize(1.2); h_pb->SetMarkerColor(color_pb); h_pb->SetLineColor(color_pb);
+    h_pp->SetMarkerStyle(20); h_pp->SetMarkerSize(1.2); h_pp->SetMarkerColor(color_pp); h_pp->SetLineColor(color_pp);
 
     int H_ref = 800; int W_ref = 800;
     TCanvas *c = new TCanvas("c", "c", W_ref, H_ref);

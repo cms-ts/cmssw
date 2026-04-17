@@ -6,10 +6,10 @@
 #include "TMath.h"
 #include "TRatioPlot.h"
 #include "TLatex.h"
-#include "tdrstyle.C"
+#include "../pp_vs_PbPb/tdrstyle.C"
 #include "../helpers.h" // For getLumiFromSummary
 
-void compare_inclusive_leading(std::string variable = "xZj", const char* collision_type = "PbPb23", bool isData = true, 
+void compare_inclusive_leading(std::string variable = "jetPt", const char* collision_type = "PbPb23", bool isData = true, 
                                int cent_min = 0, int cent_max = 30, double ptZ_min = 40.0, double ptZ_max = 9999.0) {
 
     setTDRStyle();
@@ -122,7 +122,7 @@ void compare_inclusive_leading(std::string variable = "xZj", const char* collisi
     h_ratio->GetLowerRefGraph()->SetMarkerColor(kBlack);
     h_ratio->GetLowerRefGraph()->SetLineColor(kBlack);
     h_ratio->GetLowerRefGraph()->SetMinimum(0.8);
-    h_ratio->GetLowerRefGraph()->SetMaximum(2.0); // Adjust depending on expected inclusive multiplicity
+    h_ratio->GetLowerRefGraph()->SetMaximum(1.6); // Adjust depending on expected inclusive multiplicity
 
     h_all->GetXaxis()->SetTitle(x_title.c_str());
     h_all->GetYaxis()->SetTitle(y_title.c_str());
@@ -148,7 +148,7 @@ void compare_inclusive_leading(std::string variable = "xZj", const char* collisi
     latex->SetTextSize(0.06); 
     latex->SetTextColor(kBlack);
     latex->SetTextFont(61);
-    latex->DrawLatex(0.15, 0.92, "CMS"); 
+    latex->DrawLatex(0.15, 0.92, "CMS");
 
     TLatex* latex1 = new TLatex();
     latex1->SetNDC();

@@ -70,6 +70,7 @@
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 #include "TTreeReaderArray.h"
+#include "TPRegexp.h"
 
 // Custom headers
 #include "helpers.h"           // for getLumiFromSummary, cen tables, etc.
@@ -95,7 +96,9 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TChain data("data"), EventTree("EventTree"), HiTree("HiTree"),
          skimanalysis("skimanalysis"), hltanalysis("hltanalysis"),
          hiFJRhoAnalyzerFinerBins("hiFJRhoAnalyzerFinerBins");
-  glob_t globlist;
+  // glob_t globlist; // REMOVED
+  std::vector<std::string> matched_files;
+  TString search_pattern = "";
 
   // Binning_option for mixed event background subtraction, Use VZ + Centrality binning as default
   // 0: HF binning only
@@ -155,10 +158,10 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     isData = true;
     if (isPbPb) {
       if (is2023)
-        glob("/eos/infnts/cms/store/user/rdelliga/HIPhysicsRawPrime*/CRAB3_Analysis_test24_ZMM_Prime*/*/*.root", GLOB_NOSORT, NULL, &globlist);
+        search_pattern = "/eos/infnts/cms/store/user/rdelliga/HIPhysicsRawPrime*/CRAB3_Analysis_test24_ZMM_Prime*/*/*.root";
       else
           // Pattern "PbPb24[AB]_" matches "PbPb24A_..." and "PbPb24B_..." but EXCLUDES "PbPb24_..."
-        glob("/eos/infnts/cms/store/user/rdelliga/HIPhysicsRawPrime*/CRAB3_Analysis_test21_ZMM_PbPb24[AB]_*/*/*.root", GLOB_NOSORT, NULL, &globlist);
+        search_pattern = "/eos/infnts/cms/store/user/rdelliga/HIPhysicsRawPrime*/CRAB3_Analysis_test21_ZMM_PbPb24[AB]_*/*/*.root";
 
       // Dynamic Prefix for MinBias files
       TString mb_prefix = (is2023) ? "" : "HI24_";
@@ -167,20 +170,20 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       if (binning_option == 1 || binning_option == 2) {
           cent_tag = Form("_Cen%d_%d", cent_min, cent_max);
       }
-      
+
       if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_data_HF.root");
       else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_data_VZ" + cent_tag + ".root");
       else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_data_VZ_Cen_Combined" + cent_tag + ".root");
       else { cerr << "Invalid binning_option for data MinBias file." << endl; return; }
       cout << "This is PbPb data (" << (is2023 ? "2023" : "2024") << ")" << endl;
     } else {
-      glob("/eos/infnts/cms/store/user/kdeleo/PPRefSingleMuon*/CRAB3_Analysis_test16_ZMM_PPRefSingleMuon*/*/*.root", GLOB_NOSORT, NULL, &globlist);
+      search_pattern = "/eos/infnts/cms/store/user/rdelliga/PPRefSingleMuon*/CRAB3_Analysis_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon*/*/000*.root";
     }
   } else { //MC
     // Loop over files
     for (const auto& file : *targetVector) {
       if (file_name.Contains(file.label)) {
-        glob(file.path_miniaod, GLOB_NOSORT, NULL, &globlist);
+        search_pattern = file.path_miniaod;
         Xsec = file.xsec;
         Ngen = file.ngen;
         std::cout << "This is MC " << file.label << ": ngen = " << Ngen;
@@ -203,25 +206,41 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     }
   }
   // Print only the first file to avoid spamming the console
-  cout << "Found " << globlist.gl_pathc << " files" << endl;
-  size_t n_print = 1;
-  for (size_t i = 0; i < globlist.gl_pathc; i++) {
-    if (i < n_print) {
-      std::cout << "[" << i << "] " << globlist.gl_pathv[i] << std::endl;
-    } else {
-      // Calculate how many remain
-      size_t remaining = globlist.gl_pathc - n_print;
-      std::cout << "... and " << remaining << " more files." << std::endl;
-      break; // Stop the loop
-    }
+
+  // --- Read Sample Text File and Match Pattern ---
+  std::ifstream infile("samples_root_files.txt");
+  if (!infile.is_open()) {
+      std::cerr << "\n[ERROR] Cannot open samples_root_files.txt! Run list_samples.py first." << std::endl;
+      return;
   }
-  // --- SAFETY CHECK: Did glob find any files? ---
-  if (globlist.gl_pathc == 0) {
-      std::cerr << "\n[ERROR] No files found for sample: " << file_name << std::endl;
-      std::cerr << "  -> This usually means the path in MC_samples.h is incorrect" << std::endl;
-      std::cerr << "  -> Or the files haven't been produced/transferred yet." << std::endl;
-      std::cerr << "  -> Skipping this sample to avoid crash.\n" << std::endl;
-      return; // Exit the function cleanly
+
+  // Convert standard wildcards to strict PCRE regex (respecting directory depth!)
+  TString reg_str = search_pattern;
+  reg_str.ReplaceAll(".", "\\.");   // Escape the literal dots first
+  reg_str.ReplaceAll("*", "[^/]*"); // Match anything EXCEPT a directory slash
+  
+  // Initialize the modern, robust regex engine
+  TPRegexp re(reg_str);
+
+  std::string line;
+  while (std::getline(infile, line)) {
+      TString tline(line);
+      // .Contains() will find the pattern anywhere in the string, 
+      // safely ignoring the root://eosinfnts.ts.infn.it:1094/ prefix!
+      if (tline.Contains(re)) {
+          matched_files.push_back(line);
+      }
+  }
+  infile.close();
+
+  cout << "Found " << matched_files.size() << " files matching pattern" << endl;
+  size_t n_print = 1;
+  for (size_t i = 0; i < matched_files.size(); i++) {
+    if (i < n_print) std::cout << "[" << i << "] " << matched_files[i] << std::endl;
+    else {
+      std::cout << "... and " << (matched_files.size() - n_print) << " more files." << std::endl;
+      break;
+    }
   }
   // ----------------------------------------------
 
@@ -364,17 +383,16 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   std::cout << "------------------------------------------------" << std::endl;
 
   // --- Add files to chains ---
-  for (size_t i = 0; i < globlist.gl_pathc; i++) {
-    //data.Add(TString(globlist.gl_pathv[i]) + "/akCs2PFJetAnalyzerSubstructure/t");
-    if (isPbPb) data.Add(TString(globlist.gl_pathv[i]) + "/akCs2PFJetAnalyzer/t");
-    else data.Add(TString(globlist.gl_pathv[i]) + "/ak2PFJetAnalyzer/t");
-    EventTree.Add(TString(globlist.gl_pathv[i]) + "/muonAnalyzer/MuonTree");
-    HiTree.Add(TString(globlist.gl_pathv[i]) + "/hiEvtAnalyzer/HiTree");
-    skimanalysis.Add(TString(globlist.gl_pathv[i]) + "/skimanalysis/HltTree");
-    if (isPbPb) hiFJRhoAnalyzerFinerBins.Add(TString(globlist.gl_pathv[i]) + "/hiFJRhoAnalyzerFinerBins/t");
-    hltanalysis.Add(TString(globlist.gl_pathv[i]) + "/hltanalysis/HltTree");
+  for (size_t i = 0; i < matched_files.size(); i++) {
+    if (isPbPb) data.Add(TString(matched_files[i]) + "/akCs2PFJetAnalyzer/t");
+    else data.Add(TString(matched_files[i]) + "/ak2PFJetAnalyzer/t");
+    EventTree.Add(TString(matched_files[i]) + "/muonAnalyzer/MuonTree");
+    HiTree.Add(TString(matched_files[i]) + "/hiEvtAnalyzer/HiTree");
+    skimanalysis.Add(TString(matched_files[i]) + "/skimanalysis/HltTree");
+    if (isPbPb) hiFJRhoAnalyzerFinerBins.Add(TString(matched_files[i]) + "/hiFJRhoAnalyzerFinerBins/t");
+    hltanalysis.Add(TString(matched_files[i]) + "/hltanalysis/HltTree");
   }
-  globfree(&globlist);
+  // globfree(&globlist); // THIS IS DELETED
 
   // To associate additional TTrees with a primary TTree.
   // This allows you to access information from the friend trees while looping over the primary tree

@@ -3,6 +3,13 @@
 //==============================================================================
 
 //----------------------------------
+// Warning!!!
+//----------------------------------
+// If you produce new MC or data samples,
+// remember to update samples_root_files.txt
+python3 list_samples.py
+
+//----------------------------------
 // 0. Shortcut: to run on everything
 //----------------------------------
 ./do_analyze_all.sh
