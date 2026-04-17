@@ -862,6 +862,10 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TH2F *h_jet_etaphi_after  = new TH2F("h_jet_etaphi_after",  "Jets After Veto;#eta;#phi",  40, -2.5, 2.5, 40, -pi_value, pi_value);
   TH1D *h_muon_iso_nocut = new TH1D("h_muon_iso_nocut", "Muon Isolation (before cut); recoMVAIso; Entries", 20, 0, 1.0);
 
+  TH1D *h_deltaPhi_Zj_all = new TH1D("h_deltaPhi_Zj_all", "Hist;#Delta#phi_{Zj} (All Jets); Entries", 20, 0, pi_value);
+  TH1D *h_jet_pt_all = new TH1D("h_jet_pt_all", "Hist;inclusive jet p_{T} [GeV]; Entries", 30, 0, 300);
+  TH1D *h_xZj_all = new TH1D("h_xZj_all", "Hist;x_{Zj} (All Jets); Entries", nbins_xZj_meas, xZj_bins_meas);
+
   TH1D *h_vz = new TH1D("h_vz", "Hist; vz; Entries", 30, -20, 20);
   TH1D *h_avg_rho = new TH1D("h_avg_rho", "Hist; <#rho>; Entries", 50, 0, 400);
   auto *h_avg_rho_vs_cen = new TProfile("h_avg_rho_vs_cen", "Profile of <#rho> vs centrality bin", 200, 0, 200, 0, 400);
@@ -899,6 +903,10 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TH2F* h_response_MinBias_closure = new TH2F("h_response_MinBias_closure", "Response Matrix;Reco x_{Zj};True x_{Zj}", nbins_xZj_meas, xZj_bins_meas, nbins_xZj, xZj_bins);
 
   // --- End RooUnfold Histograms ---
+
+  // --- Z Acceptance Histograms for Theorists ---
+  TH1D* h_Z_eta_gen_total = new TH1D("h_Z_eta_gen_total", "Gen Z Eta (All);#eta^{Z};Entries", 30, -3.0, 3.0);
+  TH1D* h_Z_eta_gen_accepted = new TH1D("h_Z_eta_gen_accepted", "Gen Z Eta (Accepted);#eta^{Z};Entries", 30, -3.0, 3.0);
 
   //TH1D *h_jetgirth = new TH1D("h_jetgirth", "Hist;girth; Entries", 10, 0, 0.2);
   //TH1D *h_jet_deltaR = new TH1D("h_jet_deltaR", "Hist; R_{g}; Entries", 10, 0, 0.2);
@@ -1186,8 +1194,14 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         genmuMinus.SetPtEtaPhiM(genMuPt[iHighPtgenMu], genMuEta[iHighPtgenMu], genMuPhi[iHighPtgenMu], muonMass);
         genmuPlus.SetPtEtaPhiM(genMuPt[iHighPtgenAntiMu], genMuEta[iHighPtgenAntiMu], genMuPhi[iHighPtgenAntiMu], muonMass);
         gen_Z = genmuPlus + genmuMinus;
+        // Z kinematic cuts (Mass and pT)
         if (gen_Z.M() >= 60 && gen_Z.M() <= 120 && gen_Z.Pt() >= ptZ_min && gen_Z.Pt() < ptZ_max) {
+          // 1. Fill TOTAL Z bosons (before checking if muons hit the detector)
+          h_Z_eta_gen_total->Fill(gen_Z.Eta(), scale);
+          // Check if BOTH muons fall into CMS acceptance
           if (genmuMinus.Pt() >= 20 && abs(genmuMinus.Eta()) <= 2.4 && genmuPlus.Pt() >= 20 && abs(genmuPlus.Eta()) <= 2.4) {
+            // 2. Fill ACCEPTED Z bosons (muons are seen by CMS)
+            h_Z_eta_gen_accepted->Fill(gen_Z.Eta(), scale);
             h_mumu_true->Fill(gen_Z.M(), scale);
             // Loop over gen jets
             for (int ijetGen = 0; ijetGen < genpt.GetSize(); ++ijetGen) {
@@ -1400,6 +1414,21 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       if (getDeltaR(jteta[ijet], jtphi[ijet], muMinus.Eta(), muMinus.Phi()) < 0.2) continue;
       if (getDeltaR(jteta[ijet], jtphi[ijet], muPlus.Eta(), muPlus.Phi()) < 0.2) continue;
       njets++;
+
+      // --- Inclusive Jet Kinematics ---
+      double dPhi_Zj_current = RelativePhi(Z.Phi(), jtphi[ijet]);
+      double xZj_current = jtpt_corr[ijet] / Z.Pt();
+
+      // Fill delta phi for all valid jets
+      h_deltaPhi_Zj_all->Fill(dPhi_Zj_current, scale);
+
+      // Apply the exact same back-to-back cut as the leading jet
+      if (dPhi_Zj_current > 7 * pi_value / 8) {
+          h_jet_pt_all->Fill(jtpt_corr[ijet], scale);
+          h_xZj_all->Fill(xZj_current, scale);
+      }
+      // --------------------------------
+
       //cout << "-----------------------------" << endl;
       //cout << "ijet: " << ijet << " pt = " << jtpt_corr[ijet] << " eta = " << jteta[ijet] << " phi = " << jtphi[ijet] << endl;
       //cout << "muMinus pt = " << muMinus.Pt() << " eta = " << muMinus.Eta() << " phi = " << muMinus.Phi() << endl;
@@ -1721,6 +1750,11 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   h_deltaPhi_Zj->Write();
   h_xZj->Write();
   h_xZj_fixbinw->Write();
+
+  h_deltaPhi_Zj_all->Write();
+  h_jet_pt_all->Write();
+  h_xZj_all->Write();
+
   h_jet_etaphi_before->Write();
   h_jet_etaphi_after->Write();
   h_muon_iso_nocut->Write();
@@ -1756,6 +1790,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     h_xZj_true_test_closure->Write();
     h_response_closure->Write();
     h_response_closure_unmatched->Write();
+    h_Z_eta_gen_total->Write();
+    h_Z_eta_gen_accepted->Write();
     if (isPbPb) {
       h_response_MinBias->Write();
       h_response_subtracted->Write();

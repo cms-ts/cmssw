@@ -59,9 +59,16 @@ root -l -b -q 'plot_sf_2d.C("ppref24")'
 // Arguments: (test_pt, test_rho)
 // Default test_pt = 40, test_rho = 80 for Pb 23
 root -l -b -q plot_JES_JER.C
-
 // test_pt = 50, test_rho = 50
 root -l -b -q 'plot_JES_JER.C(50.0, 50.0)'
+
+//--------------------------------
+//  Extract acceptance
+//--------------------------------
+// Macro: extract_acceptance.C
+// Arguments: (input_file)
+// Default input_file = "output_HI_mu_MC_signal_Cen0_30_ptZ40_Inf.root"
+root -l -b -q extract_acceptance.C
 
 // --- Deprecated ---
 //--------------------------------

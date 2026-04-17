@@ -53,16 +53,18 @@ const std::vector<FileInfo> files_PbPb24 = {
 // PPref 24
 // xsec in pb
 const std::vector<FileInfo> files_ppref = {
-    {"/eos/infnts/cms/store/user/kdeleo/WplusToMuplusNu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test18_mc_ppRef_ZMM_WplusToMu/251121_153250/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_WplusToMuplusNu.root", "WplusToMuplusNu", 4.09 * 1000, 9730000},
-    {"/eos/infnts/cms/store/user/kdeleo/T_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test18_mc_ppRef_ZMM_SingleT/251124_103245/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_singleT.root", "singleT", 3.06, 10000000},
-    {"/eos/infnts/cms/store/user/kdeleo/Tbar_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test18_mc_ppRef_ZMM_SingleAntiT/251124_140017/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_Tbar.root", "Tbar", 3.07, 9972000},
-    {"/eos/infnts/cms/store/user/kdeleo/DYToTauTau_M-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test18_mc_ppRef_ZMM_DYtoTauTau/251119_161755/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_DYto2Tau.root", "DYto2Tau", 6.57*100, 9946251},
-    {"/eos/infnts/cms/store/user/kdeleo/WminusToMuminusNu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test18_mc_ppRef_ZMM_WminusToMu/251120_161830/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_WminusToMuminusNu.root", "WminusToMuminusNu", 2.73 * 1000, 9844580},
-    {"/eos/infnts/cms/store/user/kdeleo/TT_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test18_mc_ppRef_ZMM_TT/251120_101043/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_TT.root", "TT", 6.62 * 10, 10000000},
-    {"/eos/infnts/cms/store/user/rdelliga/ZZTo4L_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test22_run3_ppref_MC_ZMM_ZZTo4L/260308_162724/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_ZZto4L.root", "ZZto4L", 5.04 / 10, 999040},
+    {"/eos/infnts/cms/store/user/rdelliga/WplusToMuplusNu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_WplusToMuplusNu/260411_111430/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_WplusToMuplusNu.root", "WplusToMuplusNu", 4.09 * 1000, 9730000},
+    {"/eos/infnts/cms/store/user/rdelliga/T_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_T/260411_011212/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_singleT.root", "singleT", 3.06, 10000000},
+    {"/eos/infnts/cms/store/user/rdelliga/Tbar_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_Tbar/260411_051305/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_Tbar.root", "Tbar", 3.07, 9972000},
+    {"/eos/infnts/cms/store/user/rdelliga/DYToTauTau_M-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_DYtoTauTau/260411_071330/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_DYto2Tau.root", "DYto2Tau", 6.57*100, 9946251},
+    {"/eos/infnts/cms/store/user/rdelliga/WminusToMuminusNu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_WminusToMuminusNu/260411_091355/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_WminusToMuminusNu.root", "WminusToMuminusNu", 2.73 * 1000, 9844580},
+    {"/eos/infnts/cms/store/user/rdelliga/TT_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_TT/260411_031237/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_TT.root", "TT", 6.62 * 10, 10000000},
+    {"/eos/infnts/cms/store/user/rdelliga/ZZTo4L_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_ZZTo4L/260410_191057/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_ZZto4L.root", "ZZto4L", 5.04 / 10, 999040},
+    {"/eos/infnts/cms/store/user/rdelliga/WWTo2L2Nu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_WWTo2L2Nu/260410_231147/0000/HiForestMiniAOD_*.root", "output_HI_mu_MC_WWto2L2Nu.root", "WWto2L2Nu", 3.066, 1000000},
+    {"/eos/infnts/cms/store/user/rdelliga/ZZTo2L2Nu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_ZZTo2L2Nu/260410_211120/0000/HiForestMiniAOD_*.root", "output_HI_mu_MC_ZZto2L2Nu.root", "ZZto2L2Nu", 2.917 / 10, 997195},
 //    {"/eos/infnts/cms/store/user/kdeleo/DYToMuMu_M-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test18_mc_ppRef_ZMM_DYto2Mu/251115_123708/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_signal.root", "signal", 6.57 * 100, 9999999} //old
-    {"/eos/infnts/cms/store/user/rdelliga/DYToMuMu_M-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test22_run3_ppref_MC_ZMM_DYtoMuMu/260127_120900/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_alternative.root", "alternative", 6.57 * 100, 9999999},
-    {"/eos/infnts/cms/store/user/rdelliga/DYto2L-2Jets_MLL-50_TuneCP5_5p36TeV_amcatnloFXFX-pythia8/CRAB3_Analysis_test22_run3_ppref_MC_ZMM_DYto2L_2Jets/260130_142319/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_signal.root", "signal", 2.328 * 1000, 30156049}
+    {"/eos/infnts/cms/store/user/rdelliga/DYToMuMu_M-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_DYtoMuMu/260410_145930/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_alternative.root", "alternative", 6.57 * 100, 9999999},
+    {"/eos/infnts/cms/store/user/rdelliga/DYto2L-2Jets_MLL-50_TuneCP5_5p36TeV_amcatnloFXFX-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_DYto2L_2Jets/260410_103348/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_signal.root", "signal", 2.328 * 1000, 30156049}
 };
 
 #endif // MC_SAMPLES_H

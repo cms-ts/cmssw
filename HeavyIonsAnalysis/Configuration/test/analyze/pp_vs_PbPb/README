@@ -19,4 +19,4 @@ root -l 'vs_PbPb.C(true, "PbPb24", "ppref24", 30, 50, 60.0, 9999.0)'
 
 //--------------------------------
 // To run vs_PbPb_detector.C with default kinematics (0-30%, pT_Z > 40) and for all histos
-do_vs_PbPb_detector.sh
+./do_vs_PbPb_detector.sh
