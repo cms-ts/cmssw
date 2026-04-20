@@ -157,7 +157,7 @@ void JEWEL_weight_3(const char * collision_type = "PbPb23", int after_flag = 0, 
 
         gStyle->SetErrorX(0);
 
-        TRatioPlot *h_ratio = new TRatioPlot(h_JEWEL, h, "pois");
+        TRatioPlot *h_ratio = new TRatioPlot(h_JEWEL, h, "divsym");
         h_ratio->SetH1DrawOpt("E");
         h_ratio->SetH2DrawOpt("E");
         h_ratio->Draw();

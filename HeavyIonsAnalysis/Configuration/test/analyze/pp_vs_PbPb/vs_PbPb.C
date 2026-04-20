@@ -128,7 +128,7 @@ void vs_PbPb(bool subtracted = false, const char* pb_type = "PbPb23", const char
         // gstyle to remove horizontal error bars, put in rootlogon
         gStyle->SetErrorX(0);
 
-        TRatioPlot *h_ratio = new TRatioPlot(h, h_pp, "pois");
+        TRatioPlot *h_ratio = new TRatioPlot(h, h_pp, "divsym");
         h_ratio->SetH1DrawOpt("EX0");
         h_ratio->SetH2DrawOpt("EX0");
         h_ratio->Draw();

@@ -103,7 +103,7 @@ void vz_weight_2(const char * collision_type = "PbPb23", int after_flag  = 0, in
         // gstyle to remove horizontal error bars, put in rootlogon
         gStyle->SetErrorX(0);
 
-        TRatioPlot *h_ratio = new TRatioPlot(h_data, h, "pois");
+        TRatioPlot *h_ratio = new TRatioPlot(h_data, h, "divsym");
         h_ratio->SetH1DrawOpt("EX0");
         h_ratio->SetH2DrawOpt("HIST");
         h_ratio->Draw();

@@ -62,6 +62,8 @@
 #include "TMath.h" // For TMath::Pi()
 
 #include <glob.h>
+#include "TPRegexp.h"
+#include <fstream>
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 #include "TTreeReaderArray.h"
@@ -82,44 +84,63 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
   //TTrees
   TChain data("data"), EventTree("EventTree"), HiTree("HiTree"),  skimanalysis("skimanalysis"), hltanalysis("hltanalysis"), hiFJRhoAnalyzerFinerBins("hiFJRhoAnalyzerFinerBins");
 
-  glob_t globlist;
+  std::vector<std::string> matched_files;
+  TString search_pattern = "";
+
   // --- Input File Logic ---
   if (isData) {
     cout << "Running on DATA - Year: " << s_year << endl;
     if (is2023) {
-        glob("/eos/infnts/cms/store/user/rdelliga/HIMinimumBias0/CRAB3_Analysis_test24_data_MinBias/*/*/HiForestMiniAOD_*.root", GLOB_NOSORT, NULL, &globlist);
+        search_pattern = "/eos/infnts/cms/store/user/rdelliga/HIMinimumBias0/CRAB3_Analysis_test24_data_MinBias/*/*/HiForestMiniAOD_*.root";
     }
     else if (is2024) {
-        glob("/eos/infnts/cms/store/user/rdelliga/HIMinimumBias0/CRAB3_Analysis_test23_PbPb24*MinBias*/*/*/HiForestMiniAOD_DATA_*.root", GLOB_NOSORT, NULL, &globlist);
+        search_pattern = "/eos/infnts/cms/store/user/rdelliga/HIMinimumBias0/CRAB3_Analysis_test23_PbPb24*MinBias*/*/*/HiForestMiniAOD_DATA_*.root";
     }
   }
   else {
     cout << "Running on MC - Year: " << s_year << endl;
     if (is2023) {
-        glob("/eos/infnts/cms/store/user/rdelliga/MinBias_Drum5F_5p36TeV_hydjet/CRAB3_Analysis_test24_mc_MinBias/260219_162314/0000/HiForestMiniAOD_*.root", GLOB_NOSORT, NULL, &globlist);
+        search_pattern = "/eos/infnts/cms/store/user/rdelliga/MinBias_Drum5F_5p36TeV_hydjet/CRAB3_Analysis_test24_mc_MinBias/260219_162314/0000/HiForestMiniAOD_*.root";
     }
     else if (is2024) {
-        glob("/eos/infnts/cms/store/user/rdelliga/MinBias_Drum5F_5p36TeV_hydjet/CRAB3_Analysis_test20_mc_PbPb24_MinBias/260109_102927/0000/HiForestMiniAOD_*.root", GLOB_NOSORT, NULL, &globlist);
+        search_pattern = "/eos/infnts/cms/store/user/rdelliga/MinBias_Drum5F_5p36TeV_hydjet/CRAB3_Analysis_test20_mc_PbPb24_MinBias/260109_102927/0000/HiForestMiniAOD_*.root";
     }
   }
 
-  if (globlist.gl_pathc == 0) {
-      cerr << "ERROR: No files found! Check glob path." << endl;
+  // --- Read samples Text File and Match Pattern ---
+  std::ifstream infile("../samples_root_files.txt");
+  if (!infile.is_open()) {
+      std::cerr << "\n[ERROR] Cannot open samples_root_files.txt! Run safe_crawler.py first." << std::endl;
       return;
   }
-  cout << "Found " << globlist.gl_pathc << " files"<< endl;
 
-  for (size_t i = 0; i < globlist.gl_pathc; i++) {
-    //data.Add(TString(globlist.gl_pathv[i]) + "/akCs2PFJetAnalyzerSubstructure/t");
-    data.Add(TString(globlist.gl_pathv[i]) + "/akCs2PFJetAnalyzer/t");
-    EventTree.Add(TString(globlist.gl_pathv[i]) + "/muonAnalyzer/MuonTree");
-    HiTree.Add(TString(globlist.gl_pathv[i]) + "/hiEvtAnalyzer/HiTree");
-    skimanalysis.Add(TString(globlist.gl_pathv[i]) + "/skimanalysis/HltTree");
-    hiFJRhoAnalyzerFinerBins.Add(TString(globlist.gl_pathv[i]) + "/hiFJRhoAnalyzerFinerBins/t");
-    //hltanalysis.Add(TString(globlist.gl_pathv[i]) + "/hltanalysis/HltTree");
+  TString reg_str = search_pattern;
+  reg_str.ReplaceAll(".", "\\.");   // Escape literal dots
+  reg_str.ReplaceAll("*", "[^/]*"); // Match anything EXCEPT a directory slash
 
+  TPRegexp re(reg_str);
+  std::string line;
+  while (std::getline(infile, line)) {
+      TString tline(line);
+      if (tline.Contains(re)) {
+          matched_files.push_back(line);
+      }
   }
-  globfree(&globlist);
+  infile.close();
+
+  if (matched_files.empty()) {
+      std::cerr << "\n[ERROR] No files matched the pattern: " << search_pattern << std::endl;
+      return; 
+  }
+  cout << "Found " << matched_files.size() << " MinBias files matching pattern" << endl;
+
+  for (size_t i = 0; i < matched_files.size(); i++) {
+    data.Add(TString(matched_files[i]) + "/akCs2PFJetAnalyzer/t");
+    EventTree.Add(TString(matched_files[i]) + "/muonAnalyzer/MuonTree");
+    HiTree.Add(TString(matched_files[i]) + "/hiEvtAnalyzer/HiTree");
+    skimanalysis.Add(TString(matched_files[i]) + "/skimanalysis/HltTree");
+    hiFJRhoAnalyzerFinerBins.Add(TString(matched_files[i]) + "/hiFJRhoAnalyzerFinerBins/t");
+  }
 
   //To associate additional TTrees with a primary TTree. This allows you to access information from the friend trees while looping over the primary tree
   data.AddFriend("EventTree");
@@ -378,6 +399,13 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
     v_gen_pts.clear();
     v_gen_etas.clear();
     v_gen_phis.clear();
+
+    // FIX: RESET VARIABLES FOR EVERY NEW EVENT ---
+    // This prevents the previous event's jet from carrying over
+    jet_tree_pt = 0.0;
+    jet_tree_phi = -999.0;
+    jet_tree_eta = -999.0;
+    // ----------------------------------------------------
 
     // Optional: if all bins are filled, we can stop processing events early
     if (overall_filled_bins_count == total_bins_count) {

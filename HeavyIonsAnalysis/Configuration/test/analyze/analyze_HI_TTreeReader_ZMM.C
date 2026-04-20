@@ -1493,12 +1493,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     // --- end loop over jets ---
 
     // --- Reco leading jet selection ---
-    if (ijetLeading != -1) {
-      double dPhi_Zj = RelativePhi(Z.Phi(), jtphi[ijetLeading]);
-      double xZj = jtpt_corr[ijetLeading]/Z.Pt();
-      //Remove overflow and put it in the last bin
-      //if (xZj > xZj_max) xZj = xZj_max - 0.01;
-      h_deltaPhi_Zj->Fill(dPhi_Zj, scale);
+    double signal_leading_pt = (ijetLeading != -1) ? jtpt_corr[ijetLeading] : 0.0;
       if (isPbPb) {
         // --- Determine the current bin number for MinBias matching ---
         int current_global_bin_n = -1;
@@ -1562,7 +1557,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
             for (const auto& mbJet : cachedJets) {
               // Use mbJet.pt, mbJet.eta, mbJet.phi instead of tree variables
               // Apply same jet cuts as for signal jets
-              if (mbJet.pt > jtpt_corr[ijetLeading]) {
+              if (mbJet.pt > signal_leading_pt) {
                 if (getDeltaR(mbJet.eta, mbJet.phi, muMinus.Eta(), muMinus.Phi()) >= 0.2 &&
                     getDeltaR(mbJet.eta, mbJet.phi, muPlus.Eta(), muPlus.Phi()) >= 0.2) {
                   double dPhi_Zj_MinBias = RelativePhi(Z.Phi(), mbJet.phi);
@@ -1593,6 +1588,14 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
           }
         }
       } // end isPbPb
+
+      if (ijetLeading != -1) {
+      double dPhi_Zj = RelativePhi(Z.Phi(), jtphi[ijetLeading]);
+      double xZj = jtpt_corr[ijetLeading]/Z.Pt();
+      //Remove overflow and put it in the last bin
+      //if (xZj > xZj_max) xZj = xZj_max - 0.01;
+      h_deltaPhi_Zj->Fill(dPhi_Zj, scale);
+
 
       if (!isData && isLeadingJetMatched) {
         double dPhi_Zj_matched = RelativePhi(Z.Phi(), jtphi[ijetLeading]);

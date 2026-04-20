@@ -105,7 +105,7 @@ void vs_PbPb_detector(std::string variable = "xZj", const char* pb_type = "PbPb2
     TCanvas *c = new TCanvas("c", "c", W_ref, H_ref);
     c->SetLeftMargin(0.15); c->SetRightMargin(0.04); c->SetTopMargin(0.08); c->SetBottomMargin(0.12);
 
-    TRatioPlot *h_ratio = new TRatioPlot(h_pb, h_pp, "pois");
+    TRatioPlot *h_ratio = new TRatioPlot(h_pb, h_pp, "divsym");
     h_ratio->SetH1DrawOpt("EX0"); h_ratio->SetH2DrawOpt("EX0");
     h_ratio->Draw();
     

@@ -44,19 +44,19 @@ void compare_inclusive_leading(std::string variable = "jetPt", const char* colli
     double y_max_scale = 1.5;
 
     if (variable == "deltaPhi") {
-        h_name_leading = "deltaPhi_Zj";
-        h_name_all = "deltaPhi_Zj_all";
+        h_name_leading = isPbPb ? "deltaPhi_Zj_subtracted" : "deltaPhi_Zj";
+        h_name_all = isPbPb ? "deltaPhi_Zj_all_subtracted" : "deltaPhi_Zj_all";
         x_title = "#Delta#phi_{Zj}";
         y_title = "#frac{1}{N_{Z}} #frac{dN_{Zj}}{d#Delta#phi}";
         y_max_scale = 2.0;
     } else if (variable == "jetPt") {
-        h_name_leading = "jet_pt_lj";
-        h_name_all = "jet_pt_all";
+        h_name_leading = isPbPb ? "jet_pt_lj_subtracted" : "jet_pt_lj";
+        h_name_all = isPbPb ? "jet_pt_all_subtracted" : "jet_pt_all";
         x_title = "jet p_{T} [GeV]";
         y_title = "#frac{1}{N_{Z}} #frac{dN_{Zj}}{dp_{T}}";
     } else if (variable == "xZj") {
-        h_name_leading = "xZj"; 
-        h_name_all = "xZj_all";
+        h_name_leading = isPbPb ? "xZj_subtracted" : "xZj";
+        h_name_all = isPbPb ? "xZj_all_subtracted" : "xZj_all";
         x_title = "x_{Zj}";
         y_title = "#frac{1}{N_{Z}} #frac{dN_{Zj}}{dx_{Zj}}";
     } else {
@@ -88,6 +88,9 @@ void compare_inclusive_leading(std::string variable = "jetPt", const char* colli
     TH1D* h_lead = (TH1D*)h_lead_raw->Clone("h_lead"); h_lead->SetDirectory(0);
     TH1D* h_all  = (TH1D*)h_all_raw->Clone("h_all");   h_all->SetDirectory(0);
 
+    if (!h_lead->GetSumw2N()) h_lead->Sumw2();
+    if (!h_all->GetSumw2N()) h_all->Sumw2();
+
     // --- CALCULATE Nz AND NORMALIZE ---
     double nZ = h_mumu->Integral(0, h_mumu->GetNbinsX()+1);
     f->Close();
@@ -114,7 +117,7 @@ void compare_inclusive_leading(std::string variable = "jetPt", const char* colli
     c->SetLeftMargin(0.15); c->SetRightMargin(0.04); c->SetTopMargin(0.08); c->SetBottomMargin(0.12);
 
     // Plot All Jets / Leading Jet
-    TRatioPlot *h_ratio = new TRatioPlot(h_all, h_lead, "pois");
+    TRatioPlot *h_ratio = new TRatioPlot(h_all, h_lead, "divsym");
     h_ratio->SetH1DrawOpt("EX0"); h_ratio->SetH2DrawOpt("EX0");
     h_ratio->Draw();
     
@@ -137,8 +140,14 @@ void compare_inclusive_leading(std::string variable = "jetPt", const char* colli
 
     TLegend* legend = new TLegend(0.48, 0.7, 0.88, 0.85);
     legend->SetBorderSize(0); legend->SetTextFont(42); legend->SetTextSize(0.035);
-    legend->AddEntry(h_all, "Inclusive Jets", "PE");
-    legend->AddEntry(h_lead, "Leading Jet", "PE");
+    if (isData) {
+      legend->AddEntry(h_all, "Inclusive Jets (Data)", "PE");
+      legend->AddEntry(h_lead, "Leading Jet (Data)", "PE");
+    }
+    else {
+      legend->AddEntry(h_all, "Inclusive Jets (DY + 2j)", "PE");
+      legend->AddEntry(h_lead, "Leading Jet (DY + 2j)", "PE");
+    }
     legend->Draw();
 
     // --- Latex Labels ---
@@ -166,7 +175,7 @@ void compare_inclusive_leading(std::string variable = "jetPt", const char* colli
     if (isPbPb) {
         latex2->DrawLatex(0.55, 0.92, TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", Lumi));
     } else {
-        latex2->DrawLatex(0.60, 0.92, TString::Format("pp %.0f pb^{-1} (5.36 TeV)", Lumi));
+        latex2->DrawLatex(0.65, 0.92, TString::Format("pp %.0f pb^{-1} (5.36 TeV)", Lumi));
     }
 
     // 2. DYNAMIC CUT LABELS
