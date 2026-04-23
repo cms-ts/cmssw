@@ -9,13 +9,13 @@
 //                                                                                                                            //
 //   DESCRIPTION:                                                                                                             //
 //   Creates a library of MinBias events to be used for Mixed Event Background Subtraction in the Z+Jet analysis.             //
-//   It reads MinBias tuples, processes jets, stores event info (HF, VZ, Cen) and Leading Jet info into a flat TTree.         //
+//   It reads MinBias tuples, processes jets, stores event info (HF, VZ, Cen) and Inclusive Jet info into a flat TTree.       //
 //   Now supports dynamic centrality slicing for VZ and Combined binning options.                                             //
 //                                                                                                                            //
 //   CORE WORKFLOW:                                                                                                           //
 //   1. Initialization:   Load Chains, JEC, JER, and Jet Selectors.    2. Bin Setup:    Define mixing bins (HF, VZ, VZ+Cen).  //
 //   3. Event Loop:       Apply filters, calculate Centrality/Rho.     4. Jet Process:  Apply JEC/JER, cuts cleaning.         //
-//   5. Storage:          Fill 'jet_tree' with event data and jet_l.                                                          //
+//   5. Storage:          Fill 'jet_tree' with event data and all inclusive jets.                                             //
 //                                                                                                                            //
 //   USAGE EXAMPLES for PbPb23:                                                                                               //
 //   root -l 'analyze_MinBias_TTreeReader.C("PbPb23", true, 0, 0, 100)' // Data (HF Binning - Cent cuts ignored)              //
@@ -268,7 +268,8 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
   std::cout << "------------------------------------------------" << std::endl;
 
   // --- Define bins ---
-  std::map<std::string, std::vector<std::pair<double, double>>> leading_jets_by_bin;
+  std::map<std::string, int> inclusive_jets_by_bin; // Lightweight counter for inclusive jets
+  std::map<std::string, int> leading_jets_by_bin_count; // Track leading jets for debugging
 
   // These will hold the actual bin ranges for iteration, based on the selected option
   std::vector<std::pair<float, float>> primary_bins;         // For HF or VZ only
@@ -347,17 +348,19 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
   Float_t jet_tree_vz = 0;
   Int_t jet_tree_hiBin = 0;
   Int_t jet_tree_bin = 0;
-  Float_t jet_tree_pt = 0;
-  Float_t jet_tree_phi = -999.0;
-  Float_t jet_tree_eta = -999.0;
+  Int_t jet_tree_n = 0;
+  Float_t jet_tree_pt[500];
+  Float_t jet_tree_phi[500];
+  Float_t jet_tree_eta[500];
 
   jet_tree->Branch("HF_MinBias", &jet_tree_HF);
   jet_tree->Branch("vz_MinBias", &jet_tree_vz);
   jet_tree->Branch("hiBin_MinBias", &jet_tree_hiBin);
   jet_tree->Branch("bin_MinBias", &jet_tree_bin);
-  jet_tree->Branch("jet_pt_MinBias", &jet_tree_pt);
-  jet_tree->Branch("jet_phi_MinBias", &jet_tree_phi);
-  jet_tree->Branch("jet_eta_MinBias", &jet_tree_eta);
+  jet_tree->Branch("n_jets_MinBias", &jet_tree_n, "n_jets_MinBias/I");
+  jet_tree->Branch("jet_pt_MinBias", jet_tree_pt, "jet_pt_MinBias[n_jets_MinBias]/F");
+  jet_tree->Branch("jet_phi_MinBias", jet_tree_phi, "jet_phi_MinBias[n_jets_MinBias]/F");
+  jet_tree->Branch("jet_eta_MinBias", jet_tree_eta, "jet_eta_MinBias[n_jets_MinBias]/F");
 
   // Canvas
   gStyle->SetOptStat(0);
@@ -376,8 +379,8 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
   TH1D *h_cen = new TH1D("h_cen", "Hist; centrality bin; Entries", 20, 0, 100);
   TH1D *h_HF = new TH1D("h_HF", "Hist; HF; Entries", 80, 0, 8000);
 
-  TH1D *h_jet_pt_lj = new TH1D("h_jet_pt_lj", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
-  TH1D *h_Phi_lj = new TH1D("h_Phi_lj", "Hist;#phi_{lj}; Entries", 20, -TMath::Pi(),TMath::Pi());
+  TH1D *h_jet_pt_all = new TH1D("h_jet_pt_all", "Hist;inclusive jet p_{T} [GeV]; Entries", 30, 0, 300);
+  TH1D *h_Phi_all = new TH1D("h_Phi_all", "Hist;#phi_{all}; Entries", 20, -TMath::Pi(),TMath::Pi());
 
   TH1D *h_vz = new TH1D("h_vz", "Hist; vz; Entries", 30, -20, 20);
 
@@ -400,11 +403,8 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
     v_gen_etas.clear();
     v_gen_phis.clear();
 
-    // FIX: RESET VARIABLES FOR EVERY NEW EVENT ---
-    // This prevents the previous event's jet from carrying over
-    jet_tree_pt = 0.0;
-    jet_tree_phi = -999.0;
-    jet_tree_eta = -999.0;
+    // --- RESET JET COUNTER FOR EVERY NEW EVENT ---
+    jet_tree_n = 0;
     // ----------------------------------------------------
 
     // Optional: if all bins are filled, we can stop processing events early
@@ -537,21 +537,29 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
       // Apply Combined Jet ID and Veto Map
       // Pass the current jet index [ijet] to the arrays
       if (!js_PbPb->JetSelection(jteta[ijet], jtphi[ijet], jtPfCEF[ijet], jtPfNEF[ijet], jtPfMUF[ijet])) continue;
+      
       if (ijetLeading == -1 || jtpt_corr[ijet] > jtpt_corr[ijetLeading]) {
           ijetLeading = ijet;
       }
+
+      if (jet_tree_n < 500) {
+          jet_tree_pt[jet_tree_n] = jtpt_corr[ijet];
+          jet_tree_phi[jet_tree_n] = jtphi[ijet];
+          jet_tree_eta[jet_tree_n] = jteta[ijet];
+          jet_tree_n++;
+          
+          h_Phi_all->Fill(jtphi[ijet]);
+          h_jet_pt_all->Fill(jtpt_corr[ijet]);
+          inclusive_jets_by_bin[current_bin_label]++;
+      }
     } // end loop over jets
 
+    // --- DEBUG: Count Leading Jets ---
     if (ijetLeading != -1) {
-      jet_tree_pt = jtpt_corr[ijetLeading];
-      jet_tree_phi = jtphi[ijetLeading];
-      jet_tree_eta = jteta[ijetLeading];
-      // Fill histograms only if you have a jet
-      h_Phi_lj->Fill(jtphi[ijetLeading]);
-      h_jet_pt_lj->Fill(jtpt_corr[ijetLeading]);
-      // Store leading jet information for the specific bin
-      leading_jets_by_bin[current_bin_label].push_back({jtpt_corr[ijetLeading], jtphi[ijetLeading]});
+        leading_jets_by_bin_count[current_bin_label]++;
     }
+    // ---------------------------------
+
     // Fill general event histograms, ALWAYS Fill the Tree (Even if jet_tree_pt is 0)
     jet_tree_HF = *hiHF;
     jet_tree_vz = *vz;
@@ -583,13 +591,15 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
     }
   }
 
-  std::cout << "\n--- Finished event collection. Final status of leading jet data per bin: ---" << std::endl;
-  for (const auto& pair : leading_jets_by_bin) {
-    std::cout << "Bin " << pair.first << ": " << pair.second.size() << " leading jets collected." << std::endl;
+  std::cout << "\n--- Finished event collection. Final status per bin: ---" << std::endl;
+  for (const auto& pair : inclusive_jets_by_bin) {
+    std::cout << "Bin " << pair.first 
+              << ": " << pair.second << " inclusive jets, " 
+              << leading_jets_by_bin_count[pair.first] << " leading jets collected." << std::endl;
   }
 
   cout << "Total events saved : " << iEvent << endl;
-  cout << "N leading jets (h_jet_pt_lj integral): " << h_Phi_lj->GetEntries() << endl;
+  cout << "N inclusive jets (h_jet_pt_all integral): " << h_Phi_all->GetEntries() << endl;
 
   // --- Store to a ROOT file ---
   TFile *outputFile;
@@ -606,15 +616,15 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
   }
 
   if (isData) {
-    if (use_binning_option == 0) output_filename = "./MinBias_" + prefix + "leading_jets_data_HF.root"; // No cent tag needed for HF
-    else if (use_binning_option == 1) output_filename = "./MinBias_" + prefix + "leading_jets_data_VZ" + cent_tag + ".root";
-    else if (use_binning_option == 2) output_filename = "./MinBias_" + prefix + "leading_jets_data_VZ_Cen_Combined" + cent_tag + ".root";
-    else output_filename = "./MinBias_" + prefix + "leading_jets_data_UnknownOption.root";
+    if (use_binning_option == 0) output_filename = "./MinBias_" + prefix + "inclusive_jets_data_HF.root"; // No cent tag needed for HF
+    else if (use_binning_option == 1) output_filename = "./MinBias_" + prefix + "inclusive_jets_data_VZ" + cent_tag + ".root";
+    else if (use_binning_option == 2) output_filename = "./MinBias_" + prefix + "inclusive_jets_data_VZ_Cen_Combined" + cent_tag + ".root";
+    else output_filename = "./MinBias_" + prefix + "inclusive_jets_data_UnknownOption.root";
   } else {
-    if (use_binning_option == 0) output_filename = "./MinBias_" + prefix + "leading_jets_MC_HF.root"; // No cent tag needed for HF
-    else if (use_binning_option == 1) output_filename = "./MinBias_" + prefix + "leading_jets_MC_VZ" + cent_tag + ".root";
-    else if (use_binning_option == 2) output_filename = "./MinBias_" + prefix + "leading_jets_MC_VZ_Cen_Combined" + cent_tag + ".root";
-    else output_filename = "./MinBias_" + prefix + "leading_jets_MC_UnknownOption.root";
+    if (use_binning_option == 0) output_filename = "./MinBias_" + prefix + "inclusive_jets_MC_HF.root"; // No cent tag needed for HF
+    else if (use_binning_option == 1) output_filename = "./MinBias_" + prefix + "inclusive_jets_MC_VZ" + cent_tag + ".root";
+    else if (use_binning_option == 2) output_filename = "./MinBias_" + prefix + "inclusive_jets_MC_VZ_Cen_Combined" + cent_tag + ".root";
+    else output_filename = "./MinBias_" + prefix + "inclusive_jets_MC_UnknownOption.root";
   }
   
   outputFile = new TFile(output_filename, "RECREATE");
@@ -630,8 +640,7 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
   c3->cd(1);
   h_HF->Draw();
   c4->cd(1);
-  h_jet_pt_lj->Draw();
+  h_jet_pt_all->Draw();
   c5->cd(1);
-  h_Phi_lj->Draw();
+  h_Phi_all->Draw();
 }
-

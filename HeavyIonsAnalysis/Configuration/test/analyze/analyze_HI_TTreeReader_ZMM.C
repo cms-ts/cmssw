@@ -171,9 +171,9 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
           cent_tag = Form("_Cen%d_%d", cent_min, cent_max);
       }
 
-      if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_data_HF.root");
-      else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_data_VZ" + cent_tag + ".root");
-      else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_data_VZ_Cen_Combined" + cent_tag + ".root");
+      if (binning_option == 0) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "inclusive_jets_data_HF.root");
+      else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "inclusive_jets_data_VZ" + cent_tag + ".root");
+      else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "inclusive_jets_data_VZ_Cen_Combined" + cent_tag + ".root");
       else { cerr << "Invalid binning_option for data MinBias file." << endl; return; }
       cout << "This is PbPb data (" << (is2023 ? "2023" : "2024") << ")" << endl;
     } else {
@@ -188,7 +188,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         Ngen = file.ngen;
         std::cout << "This is MC " << file.label << ": ngen = " << Ngen;
         if (isPbPb) std::cout << " xsec = " << Xsec << " nb-1" << std::endl;
-        else std::cout << " xsec = " <<  Xsec << " pb^-1" << std::endl;
+        else std::cout << " xsec = "  << Xsec << " pb^-1" << std::endl;
       }
     }
     if (isPbPb) {
@@ -199,9 +199,9 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
           cent_tag = Form("_Cen%d_%d", cent_min, cent_max);
       }
 
-      if (binning_option == 0)      inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_MC_HF.root");
-      else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_MC_VZ" + cent_tag + ".root");
-      else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "leading_jets_MC_VZ_Cen_Combined" + cent_tag + ".root");
+      if (binning_option == 0)      inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "inclusive_jets_MC_HF.root");
+      else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "inclusive_jets_MC_VZ" + cent_tag + ".root");
+      else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "inclusive_jets_MC_VZ_Cen_Combined" + cent_tag + ".root");
       else { cerr << "Invalid binning_option for MC MinBias file." << endl; return; }
     }
   }
@@ -721,47 +721,61 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   }
   else {inputTree = nullptr;}
 
+  // --- Define struct for cache ---
+  struct MinBiasJetInfo { float pt; float eta; float phi; };
+  struct MinBiasEvent { 
+      int n_jets;
+      MinBiasJetInfo jets[200]; // Fixed array prevents heap fragmentation
+  };
+  std::map<int, std::vector<MinBiasEvent>> minBiasCache;
+  std::map<int, int> mb_counts;
+
   // Declare variables to hold the branch data
-  Float_t HF_MinBias, vz_MinBias, jet_pt_MinBias, jet_phi_MinBias, jet_eta_MinBias;
-  Int_t hiBin_MinBias, bin_MinBias;
+  Float_t HF_MinBias, vz_MinBias;
+  Int_t hiBin_MinBias, bin_MinBias, n_jets_MinBias;
+  Float_t jet_pt_MB[500];
+  Float_t jet_phi_MB[500];
+  Float_t jet_eta_MB[500];
+
   // Set branch addresses to link variables to tree branches
   if (isPbPb) {
     inputTree->SetBranchAddress("HF_MinBias", &HF_MinBias);
     inputTree->SetBranchAddress("vz_MinBias", &vz_MinBias);
     inputTree->SetBranchAddress("hiBin_MinBias", &hiBin_MinBias); // Link new branch
     inputTree->SetBranchAddress("bin_MinBias", &bin_MinBias);
-    inputTree->SetBranchAddress("jet_pt_MinBias", &jet_pt_MinBias);
-    inputTree->SetBranchAddress("jet_phi_MinBias", &jet_phi_MinBias);
-    inputTree->SetBranchAddress("jet_eta_MinBias", &jet_eta_MinBias);
+    inputTree->SetBranchAddress("n_jets_MinBias", &n_jets_MinBias);
+    inputTree->SetBranchAddress("jet_pt_MinBias", jet_pt_MB);
+    inputTree->SetBranchAddress("jet_phi_MinBias", jet_phi_MB);
+    inputTree->SetBranchAddress("jet_eta_MinBias", jet_eta_MB);
 
     // --- OPTIMIZATION START: Cache MinBias events into RAM ---
     std::cout << "Caching MinBias events into memory..." << std::endl;
-
     std::cout << "Found " << inputTree->GetEntries() << " MinBias entries in 'jet_tree'." << std::endl;
-    std::cout << "Caching into memory... " << std::flush; // Flush ensures text appears immediately
+    std::cout << "Caching into memory... " << std::flush;
 
-  }
-  std::map<int, std::vector<MinBiasJetInfo>> minBiasCache; // Map: Key = Bin ID, Value = Vector of jets in that bin
-  std::map<int, int> mb_counts;
-  if (isPbPb) {
     // Read the MinBias tree exactly ONCE
     for(int iEntry=0; iEntry < inputTree->GetEntries(); iEntry++){
       inputTree->GetEntry(iEntry);
-      // Pre-count the MinBias events before event loop, count how many events you actually have for each bin.
+      // Pre-count the MinBias events before event loop
       mb_counts[bin_MinBias]++;
-      // Store only the necessary info
-      MinBiasJetInfo info;
-      info.pt = jet_pt_MinBias;
-      info.eta = jet_eta_MinBias;
-      info.phi = jet_phi_MinBias;
 
+      MinBiasEvent mb_ev;
+      mb_ev.n_jets = 0; // Initialize counter
+      for (int k = 0; k < n_jets_MinBias; ++k) {
+          // SPEED HACK: Do not cache extremely soft jets that will never beat signal jets
+          if (jet_pt_MB[k] < 15.0) continue; 
+          if (mb_ev.n_jets >= 200) break; // Safety bounds check
+
+          mb_ev.jets[mb_ev.n_jets] = {jet_pt_MB[k], jet_eta_MB[k], jet_phi_MB[k]};
+          mb_ev.n_jets++;
+      }
       // Push into the specific bin vector
-      minBiasCache[bin_MinBias].push_back(info);
+      minBiasCache[bin_MinBias].push_back(mb_ev);
     }
-  std::cout << "Done." << std::endl;
-  std::cout << "Cached " << minBiasCache.size() << " unique bins." << std::endl;
-  std::cout << "Caching complete " << std::endl;
-  // --- OPTIMIZATION END ---
+    std::cout << "Done." << std::endl;
+    std::cout << "Cached " << minBiasCache.size() << " unique bins." << std::endl;
+    std::cout << "Caching complete " << std::endl;
+    // --- OPTIMIZATION END ---
   }
 
   // --- Bin definition for MinBias matching (based on selected option) ---
@@ -863,7 +877,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
 
   TH1D *h_mumu = new TH1D("h_mumu", "Hist;m_{#mu#mu} [GeV]; Entries", 20, 60, 120);
   TH1D *h_Z_pt = new TH1D("h_Z_pt", "Hist;p_{t}^{Z} [GeV]; Entries", 30, 0, 300);
-  TH1D *h_njet = new TH1D("h_njet", "Hist;Number of jets; Entries", 10, 0, 10);
+  TH1D *h_njet = new TH1D("h_njet", "Hist;Number of jets; Entries", 5, 0, 5);
   TH1D *h_cen = new TH1D("h_cen", "Hist; centrality bin; Entries", 20, 0, 100);
 
   TH1D *h_mumu_j = new TH1D("h_mumu_j", "Hist;m_{#mu#mu} [GeV]; Entries", 20, 60, 120);
@@ -892,10 +906,17 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TH1D *h_jet_pt_lj_MinBias = new TH1D("h_jet_pt_lj_MinBias", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
   TH1D *h_xZj_MinBias = new TH1D("h_xZj_MinBias", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
 
+  TH1D *h_deltaPhi_Zj_all_MinBias = new TH1D("h_deltaPhi_Zj_all_MinBias", "Hist;#Delta#phi_{Zj} (All); Entries", 20, 0,pi_value);
+  TH1D *h_jet_pt_all_MinBias = new TH1D("h_jet_pt_all_MinBias", "Hist;inclusive jet p_{T}; Entries", 30, 0, 300);
+  TH1D *h_xZj_all_MinBias = new TH1D("h_xZj_all_MinBias", "Hist;x_{Zj} (All); Entries", nbins_xZj_meas, xZj_bins_meas);
+
   TH1D *h_deltaPhi_Zj_matched = new TH1D("h_deltaPhi_Zj_matched", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,pi_value);
   TH1D *h_jet_pt_lj_matched = new TH1D("h_jet_pt_lj_matched", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
   TH1D *h_xZj_matched = new TH1D("h_xZj_matched", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
 
+  TH1D *h_deltaPhi_Zj_all_matched = new TH1D("h_deltaPhi_Zj_all_matched", "Hist;#Delta#phi_{Zj} (All Matched); Entries", 20, 0, pi_value);
+  TH1D *h_jet_pt_all_matched = new TH1D("h_jet_pt_all_matched", "Hist;inclusive jet p_{T} [GeV] (Matched); Entries", 30, 0, 300);
+  TH1D *h_xZj_all_matched = new TH1D("h_xZj_all_matched", "Hist;x_{Zj} (All Matched); Entries", nbins_xZj_meas, xZj_bins_meas);
   // --- RooUnfold Histograms ---
 
   TH1D *h_deltaR_gen_reco = new TH1D("h_deltaR_gen_reco", "Matching Distance;#DeltaR(Reco, Gen);Entries", 50, 0, 0.5);
@@ -1057,6 +1078,10 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   unsigned int iEvent = 0;
   unsigned int itotev = 0;
   double weight_totev = 0;
+  long long dbg_mb_total_mixed = 0;
+  long long dbg_mb_pass_muon = 0;
+  long long dbg_mb_pass_pt = 0;
+  long long dbg_mb_filled_bkg = 0;
   std::cout << "Starting Analysis Loop over " << total_events << " events..." << std::endl;
   int report_step = static_cast<unsigned int>(total_events / 100); // Update 100 times
   while (fReader.Next()) {
@@ -1431,7 +1456,6 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       // Z-Jet dR Cleaning
       if (getDeltaR(jteta[ijet], jtphi[ijet], muMinus.Eta(), muMinus.Phi()) < 0.2) continue;
       if (getDeltaR(jteta[ijet], jtphi[ijet], muPlus.Eta(), muPlus.Phi()) < 0.2) continue;
-      njets++;
 
       // --- Inclusive Jet Kinematics ---
       double dPhi_Zj_current = RelativePhi(Z.Phi(), jtphi[ijet]);
@@ -1444,6 +1468,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       if (dPhi_Zj_current > 7 * pi_value / 8) {
           h_jet_pt_all->Fill(jtpt_corr[ijet], scale);
           h_xZj_all->Fill(xZj_current, scale);
+          njets++;
       }
       // --------------------------------
 
@@ -1471,6 +1496,14 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
             matched_gen_jet_idx = igenjet;
           }
         }
+      }
+      if (!isData && min_dR < 0.1) {
+          h_deltaPhi_Zj_all_matched->Fill(dPhi_Zj_current, scale);
+          // Apply the back-to-back cut for pT and xZj
+          if (dPhi_Zj_current > 7 * pi_value / 8) {
+              h_jet_pt_all_matched->Fill(jtpt_corr[ijet], scale);
+              h_xZj_all_matched->Fill(xZj_current, scale);
+          }
       }
 
       if (ijetLeading == -1 || jtpt_corr[ijet] > jtpt_corr[ijetLeading]) {
@@ -1535,6 +1568,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
             }
           }
           if (cen_bin_idx != -1 && vz_bin_idx != -1) {
+            // Calculate a unique global bin number for the TTree
+            // This assumes centrality_bins_combined.size() and vz_bins_combined.size() are constant
             current_global_bin_n = cen_bin_idx * BinningConfig_Combined_Vz_Centrality::num_vz_bins + vz_bin_idx;
           } else {
             // This event doesn't fall into a defined combined bin, skip background subtraction for it
@@ -1543,51 +1578,70 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         }
         // --- End of bin determination ---
 
-        // Mixing events with MinBias, assumes 'current_global_bin_n' and 'events_per_mixed_bin_limit' events for each bin
-        if (current_global_bin_n != -1) { // Only proceed with MinBias matching if a valid bin was found
-          // Check if this bin exists in our cache
-          if (minBiasCache.count(current_global_bin_n)) {
-            // Access the specific vector of jets for this bin directly
-            const std::vector<MinBiasJetInfo>& cachedJets = minBiasCache[current_global_bin_n];
-            double events_filled_for_this_bin_in_MinBias = 0;
-            // Determine weight (using the size of the cached vector)
-            double n_mix = mb_counts[current_global_bin_n]; // Or use cachedJets.size() if they are 1-to-1
+        // Mixing events with MinBias
+        if (current_global_bin_n != -1 && minBiasCache.count(current_global_bin_n)) {
+            const std::vector<MinBiasEvent>& cachedEvents = minBiasCache[current_global_bin_n];
+            double n_mix = cachedEvents.size();
             double mixing_weight = (n_mix > 0) ? (1.0 / n_mix) : 0.0;
-            // Loop ONLY over the jets that belong to this bin
-            for (const auto& mbJet : cachedJets) {
-              // Use mbJet.pt, mbJet.eta, mbJet.phi instead of tree variables
-              // Apply same jet cuts as for signal jets
-              if (mbJet.pt > signal_leading_pt) {
-                if (getDeltaR(mbJet.eta, mbJet.phi, muMinus.Eta(), muMinus.Phi()) >= 0.2 &&
-                    getDeltaR(mbJet.eta, mbJet.phi, muPlus.Eta(), muPlus.Phi()) >= 0.2) {
-                  double dPhi_Zj_MinBias = RelativePhi(Z.Phi(), mbJet.phi);
-                  double xZj_MinBias = mbJet.pt / Z.Pt();
-                  h_deltaPhi_Zj_MinBias->Fill(dPhi_Zj_MinBias, scale * mixing_weight);
-                  //Remove overflow and put it in the last bin
-                  //if (xZj_MinBias > xZj_max) xZj_MinBias = xZj_max - 0.01;
-                  if (dPhi_Zj_MinBias > 7 * pi_value / 8) {
-                    h_jet_pt_lj_MinBias->Fill(mbJet.pt, scale * mixing_weight);
-                    h_xZj_MinBias->Fill(xZj_MinBias, scale * mixing_weight);
-                    if (itotev < 0.6*Ngen) h_xZj_MinBias_train_closure->Fill(xZj_MinBias, scale * mixing_weight);
-                    else h_xZj_MinBias_test_closure->Fill(xZj_MinBias, scale * mixing_weight);
-                    if (!isData && ijetGenLeading_unfold != -1 && dPhi_Zj_Gen > 7 * pi_value / 8) {
-                      //if (ijetGenLeading_unfold == iGenjetMatchedtoLeadingReco) {
-                      h_response_MinBias->Fill(xZj_MinBias, true_xZj, scale * mixing_weight);
-                      if (itotev < 0.6*Ngen) h_response_MinBias_closure->Fill(xZj_MinBias, true_xZj, scale * mixing_weight);
-                      //}
+
+                for (const auto& mb_ev : cachedEvents) {
+                dbg_mb_total_mixed++;
+                int ijetLeading_MB = -1;
+                float max_pt_MB = -1;
+
+                for (int k = 0; k < mb_ev.n_jets; ++k) {
+                    const auto& mbJet = mb_ev.jets[k];
+
+                    // Clean MB jet against Signal Muons
+                    if (getDeltaR(mbJet.eta, mbJet.phi, muMinus.Eta(), muMinus.Phi()) >= 0.2 &&
+                        getDeltaR(mbJet.eta, mbJet.phi, muPlus.Eta(), muPlus.Phi()) >= 0.2) {
+                        // --- 1. INCLUSIVE JET BACKGROUND ---
+                        double dPhi_Zj_MB = RelativePhi(Z.Phi(), mbJet.phi);
+                        double xZj_MB = mbJet.pt / Z.Pt();
+
+                        h_deltaPhi_Zj_all_MinBias->Fill(dPhi_Zj_MB, scale * mixing_weight);
+                        if (dPhi_Zj_MB > 7 * pi_value / 8) {
+                            h_jet_pt_all_MinBias->Fill(mbJet.pt, scale * mixing_weight);
+                            h_xZj_all_MinBias->Fill(xZj_MB, scale * mixing_weight);
+                        }
+
+                        // Track the hardest MB jet in this event
+                        if (mbJet.pt > max_pt_MB) {
+                            max_pt_MB = mbJet.pt;
+                            ijetLeading_MB = k;
+                        }
                     }
-                  }
-                }
-              }
-              events_filled_for_this_bin_in_MinBias++;
-            }
-            if (events_filled_for_this_bin_in_MinBias != events_per_mixed_bin_limit) {
-            std::cout << "--- Warning! MinBias bin " << current_global_bin_n << " has only " << events_filled_for_this_bin_in_MinBias
-                      << " events (expected " << events_per_mixed_bin_limit << "). ---" << std::endl;
-            }
-          }
-        }
-      } // end isPbPb
+                } // End inner jet loop
+
+                // --- 2. LEADING JET BACKGROUND ---
+                // A UE jet ONLY acts as a leading jet background if it is harder than the signal leading jet
+                if (ijetLeading_MB != -1) {
+                    dbg_mb_pass_muon++; // At least one MB jet survived the muon veto
+                    if (max_pt_MB > signal_leading_pt) {
+                        dbg_mb_pass_pt++;
+                        const auto& leadMBJet = mb_ev.jets[ijetLeading_MB];
+                        double dPhi_Zj_MB = RelativePhi(Z.Phi(), leadMBJet.phi);
+                        double xZj_MB = leadMBJet.pt / Z.Pt();
+
+                        h_deltaPhi_Zj_MinBias->Fill(dPhi_Zj_MB, scale * mixing_weight);
+                        if (dPhi_Zj_MB > 7 * pi_value / 8) {
+                            dbg_mb_filled_bkg++;
+                            h_jet_pt_lj_MinBias->Fill(leadMBJet.pt, scale * mixing_weight);
+                        h_xZj_MinBias->Fill(xZj_MB, scale * mixing_weight);
+
+                        if (itotev < 0.6*Ngen) h_xZj_MinBias_train_closure->Fill(xZj_MB, scale * mixing_weight);
+                        else h_xZj_MinBias_test_closure->Fill(xZj_MB, scale * mixing_weight);
+
+                        if (!isData && ijetGenLeading_unfold != -1 && dPhi_Zj_Gen > 7 * pi_value / 8) {
+                                    h_response_MinBias->Fill(xZj_MB, true_xZj, scale * mixing_weight);
+                                    if (itotev < 0.6*Ngen) h_response_MinBias_closure->Fill(xZj_MB, true_xZj, scale * mixing_weight);
+                                }
+                            } // closes if (dPhi_Zj_MB > 7 * pi_value / 8)
+                        } // closes if (max_pt_MB > signal_leading_pt)
+                    } // closes if (ijetLeading_MB != -1)
+                } // End MinBias event loop (closes for-loop)
+            } // closes if (current_global_bin_n != -1...)
+        } // end isPbPb
 
       if (ijetLeading != -1) {
       double dPhi_Zj = RelativePhi(Z.Phi(), jtphi[ijetLeading]);
@@ -1690,6 +1744,18 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   h_response_closure_subtracted->SetTitle("h_response_closure_unmatched - h_response_MinBias_closure (rescaled)");
   h_response_closure_subtracted->Add(h_response_MinBias_closure, -1); // The -1 performs the subtraction
 
+  TH1D* h_deltaPhi_Zj_all_subtracted = (TH1D*)h_deltaPhi_Zj_all->Clone("h_deltaPhi_Zj_all_subtracted");
+  h_deltaPhi_Zj_all_subtracted->SetDirectory(0);
+  h_deltaPhi_Zj_all_subtracted->Add(h_deltaPhi_Zj_all_MinBias, -1);
+
+  TH1D* h_jet_pt_all_subtracted = (TH1D*)h_jet_pt_all->Clone("h_jet_pt_all_subtracted");
+  h_jet_pt_all_subtracted->SetDirectory(0);
+  h_jet_pt_all_subtracted->Add(h_jet_pt_all_MinBias, -1);
+
+  TH1D* h_xZj_all_subtracted = (TH1D*)h_xZj_all->Clone("h_xZj_all_subtracted");
+  h_xZj_all_subtracted->SetDirectory(0);
+  h_xZj_all_subtracted->Add(h_xZj_all_MinBias, -1);
+
   // --- Output summary ---
   // Clear the progress bar line
   std::cout << "\r[Analysis] Processing: " << total_events << " / " << total_events << " (100.0%) - Complete." << std::endl;
@@ -1713,21 +1779,48 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   std::cout << "Bkg Fraction (dPhi):   " << (raw_dPhi_integral > 0 ? 100*bkg_dPhi_integral/raw_dPhi_integral : 0) << " %"
             << "        Bkg Fraction (pT):    " << (raw_pt_integral > 0 ? 100*bkg_pt_integral/raw_pt_integral : 0) << " %" << std::endl;
 
+  std::cout << "\n[DEBUG MinBias Mixing Pipeline]" << std::endl;
+  std::cout << "1. Total MB entries mixed: " << dbg_mb_total_mixed << std::endl;
+  std::cout << "2. Passed Muon Veto:       " << dbg_mb_pass_muon << std::endl;
+  std::cout << "3. Passed pT > signal pt:  " << dbg_mb_pass_pt << std::endl;
+  std::cout << "4. Filled into Bkg Hist:   " << dbg_mb_filled_bkg << std::endl;
   }
   if (!isData) {
+      // Leading Jet Integrals
       double matched_dPhi_integral = h_deltaPhi_Zj_matched->Integral(0, h_deltaPhi_Zj_matched->GetNbinsX()+1);
       double matched_pt_integral = h_jet_pt_lj_matched->Integral(0, h_jet_pt_lj_matched->GetNbinsX()+1);
-      std::cout << "[MC Matching Info]" << std::endl;
+      
+      // Inclusive Jet Integrals
+      double raw_dPhi_all_integral = h_deltaPhi_Zj_all->Integral(0, h_deltaPhi_Zj_all->GetNbinsX()+1);
+      double raw_pt_all_integral = h_jet_pt_all->Integral(0, h_jet_pt_all->GetNbinsX()+1);
+      double matched_dPhi_all_integral = h_deltaPhi_Zj_all_matched->Integral(0, h_deltaPhi_Zj_all_matched->GetNbinsX()+1);
+      double matched_pt_all_integral = h_jet_pt_all_matched->Integral(0, h_jet_pt_all_matched->GetNbinsX()+1);
+
+      std::cout << "[MC Matching Info - Leading Jet]" << std::endl;
       std::cout << "Raw - Matched (dPhi):  " << raw_dPhi_integral - matched_dPhi_integral
                 << "        Raw - Matched (pT):   " << raw_pt_integral - matched_pt_integral << std::endl;
-      std::cout << "Fraction (dPhi):       " << (raw_dPhi_integral > 0 ? 100*(raw_dPhi_integral - matched_dPhi_integral)/raw_dPhi_integral : 0) << " %"
-                << "        Fraction (pT):        " << (raw_pt_integral > 0 ? 100*(raw_pt_integral - matched_pt_integral)/raw_pt_integral : 0) << " %" <<std::endl;
+      std::cout << "Fraction Fake (dPhi):  " << (raw_dPhi_integral > 0 ? 100*(raw_dPhi_integral - matched_dPhi_integral)/raw_dPhi_integral : 0) << " %"
+                << "        Fraction Fake (pT):   " << (raw_pt_integral > 0 ? 100*(raw_pt_integral - matched_pt_integral)/raw_pt_integral : 0) << " %" <<std::endl;
+
+      std::cout << "\n[MC Matching Info - Inclusive Jets]" << std::endl;
+      std::cout << "Raw - Matched (dPhi):  " << raw_dPhi_all_integral - matched_dPhi_all_integral
+                << "        Raw - Matched (pT):   " << raw_pt_all_integral - matched_pt_all_integral << std::endl;
+      std::cout << "Fraction Fake (dPhi):  " << (raw_dPhi_all_integral > 0 ? 100*(raw_dPhi_all_integral - matched_dPhi_all_integral)/raw_dPhi_all_integral : 0) << " %"
+                << "        Fraction Fake (pT):   " << (raw_pt_all_integral > 0 ? 100*(raw_pt_all_integral - matched_pt_all_integral)/raw_pt_all_integral : 0) << " %" <<std::endl;
   }
 
-  std::cout << "[Z Boson Info]" << std::endl;
-  std::cout << "Z+Jet Events found:    " << raw_pt_integral << std::endl;
-  std::cout << "Z+Jet (pT_Z > 60):     " << h_Z_pt_j->Integral(h_Z_pt->FindBin(60), h_Z_pt->GetNbinsX()+1)
-            << "        Z+Jet (pT_Z > 80):     " << h_Z_pt_j->Integral(h_Z_pt->FindBin(80), h_Z_pt->GetNbinsX()+1) << std::endl;
+  // --- Calculate 1-Jet Percentage ---
+  double total_Z_events = h_njet->Integral(0, h_njet->GetNbinsX() + 1);
+  double events_at_least_1jet = total_Z_events - h_njet->GetBinContent(1); // Subtract 0-jet events
+  double events_exactly_1jet = h_njet->GetBinContent(2); // Bin 2 is exactly 1 jet
+  
+  double pct_of_all_Z = (total_Z_events > 0) ? (100.0 * events_exactly_1jet / total_Z_events) : 0.0;
+  double pct_of_Z_with_jets = (events_at_least_1jet > 0) ? (100.0 * events_exactly_1jet / events_at_least_1jet) : 0.0;
+
+  std::cout << "Events with exactly 1 jet: " << events_exactly_1jet 
+            << " (" << pct_of_Z_with_jets << " % of Z+jet events)" << std::endl;
+  // ----------------------------------
+
   std::cout << "--- End Analysis Sum ---" << std::endl;
   std::cout << "------------------------------------------------" << std::endl;
   // --- End output summary ---
@@ -1788,6 +1881,12 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     h_deltaPhi_Zj_subtracted->Write();
     h_xZj_MinBias->Write();
     h_xZj_subtracted->Write();
+    h_deltaPhi_Zj_all_MinBias->Write();
+    h_deltaPhi_Zj_all_subtracted->Write();
+    h_jet_pt_all_MinBias->Write();
+    h_jet_pt_all_subtracted->Write();
+    h_xZj_all_MinBias->Write();
+    h_xZj_all_subtracted->Write();
   }
 
   // Write unfolding specific histograms
@@ -1798,6 +1897,9 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     h_deltaPhi_Zj_matched->Write();
     h_xZj_matched->Write();
     h_xZj_true->Write();
+    h_deltaPhi_Zj_all_matched->Write();
+    h_jet_pt_all_matched->Write();
+    h_xZj_all_matched->Write();
     h_xZj_for_JEWEL_w->Write();
     h_mumu_true->Write();
     h_xZj_reco->Write();
@@ -1848,4 +1950,3 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   //if (goodvertex) delete goodvertex;
   //if (HLT_L2SingleMu) delete HLT_L2SingleMu;
 }
-

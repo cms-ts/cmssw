@@ -58,7 +58,7 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
     std::vector<histoPar> histo_par = {
     {"h_mumu", "m_{#mu#mu} [GeV]", "Events", 20, 60, 120},
     {"h_Z_pt", "p_{T}^{Z} [GeV]", "Events", 30, 0, 300},
-    {"h_njet", "n_{jet}", "Events", 10, 0, 10},
+    {"h_njet", "n_{jet}", "Events", 5, 0, 5},
     {"h_cen", "cen", "Events", 20, 0, 100},
     {"h_mumu_j", "m_{#mu#mu} [GeV]", "Events", 20, 60, 120},
     {"h_Z_pt_j", "p_{T}^{Z} [GeV]", "Events", 30, 0, 300},
@@ -118,6 +118,7 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
         float Y_leg = 0.65;
         if (histo_name == "h_deltaPhi_Zj") X_leg = 0.15;
         if (histo_name.find("h_jet_pt_lj") != std::string::npos) X_leg = 0.4;
+        if (histo_name.find("h_njet") != std::string::npos) X_leg = 0.4;
         if (histo_name.find("mumu") != std::string::npos) X_leg = 0.15;
         if (histo_name == "h_xZj_fixbinw") X_leg = 0.46;
         TLegend* legend = new TLegend(X_leg, Y_leg, X_leg+0.19, Y_leg+0.2);
@@ -330,6 +331,7 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
         if (histo_name.find("mumu") != std::string::npos) textY = 0.82;
         if (histo_name == "h_xZj_fixbinw") textY = 0.82;
         if (histo_name.find("h_jet_pt_lj") != std::string::npos) textY = 0.82;
+        if (histo_name.find("h_njet") != std::string::npos) textY = 0.82;
         // 1. Centrality (Only for PbPb)
         if (isPbPb) {
             latex2->DrawLatexNDC(textX, textY, TString::Format("Centrality %d-%d%%", cent_min, cent_max));
@@ -355,7 +357,7 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
             textY -= 0.05;
 
             // Only add dPhi cut label for specific back-to-back plots
-            if (histo_name != "h_deltaPhi_Zj" && histo_name != "h_njet" &&
+            if (histo_name != "h_deltaPhi_Zj" &&
                 histo_name != "h_jet_pt_lj_2pi_3" && histo_name != "h_jet_pt_lj_nocut") {
                 latex2->DrawLatexNDC(textX, textY, "#Delta#phi_{Zj} > 7#pi/8");
             }

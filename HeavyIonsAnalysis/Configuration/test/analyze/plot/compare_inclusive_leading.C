@@ -173,7 +173,7 @@ void compare_inclusive_leading(std::string variable = "jetPt", const char* colli
     latex2->SetTextFont(42);
 
     if (isPbPb) {
-        latex2->DrawLatex(0.55, 0.92, TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", Lumi));
+        latex2->DrawLatex(0.60, 0.92, TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", Lumi));
     } else {
         latex2->DrawLatex(0.65, 0.92, TString::Format("pp %.0f pb^{-1} (5.36 TeV)", Lumi));
     }

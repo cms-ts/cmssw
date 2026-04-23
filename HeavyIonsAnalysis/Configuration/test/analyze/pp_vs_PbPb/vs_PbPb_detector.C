@@ -113,7 +113,7 @@ void vs_PbPb_detector(std::string variable = "xZj", const char* pb_type = "PbPb2
     h_ratio->GetLowerRefGraph()->SetMarkerColor(kBlack);
     h_ratio->GetLowerRefGraph()->SetLineColor(kBlack);
     h_ratio->GetLowerRefGraph()->SetMinimum(0.0);
-    h_ratio->GetLowerRefGraph()->SetMaximum(3.); // Wider ratio for quenching
+    h_ratio->GetLowerRefGraph()->SetMaximum(1.8);
 
     h_pb->GetXaxis()->SetTitle(x_title.c_str());
     h_pb->GetYaxis()->SetTitle(y_title.c_str());
