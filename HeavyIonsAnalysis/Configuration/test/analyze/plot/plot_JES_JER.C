@@ -19,7 +19,7 @@ void plot_JES_JER(double test_pt = 40.0, double test_rho = 80.0) {
     gSystem->Load("libJetMETCorrectionsModules");
 
     // 2. Define filenames and their paths separately
-    std::string jec_file = "Spring23Prompt23_PbPb_V1_MC_L2Relative_AK2PF.txt"; 
+    std::string jec_file = "Prompt23HIPbPb_V1_MC_L2Relative_AK2PF.txt"; 
     std::string jer_file = "Autumn18_RunD_V7b_MC_PtResolution_AK4PF.txt";
 
     // Create path strings that point to the parent directory
