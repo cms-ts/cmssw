@@ -596,8 +596,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   // L2Residual applied only to Data
   if (isData) {
     if (collision_name.Contains("PbPb23")) {
-      Files.push_back("Spring23Prompt23_PbPb_V1_DATA_L2Relative_AK2PF.txt");
-      Files.push_back("Spring23Prompt23_PbPb_V1_DATA_L2Residual_AK2PF.txt");
+      Files.push_back("Prompt23HIPbPb_V1_MC_L2Relative_AK2PF.txt");
+      Files.push_back("Prompt23HIPbPb_V1_DATA_L2Residual_AK2PF.txt");
     }
     else if (collision_name.Contains("PbPb24")) {
      Files.push_back("PbPb_2024_noPUcorr_L2Relative_AK4PF.txt"); // !!! to update
@@ -617,7 +617,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   }
   else {
     if (collision_name.Contains("PbPb23")) {
-      Files.push_back("Spring23Prompt23_PbPb_V1_MC_L2Relative_AK2PF.txt");
+      Files.push_back("Prompt23HIPbPb_V1_MC_L2Relative_AK2PF.txt");
     }
     else if (collision_name.Contains("PbPb24")) {
       Files.push_back("PbPb_2024_noPUcorr_L2Relative_AK4PF.txt"); // !!! to update
@@ -638,7 +638,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   }
   // ---------------------
   std::string name_Uncertainty_file;
-  if (collision_name.Contains("PbPb23")) name_Uncertainty_file = "Autumn18_HI_V8_MC_Uncertainty_AK2PF.txt"; //!!! Old, update
+  if (collision_name.Contains("PbPb23")) name_Uncertainty_file = "Spring23PbPb_TotalUncertainties.txt";
   else if (collision_name.Contains("PbPb24")) name_Uncertainty_file = "Autumn18_HI_V8_MC_Uncertainty_AK2PF.txt"; //!!! Old, update
   else if (collision_name.Contains("ppref24")) name_Uncertainty_file = "Spring18_ppRef5TeV_V6_MC_Uncertainty_AK2PF.txt"; //!!! Old, update
   JetUncertainty JEU(name_Uncertainty_file);

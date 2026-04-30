@@ -204,8 +204,8 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
   // L2Residual applied only to Data
   if (isData) {
     if (is2023) {
-        Files.push_back("../Spring23Prompt23_PbPb_V1_DATA_L2Relative_AK2PF.txt");
-        Files.push_back("../Spring23Prompt23_PbPb_V1_DATA_L2Residual_AK2PF.txt");
+        Files.push_back("../Prompt23HIPbPb_V1_MC_L2Relative_AK2PF.txt");
+        Files.push_back("../Prompt23HIPbPb_V1_DATA_L2Residual_AK2PF.txt");
     }
     else if (is2024) {
         Files.push_back("../PbPb_2024_noPUcorr_L2Relative_AK4PF.txt");
@@ -213,7 +213,7 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
     }
   } else {
     if (is2023) {
-        Files.push_back("../Spring23Prompt23_PbPb_V1_MC_L2Relative_AK2PF.txt");
+        Files.push_back("../Prompt23HIPbPb_V1_MC_L2Relative_AK2PF.txt");
     }
     else if (is2024) {
         Files.push_back("../PbPb_2024_noPUcorr_L2Relative_AK4PF.txt");
