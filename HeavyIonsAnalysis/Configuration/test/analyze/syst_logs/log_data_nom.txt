@@ -1,0 +1,53 @@
+
+Processing analyze_HI_TTreeReader_ZMM.C("PbPb23", "data", 1, 0, 0, 30, 40.0, 9999.0)...
+------------------------------------------------
+Running 2023 PbPb collisions
+isPbPb = 1 is2023 = 1 isSignal = 0
+This is PbPb data (2023)
+Found 127 files matching pattern
+[0] root://eosinfnts.ts.infn.it:1094//eos/infnts/cms/store/user/rdelliga/HIPhysicsRawPrime0/CRAB3_Analysis_test24_ZMM_Prime0/260212_144356/0000.root
+... and 126 more files.
+Opened MinBias file: ./MixEvSub/MinBias_inclusive_jets_data_VZ_Cen_Combined_Cen0_30.root
+Parsed Lumi  : 1.64432 nb^-1
+------------------------------------------------
+Loading Muon Scale Factors from JSON...
+Loaded 'HLT_HIL2SingleMu7_and_TightID_abseta1_pt1_cutAndCount_schemaV2.json'
+Loaded 'NUM_TightID_DEN_genTracks'
+Loaded 'NUM_HLT_HIL2SingleMu7_v_DEN_TightID'
+Loaded 'NUM_IsoWP95_DEN_TightID' SFs from NUM_Iso_DEN_TightID_abseta_pt_schemaV2.json
+JSON Scale Factors loaded successfully.
+Initializing JEC...
+Loaded JEC File: Prompt23HIPbPb_V1_MC_L2Relative_AK2PF.txt
+Loaded JEC File: Prompt23HIPbPb_V1_DATA_L2Residual_AK2PF.txt
+Loaded JEC Uncertainty File: Spring23PbPb_TotalUncertainties.txt
+Loaded Jet Veto Map using JetSelect_PbPb from: Winter24Prompt24_2024BCDEFGHI.root
+------------------------------------------------
+Caching MinBias events into memory...
+Found 9000 MinBias entries in 'jet_tree'.
+Caching into memory... Done.
+Cached 90 unique bins.
+Caching complete 
+Defined combined Centrality-VZ bins for MinBias matching (90 total).
+------------------------------------------------
+File created: ./plot/output_HI_mu_data_Cen0_30_ptZ40_Inf.root
+------------------------------------------------
+Starting Analysis Loop over 25441 events...
+[Analysis] Processing: 1 / 25441 (0.00%)[Analysis] Processing: 254 / 25441 (1.00%)[Analysis] Processing: 508 / 25441 (2.00%)[Analysis] Processing: 762 / 25441 (3.00%)[Analysis] Processing: 1016 / 25441 (3.99%)[Analysis] Processing: 1270 / 25441 (4.99%)[Analysis] Processing: 1524 / 25441 (5.99%)[Analysis] Processing: 1778 / 25441 (6.99%)[Analysis] Processing: 2032 / 25441 (7.99%)[Analysis] Processing: 2286 / 25441 (8.99%)[Analysis] Processing: 2540 / 25441 (9.98%)[Analysis] Processing: 2794 / 25441 (10.98%)[Analysis] Processing: 3048 / 25441 (11.98%)[Analysis] Processing: 3302 / 25441 (12.98%)[Analysis] Processing: 3556 / 25441 (13.98%)[Analysis] Processing: 3810 / 25441 (14.98%)[Analysis] Processing: 4064 / 25441 (15.97%)[Analysis] Processing: 4318 / 25441 (16.97%)[Analysis] Processing: 4572 / 25441 (17.97%)[Analysis] Processing: 4826 / 25441 (18.97%)[Analysis] Processing: 5080 / 25441 (19.97%)[Analysis] Processing: 5334 / 25441 (20.97%)[Analysis] Processing: 5588 / 25441 (21.96%)[Analysis] Processing: 5842 / 25441 (22.96%)[Analysis] Processing: 6096 / 25441 (23.96%)[Analysis] Processing: 6350 / 25441 (24.96%)[Analysis] Processing: 6604 / 25441 (25.96%)[Analysis] Processing: 6858 / 25441 (26.96%)[Analysis] Processing: 7112 / 25441 (27.95%)[Analysis] Processing: 7366 / 25441 (28.95%)[Analysis] Processing: 7620 / 25441 (29.95%)[Analysis] Processing: 7874 / 25441 (30.95%)[Analysis] Processing: 8128 / 25441 (31.95%)[Analysis] Processing: 8382 / 25441 (32.95%)[Analysis] Processing: 8636 / 25441 (33.95%)[Analysis] Processing: 8890 / 25441 (34.94%)[Analysis] Processing: 9144 / 25441 (35.94%)[Analysis] Processing: 9398 / 25441 (36.94%)[Analysis] Processing: 9652 / 25441 (37.94%)[Analysis] Processing: 9906 / 25441 (38.94%)[Analysis] Processing: 10160 / 25441 (39.94%)[Analysis] Processing: 10414 / 25441 (40.93%)[Analysis] Processing: 10668 / 25441 (41.93%)[Analysis] Processing: 10922 / 25441 (42.93%)[Analysis] Processing: 11176 / 25441 (43.93%)[Analysis] Processing: 11430 / 25441 (44.93%)[Analysis] Processing: 11684 / 25441 (45.93%)[Analysis] Processing: 11938 / 25441 (46.92%)[Analysis] Processing: 12192 / 25441 (47.92%)[Analysis] Processing: 12446 / 25441 (48.92%)!!! WARNING: hiBin = 14 hiHF = 3934.40 hiBin nominal = 15 hiBin up = 15 hiBin down = 14
+[Analysis] Processing: 12700 / 25441 (49.92%)[Analysis] Processing: 12954 / 25441 (50.92%)[Analysis] Processing: 13208 / 25441 (51.92%)[Analysis] Processing: 13462 / 25441 (52.91%)[Analysis] Processing: 13716 / 25441 (53.91%)[Analysis] Processing: 13970 / 25441 (54.91%)[Analysis] Processing: 14224 / 25441 (55.91%)[Analysis] Processing: 14478 / 25441 (56.91%)[Analysis] Processing: 14732 / 25441 (57.91%)[Analysis] Processing: 14986 / 25441 (58.90%)[Analysis] Processing: 15240 / 25441 (59.90%)[Analysis] Processing: 15494 / 25441 (60.90%)[Analysis] Processing: 15748 / 25441 (61.90%)[Analysis] Processing: 16002 / 25441 (62.90%)[Analysis] Processing: 16256 / 25441 (63.90%)[Analysis] Processing: 16510 / 25441 (64.90%)[Analysis] Processing: 16764 / 25441 (65.89%)[Analysis] Processing: 17018 / 25441 (66.89%)[Analysis] Processing: 17272 / 25441 (67.89%)[Analysis] Processing: 17526 / 25441 (68.89%)[Analysis] Processing: 17780 / 25441 (69.89%)[Analysis] Processing: 18034 / 25441 (70.89%)[Analysis] Processing: 18288 / 25441 (71.88%)[Analysis] Processing: 18542 / 25441 (72.88%)[Analysis] Processing: 18796 / 25441 (73.88%)[Analysis] Processing: 19050 / 25441 (74.88%)[Analysis] Processing: 19304 / 25441 (75.88%)[Analysis] Processing: 19558 / 25441 (76.88%)[Analysis] Processing: 19812 / 25441 (77.87%)[Analysis] Processing: 20066 / 25441 (78.87%)[Analysis] Processing: 20320 / 25441 (79.87%)[Analysis] Processing: 20574 / 25441 (80.87%)[Analysis] Processing: 20828 / 25441 (81.87%)[Analysis] Processing: 21082 / 25441 (82.87%)[Analysis] Processing: 21336 / 25441 (83.86%)[Analysis] Processing: 21590 / 25441 (84.86%)[Analysis] Processing: 21844 / 25441 (85.86%)[Analysis] Processing: 22098 / 25441 (86.86%)[Analysis] Processing: 22352 / 25441 (87.86%)[Analysis] Processing: 22606 / 25441 (88.86%)[Analysis] Processing: 22860 / 25441 (89.85%)[Analysis] Processing: 23114 / 25441 (90.85%)[Analysis] Processing: 23368 / 25441 (91.85%)[Analysis] Processing: 23622 / 25441 (92.85%)[Analysis] Processing: 23876 / 25441 (93.85%)[Analysis] Processing: 24130 / 25441 (94.85%)[Analysis] Processing: 24384 / 25441 (95.85%)[Analysis] Processing: 24638 / 25441 (96.84%)[Analysis] Processing: 24892 / 25441 (97.84%)[Analysis] Processing: 25146 / 25441 (98.84%)[Analysis] Processing: 25400 / 25441 (99.84%)[Analysis] Processing: 25441 / 25441 (100.0%) - Complete.
+------------------------------------------------
+--- Analysis Summary ---
+Total Events Processed: 25441 average_weight = 1.00
+[Raw Info]
+Raw Integral (dPhi):   737.00        Raw Integral (pT):    417.00
+[Background Subtraction Info]
+Bkg Integral (dPhi):   195.89        Bkg Integral (pT):    24.29
+Bkg Fraction (dPhi):   26.58 %        Bkg Fraction (pT):    5.82 %
+
+[DEBUG MinBias Mixing Pipeline]
+1. Total MB entries mixed: 154700
+2. Passed Muon Veto:       30452
+3. Passed pT > signal pt:  19589
+4. Filled into Bkg Hist:   2429
+Events with exactly 1 jet: 395.00 (94.72 % of Z+jet events)
+--- End Analysis Sum ---
+------------------------------------------------

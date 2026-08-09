@@ -1,4 +1,9 @@
 //--------------------------------
+//  Plot compare_inclusive_leading
+//--------------------------------
+./do_compare_inclusive_leading.sh
+
+//--------------------------------
 //  Plot iso check
 //--------------------------------
 // Macro: plot_iso_check.C
@@ -50,7 +55,7 @@ root -l -b -q 'plot_veto_check.C("PbPb23", false, 30, 50, 60, 9999)'
 root -l -b -q plot_sf_2d.C
 
 // 2. ppref24
-root -l -b -q 'plot_sf_2d.C("ppref24")'
+root -l -b -q 'plot_sf_2d.C("ppref24", 479)'
 
 //--------------------------------
 //  Plot JES_JER_Performance
@@ -61,6 +66,11 @@ root -l -b -q 'plot_sf_2d.C("ppref24")'
 root -l -b -q plot_JES_JER.C
 // test_pt = 50, test_rho = 50
 root -l -b -q 'plot_JES_JER.C(50.0, 50.0)'
+
+//--------------------------------
+//  Plot nVtx in ppref
+//--------------------------------
+root -l -b -q plot_nVtx.C
 
 //--------------------------------
 //  Extract acceptance

@@ -1,0 +1,71 @@
+
+Processing analyze_HI_TTreeReader_ZMM.C("PbPb23", "signal", 3, 10, 0, 30, 40.0, 9999.0)...
+------------------------------------------------
+Running 2023 PbPb collisions
+isPbPb = 1 is2023 = 1 isSignal = 1
+This is MC signal: ngen = 2.94448e+07 xsec = 2.04 nb-1
+Found 1942 files matching pattern
+[0] root://eosinfnts.ts.infn.it:1094//eos/infnts/cms/store/user/rdelliga/DYto2L-2Jets_MLL-50_TuneCP5_5p36TeV_amcatnloFXFX-pythia8/CRAB3_Analysis_test24_ZMM_DYto2L2Jets/260210_215130/0000/HiForestMiniAOD_1.root
+... and 1941 more files.
+Opened MinBias file: ./MixEvSub/MinBias_inclusive_jets_MC_VZ_Cen_Combined_Cen0_30.root
+Opening file for weighting: weights_MC/rho_weights_1/weight_HI_rho_Cen0_30_ptZ40_Inf.root
+Opening file for weighting: weights_MC/vz_weights_2/weight_HI_vz_Cen0_30_ptZ40_Inf.root
+Parsed Lumi  : 1.64432 nb^-1
+Opening MC norm file: ./weights_MC/MC_all_weights/output_HI_mu_MC_all.root
+n_ev = 2.94448e+07 sum_w = 1.40549e+11 sum_ncoll = 1.15159e+10
+norm_MC_w = 1.03256e-06 norm_MC_w_ncoll = 2.64012e-09
+------------------------------------------------
+Loading Muon Scale Factors from JSON...
+Loaded 'HLT_HIL2SingleMu7_and_TightID_abseta1_pt1_cutAndCount_schemaV2.json'
+Loaded 'NUM_TightID_DEN_genTracks'
+Loaded 'NUM_HLT_HIL2SingleMu7_v_DEN_TightID'
+Loaded 'NUM_IsoWP95_DEN_TightID' SFs from NUM_Iso_DEN_TightID_abseta_pt_schemaV2.json
+JSON Scale Factors loaded successfully.
+Initializing JEC...
+Loaded JEC File: Prompt23HIPbPb_V1_MC_L2Relative_AK2PF.txt
+Loaded JEC Uncertainty File: Spring23PbPb_TotalUncertainties.txt
+Initializing JER...
+Loading JER SF (PbPb): Summer23Prompt23_RunCv4_JRV1m_MC_SF_AK4PFPuppi.txt
+JERProvider: Loaded 42 SF nominal records.
+Loading JER Resolution (PbPb): derive_JER_AK2/My_PbPb23_MC_PtResolution_AK2PF.txt
+JERProvider: Loaded 24 Resolution records.
+Loading JER SF Uncertainty (PbPb): Summer23Prompt23_RunCv4_JRV1m_MC_SFUncertainty_AK4PFPuppi.txt
+JERProvider: Loaded 42 SF uncertainty records.
+Loaded Jet Veto Map using JetSelect_PbPb from: Winter24Prompt24_2024BCDEFGHI.root
+------------------------------------------------
+Caching MinBias events into memory...
+Found 9000 MinBias entries in 'jet_tree'.
+Caching into memory... Done.
+Cached 90 unique bins.
+Caching complete 
+Defined combined Centrality-VZ bins for MinBias matching (90 total).
+------------------------------------------------
+Running Systematic JEC - UP variation (systFlag = 10)
+File created: ./syst_JEC/output_HI_mu_MC_JEC_up_Cen0_30_ptZ40_Inf.root
+------------------------------------------------
+Starting Analysis Loop over 29444782 events...
+[Analysis] Processing: 1 / 29444782 (0.00%)[Analysis] Processing: 294447 / 29444782 (1.00%)[Analysis] Processing: 588894 / 29444782 (2.00%)[Analysis] Processing: 883341 / 29444782 (3.00%)[Analysis] Processing: 1177788 / 29444782 (4.00%)[Analysis] Processing: 1472235 / 29444782 (5.00%)[Analysis] Processing: 1766682 / 29444782 (6.00%)[Analysis] Processing: 2061129 / 29444782 (7.00%)[Analysis] Processing: 2355576 / 29444782 (8.00%)[Analysis] Processing: 2650023 / 29444782 (9.00%)[Analysis] Processing: 2944470 / 29444782 (10.00%)[Analysis] Processing: 3238917 / 29444782 (11.00%)[Analysis] Processing: 3533364 / 29444782 (12.00%)[Analysis] Processing: 3827811 / 29444782 (13.00%)[Analysis] Processing: 4122258 / 29444782 (14.00%)[Analysis] Processing: 4416705 / 29444782 (15.00%)[Analysis] Processing: 4711152 / 29444782 (16.00%)[Analysis] Processing: 5005599 / 29444782 (17.00%)[Analysis] Processing: 5300046 / 29444782 (18.00%)[Analysis] Processing: 5594493 / 29444782 (19.00%)[Analysis] Processing: 5888940 / 29444782 (20.00%)[Analysis] Processing: 6183387 / 29444782 (21.00%)[Analysis] Processing: 6477834 / 29444782 (22.00%)[Analysis] Processing: 6772281 / 29444782 (23.00%)[Analysis] Processing: 7066728 / 29444782 (24.00%)[Analysis] Processing: 7361175 / 29444782 (25.00%)[Analysis] Processing: 7655622 / 29444782 (26.00%)[Analysis] Processing: 7950069 / 29444782 (27.00%)[Analysis] Processing: 8244516 / 29444782 (28.00%)[Analysis] Processing: 8538963 / 29444782 (29.00%)[Analysis] Processing: 8833410 / 29444782 (30.00%)[Analysis] Processing: 9127857 / 29444782 (31.00%)[Analysis] Processing: 9422304 / 29444782 (32.00%)[Analysis] Processing: 9716751 / 29444782 (33.00%)[Analysis] Processing: 10011198 / 29444782 (34.00%)[Analysis] Processing: 10305645 / 29444782 (35.00%)[Analysis] Processing: 10600092 / 29444782 (36.00%)[Analysis] Processing: 10894539 / 29444782 (37.00%)[Analysis] Processing: 11188986 / 29444782 (38.00%)[Analysis] Processing: 11483433 / 29444782 (39.00%)[Analysis] Processing: 11777880 / 29444782 (40.00%)[Analysis] Processing: 12072327 / 29444782 (41.00%)[Analysis] Processing: 12366774 / 29444782 (42.00%)[Analysis] Processing: 12661221 / 29444782 (43.00%)[Analysis] Processing: 12955668 / 29444782 (44.00%)[Analysis] Processing: 13250115 / 29444782 (45.00%)[Analysis] Processing: 13544562 / 29444782 (46.00%)[Analysis] Processing: 13839009 / 29444782 (47.00%)[Analysis] Processing: 14133456 / 29444782 (48.00%)[Analysis] Processing: 14427903 / 29444782 (49.00%)[Analysis] Processing: 14722350 / 29444782 (50.00%)[Analysis] Processing: 15016797 / 29444782 (51.00%)[Analysis] Processing: 15311244 / 29444782 (52.00%)[Analysis] Processing: 15605691 / 29444782 (53.00%)[Analysis] Processing: 15900138 / 29444782 (54.00%)[Analysis] Processing: 16194585 / 29444782 (55.00%)[Analysis] Processing: 16489032 / 29444782 (56.00%)[Analysis] Processing: 16783479 / 29444782 (57.00%)[Analysis] Processing: 17077926 / 29444782 (58.00%)[Analysis] Processing: 17372373 / 29444782 (59.00%)[Analysis] Processing: 17666820 / 29444782 (60.00%)[Analysis] Processing: 17961267 / 29444782 (61.00%)[Analysis] Processing: 18255714 / 29444782 (62.00%)[Analysis] Processing: 18550161 / 29444782 (63.00%)[Analysis] Processing: 18844608 / 29444782 (64.00%)[Analysis] Processing: 19139055 / 29444782 (65.00%)[Analysis] Processing: 19433502 / 29444782 (66.00%)[Analysis] Processing: 19727949 / 29444782 (67.00%)[Analysis] Processing: 20022396 / 29444782 (68.00%)[Analysis] Processing: 20316843 / 29444782 (69.00%)[Analysis] Processing: 20611290 / 29444782 (70.00%)[Analysis] Processing: 20905737 / 29444782 (71.00%)[Analysis] Processing: 21200184 / 29444782 (72.00%)[Analysis] Processing: 21494631 / 29444782 (73.00%)[Analysis] Processing: 21789078 / 29444782 (74.00%)[Analysis] Processing: 22083525 / 29444782 (75.00%)[Analysis] Processing: 22377972 / 29444782 (76.00%)[Analysis] Processing: 22672419 / 29444782 (77.00%)[Analysis] Processing: 22966866 / 29444782 (78.00%)[Analysis] Processing: 23261313 / 29444782 (79.00%)[Analysis] Processing: 23555760 / 29444782 (80.00%)[Analysis] Processing: 23850207 / 29444782 (81.00%)[Analysis] Processing: 24144654 / 29444782 (82.00%)[Analysis] Processing: 24439101 / 29444782 (83.00%)[Analysis] Processing: 24733548 / 29444782 (84.00%)[Analysis] Processing: 25027995 / 29444782 (85.00%)[Analysis] Processing: 25322442 / 29444782 (86.00%)[Analysis] Processing: 25616889 / 29444782 (87.00%)[Analysis] Processing: 25911336 / 29444782 (88.00%)[Analysis] Processing: 26205783 / 29444782 (89.00%)[Analysis] Processing: 26500230 / 29444782 (90.00%)[Analysis] Processing: 26794677 / 29444782 (91.00%)[Analysis] Processing: 27089124 / 29444782 (92.00%)[Analysis] Processing: 27383571 / 29444782 (93.00%)[Analysis] Processing: 27678018 / 29444782 (94.00%)[Analysis] Processing: 27972465 / 29444782 (95.00%)[Analysis] Processing: 28266912 / 29444782 (96.00%)[Analysis] Processing: 28561359 / 29444782 (97.00%)[Analysis] Processing: 28855806 / 29444782 (98.00%)[Analysis] Processing: 29150253 / 29444782 (99.00%)[Analysis] Processing: 29444700 / 29444782 (100.00%)[Analysis] Processing: 29444782 / 29444782 (100.0%) - Complete.
+------------------------------------------------
+--- Analysis Summary ---
+Total Events Processed: 29444782 average_weight = 4773.32
+[Raw Info]
+Raw Integral (dPhi):   1116.34        Raw Integral (pT):    777.74
+[Background Subtraction Info]
+Bkg Integral (dPhi):   120.42        Bkg Integral (pT):    15.24
+Bkg Fraction (dPhi):   10.79 %        Bkg Fraction (pT):    1.96 %
+
+[DEBUG MinBias Mixing Pipeline]
+1. Total MB entries mixed: 19267200
+2. Passed Muon Veto:       3561497
+3. Passed pT > signal pt:  1474449
+4. Filled into Bkg Hist:   184875
+[MC Matching Info - Leading Jet]
+Raw - Matched (dPhi):  189.45        Raw - Matched (pT):   44.71
+Fraction Fake (dPhi):  16.97 %        Fraction Fake (pT):   5.75 %
+
+[MC Matching Info - Inclusive Jets]
+Raw - Matched (dPhi):  459.00        Raw - Matched (pT):   71.70
+Fraction Fake (dPhi):  29.30 %        Fraction Fake (pT):   8.70 %
+Events with exactly 1 jet: 724.25 (93.72 % of Z+jet events)
+--- End Analysis Sum ---
+------------------------------------------------

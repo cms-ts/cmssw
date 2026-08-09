@@ -1,0 +1,8 @@
+
+Processing JEWEL_weight_3.C("PbPb23", 1, 0, 30, 40.0, 9999.0)...
+Parsed Lumi  : 1.64432 nb^-1
+Opening MC file   : ../../syst_prior_model/output_HI_mu_MC_prior_model_Cen0_30_ptZ40_Inf.root
+Opening Jewel file   : /gfsvol01/cms/users/rdelliga/work/Hi_forest/JEWEL/CMSSW_13_2_13/src/jewel-2.4.0/jewel_converted_Zj_QGP_Cen0_30.pu14_ptZ40_Inftest.root
+before norm MC: 1108.31 JEWEL: 1.57187e-05
+after norm MC: 1 JEWEL: 1
+Info in <TCanvas::Print>: pdf file h_xZj_for_JEWEL_w_HI_Cen0_30_ptZ40_Inf_after.pdf has been created

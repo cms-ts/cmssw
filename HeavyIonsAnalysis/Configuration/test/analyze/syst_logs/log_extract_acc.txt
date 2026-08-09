@@ -1,0 +1,3 @@
+
+Processing extract_acceptance.C...
+Done! Generated both 'Z_Acceptance.root' and 'Z_Acceptance.dat'.

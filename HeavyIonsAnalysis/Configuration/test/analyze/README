@@ -7,6 +7,7 @@
 //----------------------------------
 // If you produce new MC or data samples,
 // remember to update samples_root_files.txt
+export XrdSecGSISRVNAMES="eosinfnts.ts.infn.it"
 python3 list_samples.py
 
 //----------------------------------
@@ -74,6 +75,8 @@ chmod +x do_analyze_bkg.sh
 // Runs loops over Data and MC for various systematic variations 
 // (JEC, JER, SF, Centrality, etc.).
 chmod +x do_analyze_syst.sh
+// If you realize you made a mistake and need to kill everything this script just launched, simply run:
+killall -9 root.exe
 
 // Examples:
 ./do_analyze_syst.sh                           // Runs PbPb23, 0-30%, pT > 40 (Default)
@@ -81,6 +84,16 @@ chmod +x do_analyze_syst.sh
 ./do_analyze_syst.sh PbPb23 30 50 40 9999
 // Outputs saved in: plot/, syst_JEC/, syst_JER/, syst_SF_muon/, etc.
 
+// --- Swap data-driven ---
+//--------------------------------
+root -l -b -q 'compute_swap_efficiency_fit.C("plot/output_HI_mu_data_Cen0_30_ptZ40_Inf.root", "swap_efficiency_PbPb.root", "HI/Muons")'
+root -l -b -q 'compute_swap_efficiency_fit.C("plot/output_HI_mu_MC_signal_Cen0_30_ptZ40_Inf.root", "swap_efficiency_PbPb_MC.root", "HI/Muons")'
+root -l -b -q 'compute_swap_efficiency_fit.C("plot/output_ppref_mu_data_ptZ40_Inf.root", "swap_efficiency_ppref.root", "ppref/Muons")'
+root -l -b -q 'compute_swap_efficiency_fit.C("plot/output_ppref_mu_MC_signal_ptZ40_Inf.root", "swap_efficiency_ppref_MC.root", "ppref/Muons")'
+
+root -l -b -q 'plot_swap_efficiency_summary.C(1, "_Cen0_30_ptZ40_Inf", "HI")'
+root -l -b -q 'plot_swap_efficiency_summary.C(0, "_ptZ40_Inf", "ppref")'
+//--------------------------------
 
 // --- Deprecated ---
 //--------------------------------

@@ -172,14 +172,14 @@ void vs_PbPb_detector(std::string variable = "xZj", const char* pb_type = "PbPb2
     textY -= 0.05;
 
     // Z Kinematics
-    if (ptZ_max > 9000) latex3->DrawLatex(textX, textY, Form("p_{T}^{Z} > %.0f GeV", ptZ_min));
-    else latex3->DrawLatex(textX, textY, Form("p_{T}^{Z}: %.0f-%.0f GeV", ptZ_min, ptZ_max));
+    if (ptZ_max > 9000) latex3->DrawLatex(textX, textY, Form("p_{T}^{Z} > %.0f GeV, p_{T}^{\mu} > 20 GeV", ptZ_min));
+    else latex3->DrawLatex(textX, textY, Form("p_{T}^{Z}: %.0f-%.0f GeV, p_{T}^{\mu} > 20 GeV", ptZ_min, ptZ_max));
     textY -= 0.05;
 
     // Jet Kinematics
     latex3->DrawLatex(textX, textY, "AK2 jets");
     textY -= 0.05;
-    latex3->DrawLatex(textX, textY, "p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.5");
+    latex3->DrawLatex(textX, textY, "p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.1");
     textY -= 0.05;
 
     // dPhi Cut (Applied to Jet pT and xZj, but NOT to the dPhi plot itself)

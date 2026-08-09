@@ -1,0 +1,89 @@
+# The code produces Pt resolution JER for 2023 PbPb and 2024 ppref from nominal MC samples using AK2 and AK3 jets
+# adapted from https://gitlab.cern.ch/lamartik/residualanalysis
+
+# =========================================================================
+# 0. PREREQUISITES (For external clusters like INFN)
+# =========================================================================
+# Initialize your grid proxy to read files remotely from CERN lxplus via XRootD
+voms-proxy-init -voms cms -valid 192:00
+
+# Update the local file lists pointing to CERN EOS (run when datasets change)
+cd ..
+export XrdSecGSISRVNAMES="eosinfnts.ts.infn.it"
+python3 list_samples.py            # Make sure this captures all datasets!
+cd -
+
+# Ensure the official L2Relative JEC files are present in the parent directory:
+# ../Prompt23HIPbPb_V1_MC_L2Relative_AK2PF.txt
+# ../Prompt23HIPbPb_V1_MC_L2Relative_AK3PF.txt
+# ../Prompt24HIpp_V2_MC_L2Relative_AK2PF.txt
+# ../Prompt24HIpp_V2_MC_L2Relative_AK3PF.txt
+
+# =========================================================================
+# WORKFLOW A: 2023 PbPb 
+# =========================================================================
+
+# -----------------
+# For AK2 Jets:
+# -----------------
+# 1. Produce 3D response histogram
+./launch_parallel.sh 2
+
+# 2. Merge output files into a single file (use -f to cleanly overwrite old files)
+hadd -f AK2_ZJet_forjer_FINAL.root AK2_forjer_000*.root
+
+# 3. Obtain JER parameters and visualize fits (Creates MCJER_AK2/ and .txt file)
+root -l -b -q 'runMCJER.C(2)'
+
+# 4. Obtain Closure Check
+root -l -b -q 'MCRESP.C("AK2_ZJet_forjer_FINAL.root", 15, "MCJER_AK2")'
+
+# -----------------
+# For AK3 Jets:
+# -----------------
+# 1. Produce 3D response histogram
+./launch_parallel.sh 3
+
+# 2. Merge output files into a single file
+hadd -f AK3_ZJet_forjer_FINAL.root AK3_forjer_000*.root
+
+# 3. Obtain JER parameters and visualize fits (Creates MCJER_AK3/ and .txt file)
+root -l -b -q 'runMCJER.C(3)'
+
+# 4. Obtain Closure Check
+root -l -b -q 'MCRESP.C("AK3_ZJet_forjer_FINAL.root", 15, "MCJER_AK3")'
+
+
+# =========================================================================
+# WORKFLOW B: 2024 ppref
+# =========================================================================
+
+# -----------------
+# For AK2 Jets:
+# -----------------
+# 1. Produce 3D response histogram pulling directly from lxplus
+./launch_parallel_ppref.sh 2
+
+# 2. Merge output files into a single file
+hadd -f AK2_ZJet_forjer_ppref_FINAL.root AK2_forjer_ppref_0000_*.root
+
+# 3. Obtain JER parameters and visualize fits (Creates MCJER_ppref_AK2/ and .txt file)
+root -l -b -q 'runMCJER_ppref.C(2)'
+
+# 4. Obtain Closure Check
+root -l -b -q 'MCRESP.C("AK2_ZJet_forjer_ppref_FINAL.root", 15, "MCJER_ppref_AK2")'
+
+# -----------------
+# For AK3 Jets:
+# -----------------
+# 1. Produce 3D response histogram pulling directly from lxplus
+./launch_parallel_ppref.sh 3
+
+# 2. Merge output files into a single file
+hadd -f AK3_ZJet_forjer_ppref_FINAL.root AK3_forjer_ppref_0000_*.root
+
+# 3. Obtain JER parameters and visualize fits (Creates MCJER_ppref_AK3/ and .txt file)
+root -l -b -q 'runMCJER_ppref.C(3)'
+
+# 4. Obtain Closure Check
+root -l -b -q 'MCRESP.C("AK3_ZJet_forjer_ppref_FINAL.root", 15, "MCJER_ppref_AK3")'

@@ -1,0 +1,85 @@
+
+Processing derive_JER.C("/eos/infnts/cms/store/user/rdelliga/QCD_pThat-15to1200_TuneCP5_5p36TeV_pythia8/CRAB3_Analysis_test24_mc_QCD_AK3/260713_092621/0004/*.root", "AK3_forjer_0004.root", 3)...
+Loaded Jet Veto Map using JetSelect_PbPb from: ../Winter24Prompt24_2024BCDEFGHI.root
+Successfully loaded 46 files into chains.
+Initializing JEC...
+Loaded JEC File: ../Prompt23HIPbPb_V1_MC_L2Relative_AK3PF.txt
+Starting Event Loop...
+Warning in <TTreeReader::SetEntryBase()>: The current tree in the TChain akCs3PFJetAnalyzer/t has changed (e.g. by TTree::Process) even though TTreeReader::SetEntry() was called, which switched the tree again. Did you mean to call TTreeReader::SetLocalEntry()?
+Processing event 0 / 724080
+Processing event 10000 / 724080
+Processing event 20000 / 724080
+Processing event 30000 / 724080
+Processing event 40000 / 724080
+Processing event 50000 / 724080
+Processing event 60000 / 724080
+Processing event 70000 / 724080
+Processing event 80000 / 724080
+Processing event 90000 / 724080
+Processing event 100000 / 724080
+Processing event 110000 / 724080
+Processing event 120000 / 724080
+Processing event 130000 / 724080
+Processing event 140000 / 724080
+Processing event 150000 / 724080
+Processing event 160000 / 724080
+Processing event 170000 / 724080
+Processing event 180000 / 724080
+Processing event 190000 / 724080
+Processing event 200000 / 724080
+Processing event 210000 / 724080
+Processing event 220000 / 724080
+Processing event 230000 / 724080
+Processing event 240000 / 724080
+Processing event 250000 / 724080
+Processing event 260000 / 724080
+Processing event 270000 / 724080
+Processing event 280000 / 724080
+Processing event 290000 / 724080
+Processing event 300000 / 724080
+Processing event 310000 / 724080
+Processing event 320000 / 724080
+Processing event 330000 / 724080
+Processing event 340000 / 724080
+Processing event 350000 / 724080
+Processing event 360000 / 724080
+Processing event 370000 / 724080
+Processing event 380000 / 724080
+Processing event 390000 / 724080
+Processing event 400000 / 724080
+Processing event 410000 / 724080
+Processing event 420000 / 724080
+Processing event 430000 / 724080
+Processing event 440000 / 724080
+Processing event 450000 / 724080
+Processing event 460000 / 724080
+Processing event 470000 / 724080
+Processing event 480000 / 724080
+Processing event 490000 / 724080
+Processing event 500000 / 724080
+Processing event 510000 / 724080
+Processing event 520000 / 724080
+Processing event 530000 / 724080
+Processing event 540000 / 724080
+Processing event 550000 / 724080
+Processing event 560000 / 724080
+Processing event 570000 / 724080
+Processing event 580000 / 724080
+Processing event 590000 / 724080
+Processing event 600000 / 724080
+Processing event 610000 / 724080
+Processing event 620000 / 724080
+Processing event 630000 / 724080
+Processing event 640000 / 724080
+Processing event 650000 / 724080
+Processing event 660000 / 724080
+Processing event 670000 / 724080
+Processing event 680000 / 724080
+Processing event 690000 / 724080
+Processing event 700000 / 724080
+Processing event 710000 / 724080
+Processing event 720000 / 724080
+=====================================================================
+DONE! The file 'AK3_forjer_0004.root' has been created.
+Successfully filled 2873774 matched, cleaned jets into the 3D histogram!
+Please pass this file to the expert's runMCJER.C script to extract the parameters.

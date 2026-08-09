@@ -228,22 +228,16 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
   }
 
   // --- Initialize JER Provider ---
-  JERProvider jer;
+  JERProvider jer; // <-- Use the new class
   if (!isData) {
     // Is MC
     cout << "Initializing JER..." << endl;
-    // Load both SF and Resolution Files
-    std::string jer_sf_file = "";
-    std::string jer_res_file = "";
-    // Define files based on collision type
-    if (is2023) {
-      jer_sf_file = "../Autumn18_RunD_V7b_MC_SF_AK4PF.txt";  //!!! Old, update
-      jer_res_file = "../Autumn18_RunD_V7b_MC_PtResolution_AK4PF.txt"; //!!! Old, update
-    }
-    else {
-      jer_sf_file = "../Autumn18_RunD_V7b_MC_SF_AK4PF.txt"; //!!! Old, update
-      jer_res_file = "../Autumn18_RunD_V7b_MC_PtResolution_AK4PF.txt"; //!!! Old, update
-    }
+    
+    // Define files (applies to both 2023 and 2024 PbPb)
+    std::string jer_sf_file = "../Summer23Prompt23_RunCv4_JRV1m_MC_SF_AK4PFPuppi.txt"; 
+    std::string jer_res_file = "../derive_JER_AK2/My_PbPb23_MC_PtResolution_AK2PF.txt"; 
+    std::string jer_sf_unc_file = "../Summer23Prompt23_RunCv4_JRV1m_MC_SFUncertainty_AK4PFPuppi.txt"; 
+
     // Print and Load
     if (!jer_sf_file.empty()) {
         std::cout << "Loading JER SF: " << jer_sf_file << std::endl;
@@ -253,7 +247,10 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
         std::cout << "Loading JER Resolution: " << jer_res_file << std::endl;
         jer.LoadResolution(jer_res_file);
     }
-    // Note: We typically don't apply Phi/Eta smearing for standard analysis, so we only load PtResolution.
+    if (!jer_sf_unc_file.empty()) {
+        std::cout << "Loading JER SF Uncertainty: " << jer_sf_unc_file << std::endl;
+        jer.LoadSFUncertainty(jer_sf_unc_file);
+    }
   }
 
   // Initialize Jet Selector as pointers
@@ -533,7 +530,7 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
       }
       jtpt_corr[ijet] = pt_final;
       // Selections
-      if(jtpt_corr[ijet]<30 || abs(jteta[ijet])>2.5) continue;
+      if(jtpt_corr[ijet]<30 || abs(jteta[ijet])>2.1) continue;
       // Apply Combined Jet ID and Veto Map
       // Pass the current jet index [ijet] to the arrays
       if (!js_PbPb->JetSelection(jteta[ijet], jtphi[ijet], jtPfCEF[ijet], jtPfNEF[ijet], jtPfMUF[ijet])) continue;

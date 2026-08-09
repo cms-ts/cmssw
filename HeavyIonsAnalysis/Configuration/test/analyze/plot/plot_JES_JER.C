@@ -19,12 +19,15 @@ void plot_JES_JER(double test_pt = 40.0, double test_rho = 80.0) {
     gSystem->Load("libJetMETCorrectionsModules");
 
     // 2. Define filenames and their paths separately
-    std::string jec_file = "Prompt23HIPbPb_V1_MC_L2Relative_AK2PF.txt"; 
-    std::string jer_file = "Autumn18_RunD_V7b_MC_PtResolution_AK4PF.txt";
+    //std::string jec_file = "Prompt23HIPbPb_V1_MC_L2Relative_AK2PF.txt"; 
+    //std::string jer_file = "My_PbPb23_MC_PtResolution_AK2PF.txt";
 
+    // ppref
+    std::string jec_file = "Prompt24HIpp_V1_MC_L2Relative_AK2PF.txt";
+    std::string jer_file = "My_ppref24_MC_PtResolution_AK2PF.txt";
     // Create path strings that point to the parent directory
     std::string jec_path = "../" + jec_file;
-    std::string jer_path = "../" + jer_file;
+    std::string jer_path = "../derive_JER_AK2/" + jer_file;
 
     // 3. Setup JEC (Use the PATH here)
     std::vector<JetCorrectorParameters> vPar;

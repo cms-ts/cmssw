@@ -71,28 +71,45 @@ void plot_MinBias(const char* collision_type = "PbPb23", const char* h_n = "h_de
     c->SetLeftMargin(0.12); c->SetRightMargin(0.04);
     c->SetTopMargin(0.08); c->SetBottomMargin(0.12);
 
-    // TRatioPlot Configuration: Bkg / Raw
-    TRatioPlot *h_ratio = new TRatioPlot(h_MinBias, h_raw, "divsym");
-    h_ratio->SetH1DrawOpt("E P"); 
-    h_ratio->SetH2DrawOpt("E P");
+    // TRatioPlot Configuration: Sub / True (MC) or Bkg / Raw (Data)
+    TRatioPlot *h_ratio;
+    if (!isData) {
+        h_ratio = new TRatioPlot(h_subtracted, h_matched, "divsym");
+        h_ratio->SetH1DrawOpt("E P"); 
+        h_ratio->SetH2DrawOpt("HIST");
+    } else {
+        h_ratio = new TRatioPlot(h_MinBias, h_raw, "divsym");
+        h_ratio->SetH1DrawOpt("E P"); 
+        h_ratio->SetH2DrawOpt("E P");
+    }
     h_ratio->Draw();
 
     // Range and Axis
     double y_max_val = h_raw->GetBinContent(h_raw->GetMaximumBin());
     h_ratio->GetUpperRefYaxis()->SetRangeUser(0, 1.4 * y_max_val);
     h_ratio->GetUpperRefYaxis()->SetTitle(y_title);
-    h_ratio->GetLowerRefYaxis()->SetTitle("Bkg Fraction");
-    h_ratio->GetLowerRefGraph()->SetMinimum(0.0);
-    if (canvName.Contains("delta")) h_ratio->GetLowerRefGraph()->SetMaximum(1.);
-    else h_ratio->GetLowerRefGraph()->SetMaximum(0.2);
+    
+    if (!isData) {
+        h_ratio->GetLowerRefYaxis()->SetTitle("Subtracted / True");
+        h_ratio->GetLowerRefGraph()->SetMinimum(0.5);
+        h_ratio->GetLowerRefGraph()->SetMaximum(1.5);
+        h_ratio->GetLowerRefGraph()->SetMarkerColor(sigColor);
+        h_ratio->GetLowerRefGraph()->SetLineColor(sigColor);
+        std::vector<double> gridlines = {1.0}; 
+        h_ratio->SetGridlines(gridlines);
+    } else {
+        h_ratio->GetLowerRefYaxis()->SetTitle("Bkg Fraction");
+        h_ratio->GetLowerRefGraph()->SetMinimum(0.0);
+        if (canvName.Contains("delta")) h_ratio->GetLowerRefGraph()->SetMaximum(1.);
+        else h_ratio->GetLowerRefGraph()->SetMaximum(0.2);
+        h_ratio->GetLowerRefGraph()->SetMarkerColor(bkgColor);
+        h_ratio->GetLowerRefGraph()->SetLineColor(bkgColor);
+        std::vector<double> gridlines = {}; 
+        h_ratio->SetGridlines(gridlines);
+    }
 
-    // Style the ratio points (matches numerator/Bkg styling)
+    // Style the ratio points (matches numerator styling)
     h_ratio->GetLowerRefGraph()->SetMarkerStyle(20);
-    h_ratio->GetLowerRefGraph()->SetMarkerColor(bkgColor);
-    h_ratio->GetLowerRefGraph()->SetLineColor(bkgColor);
-
-    std::vector<double> gridlines = {}; 
-    h_ratio->SetGridlines(gridlines);
 
     // --- Draw Content (Upper Pad) ---
     h_ratio->GetUpperPad()->cd();
@@ -108,8 +125,8 @@ void plot_MinBias(const char* collision_type = "PbPb23", const char* h_n = "h_de
     TLatex* latex1 = new TLatex();
     latex1->SetTextFont(42); latex1->SetTextSize(0.035);
     latex1->DrawLatexNDC(x_min_lat, 0.6, Form("Centrality: %d-%d%%", cent_min, cent_max));
-    latex1->DrawLatexNDC(x_min_lat, 0.54, (ptZ_max > 9000) ? Form("p_{T}^{Z} > %.0f GeV", ptZ_min) : Form("p_{T}^{Z}: %.0f-%.0f GeV", ptZ_min, ptZ_max));
-    latex1->DrawLatexNDC(x_min_lat, 0.48, "p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.5");
+    latex1->DrawLatexNDC(x_min_lat, 0.54, (ptZ_max > 9000) ? Form("p_{T}^{Z} > %.0f GeV, p_{T}^{#mu} > 20 GeV", ptZ_min) : Form("p_{T}^{Z}: %.0f-%.0f GeV, p_{T}^{#mu} > 20 GeV", ptZ_min, ptZ_max));
+    latex1->DrawLatexNDC(x_min_lat, 0.48, "p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.1");
     
     if (!canvName.Contains("delta")) latex1->DrawLatexNDC(x_min_lat, 0.44, "#Delta#phi_{Zj} > 7#pi/8");
 
@@ -133,19 +150,6 @@ void plot_MinBias(const char* collision_type = "PbPb23", const char* h_n = "h_de
     double Lumi = getLumiFromSummary(TString(collision_type).Contains("24") ? "../brilcalc_Collisions2024_HI.csv" : "../brilcalc_Collisions2023HI.csv");
     l_header->SetTextFont(42); l_header->SetTextSize(0.05);
     l_header->DrawLatexNDC(0.54, 0.92, TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", Lumi));
-
-    // --- MC Closure (Lower Pad) ---
-    if (!isData) {
-        h_ratio->GetLowerPad()->cd();
-        TH1D* h_ratio_closure = (TH1D*)h_raw->Clone("h_ratio_closure");
-        h_ratio_closure->Add(h_matched, -1);
-        h_ratio_closure->Divide(h_raw);
-        
-        h_ratio_closure->SetLineColor(sigColor);
-        h_ratio_closure->SetLineWidth(1); 
-        h_ratio_closure->SetMarkerSize(0);
-        h_ratio_closure->Draw("same HIST");
-    }
 
     c->Update();
     c->Print(canvName + ".pdf");

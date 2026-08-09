@@ -27,7 +27,7 @@ echo "================================================="
 
 # Define the centrality intervals we want to run for Options 1 and 2
 # Format: "min max"
-CENT_INTERVALS=("0 30" "30 90")
+CENT_INTERVALS=("0 30" "30 80")
 
 # --- Loop through options 0, 1, and 2 ---
 for OPT in 0 1 2

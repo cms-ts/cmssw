@@ -184,10 +184,10 @@ void vs_PbPb(bool subtracted = false, const char* pb_type = "PbPb23", const char
         latex2->SetTextSize(0.035);
         float textX = 0.15;
         float textY = 0.60;
-        if (ptZ_max > 9000) latex2->DrawLatexNDC(textX, textY, Form("p_{T}^{Z} > %.0f GeV", ptZ_min));
-        else latex2->DrawLatexNDC(textX, textY, Form("p_{T}^{Z}: %.0f-%.0f GeV", ptZ_min, ptZ_max));
+        if (ptZ_max > 9000) latex2->DrawLatexNDC(textX, textY, Form("p_{T}^{Z} > %.0f GeV, p_{T}^{\mu} > 20 GeV", ptZ_min));
+        else latex2->DrawLatexNDC(textX, textY, Form("p_{T}^{Z}: %.0f-%.0f GeV, p_{T}^{\mu} > 20 GeV", ptZ_min, ptZ_max));
         latex2->DrawLatexNDC(textX, textY-0.05, "AK2 jets");
-        latex2->DrawLatexNDC(textX, textY-0.10, "p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.5");
+        latex2->DrawLatexNDC(textX, textY-0.10, "p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.1");
 
         // Set titles and labels and lines
         h_ratio->GetLowerRefYaxis()->SetTitle("PbPb/ppRef");

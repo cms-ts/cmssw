@@ -106,8 +106,8 @@ void compare_inclusive_leading(std::string variable = "jetPt", const char* colli
     h_all->Scale(1.0, "width");
 
     // --- DRAWING ---
-    int color_all = TColor::GetColor("#c91f16"); // Red
-    int color_lead = TColor::GetColor("#1845fb"); // Blue
+    int color_all = 1; // Black
+    int color_lead = TColor::GetColor("#c91f16"); // Red
 
     h_all->SetMarkerStyle(20); h_all->SetMarkerSize(1.2); h_all->SetMarkerColor(color_all); h_all->SetLineColor(color_all);
     h_lead->SetMarkerStyle(24); h_lead->SetMarkerSize(1.2); h_lead->SetMarkerColor(color_lead); h_lead->SetLineColor(color_lead);
@@ -202,7 +202,7 @@ void compare_inclusive_leading(std::string variable = "jetPt", const char* colli
     // Jet Kinematics
     latex3->DrawLatex(textX, textY, "AK2 jets");
     textY -= 0.05;
-    latex3->DrawLatex(textX, textY, "p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.5");
+    latex3->DrawLatex(textX, textY, "p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.1");
     textY -= 0.05;
 
     if (variable != "deltaPhi") {

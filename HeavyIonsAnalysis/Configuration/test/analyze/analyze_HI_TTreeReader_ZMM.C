@@ -76,7 +76,7 @@
 #include "helpers.h"           // for getLumiFromSummary, cen tables, etc.
 #include "JetCorrector.h"      // for JEC
 #include "JetUncertainty.h"    // for up and down var on JEC
-#include "JERProvider.h"       // Include JER Provider
+#include "JERProvider.h"   // Include JER Provider
 #include "JetSelection_PbPb.h" // Defines JetSelect for Id selection + jet veto map in PbPb
 #include "JetSelection_pp.h"   // Defines JetSelect_pp for Id selection + jet veto map in pp
 #include "MC_samples.h"        // Include the header file for MC samples
@@ -95,7 +95,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   // --- Initialize TTrees ---
   TChain data("data"), EventTree("EventTree"), HiTree("HiTree"),
          skimanalysis("skimanalysis"), hltanalysis("hltanalysis"),
-         hiFJRhoAnalyzerFinerBins("hiFJRhoAnalyzerFinerBins");
+         hiFJRhoAnalyzerFinerBins("hiFJRhoAnalyzerFinerBins"), ppTracks("ppTracks"), PbPbTracks("PbPbTracks");
   // glob_t globlist; // REMOVED
   std::vector<std::string> matched_files;
   TString search_pattern = "";
@@ -257,7 +257,6 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TH1D* h_weight_rho   = nullptr;
   TH1D* h_weight_vz    = nullptr;
   TH1D* h_weight_JEWEL = nullptr;
-
   bool use_data_driven_cen = true;
 
   // Only load weights if running on MC
@@ -271,7 +270,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     }
 
     // 2. Vz Weight (Specific to each campaign: PbPb23, PbPb24, ppref)
-    if (weight_phase!=2) {
+    if (weight_phase==3) {
       std::string name_weight_vz;
       if (collision_name.Contains("PbPb23"))           name_weight_vz = Form("weights_MC/vz_weights_2/weight_HI_vz%s.root", run_tag.Data());
       else if (collision_name.Contains("PbPb24"))      name_weight_vz = Form("weights_MC/vz_weights_2/weight_HI24_vz%s.root", run_tag.Data());
@@ -289,7 +288,60 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       std::cout << "JEWEL file needed for syst variation" << std::endl;
     }
   }
+  // PU Weight (Only for ppref)
+  TH1D* h_weight_pu = nullptr;
+  if (!isData && !isPbPb && (weight_phase >= 2 || weight_phase == -1)) {
+    std::string name_weight_pu = Form("weights_MC/rho_weights_1/weight_ppref_pu%s.root", run_tag.Data());
+    h_weight_pu = loadWeightHist(name_weight_pu, "h_weight_pu");
+  }
   // --- End Load Weight  ---
+
+  // --- Load Data-Driven UE Swap Efficiency Fits ---
+  TF1* fit_swap_eff_pp_data = nullptr;
+  TF1* fit_swap_eff_pp_mc = nullptr;
+  TH1D* hist_swap_eff_pp_mc_truth = nullptr; // NEW
+  std::map<std::pair<double, double>, TF1*> map_swap_eff_PbPb_data;
+  std::map<std::pair<double, double>, TF1*> map_swap_eff_PbPb_mc;
+  std::map<std::pair<double, double>, TH1D*> map_swap_eff_PbPb_mc_truth; // NEW
+
+  // We now load this for ALL MC to apply the nominal correction!
+  if (!isData) { 
+      TString eff_data_filename = isPbPb ? "swap_efficiency_PbPb.root" : "swap_efficiency_ppref.root";
+      TString eff_mc_filename = isPbPb ? "swap_efficiency_PbPb_MC.root" : "swap_efficiency_ppref_MC.root";
+      TString eff_truth_filename = isPbPb ? "swap_efficiency_PbPb_MC_Truth.root" : "swap_efficiency_ppref_MC_Truth.root";
+      
+      TFile* f_eff_data = TFile::Open(eff_data_filename, "READ");
+      TFile* f_eff_mc = TFile::Open(eff_mc_filename, "READ");
+      TFile* f_eff_truth = TFile::Open(eff_truth_filename, "READ"); // NEW
+
+      if (f_eff_data && !f_eff_data->IsZombie() && f_eff_mc && !f_eff_mc->IsZombie() && f_eff_truth && !f_eff_truth->IsZombie()) {
+          if (!isPbPb) {
+              fit_swap_eff_pp_data = (TF1*)f_eff_data->Get("fit_cen_0p0_5p0"); // Adjust to your actual pp bin string
+              fit_swap_eff_pp_mc = (TF1*)f_eff_mc->Get("fit_cen_0p0_5p0");
+              hist_swap_eff_pp_mc_truth = (TH1D*)f_eff_truth->Get("truth_cen_0p0_5p0");
+          } else {
+              // Ensure these match the exact bins from your plotting script!
+              std::vector<std::pair<double, double>> cen_bins_pct = {
+                  {0.0, 5.0}, {5.0, 10.0}, {10.0, 20.0}, {20.0, 30.0}, {30.0, 100.0}
+              };
+              for (const auto& bp : cen_bins_pct) {
+                  TString s_min = Form("%.1f", bp.first); s_min.ReplaceAll(".", "p");
+                  TString s_max = Form("%.1f", bp.second); s_max.ReplaceAll(".", "p");
+                  TString func_name = Form("fit_cen_%s_%s", s_min.Data(), s_max.Data());
+                  TString truth_name = Form("truth_cen_%s_%s", s_min.Data(), s_max.Data());
+                  
+                  if (f_eff_data->Get(func_name) && f_eff_mc->Get(func_name) && f_eff_truth->Get(truth_name)) {
+                      map_swap_eff_PbPb_data[bp] = (TF1*)f_eff_data->Get(func_name);
+                      map_swap_eff_PbPb_mc[bp] = (TF1*)f_eff_mc->Get(func_name);
+                      map_swap_eff_PbPb_mc_truth[bp] = (TH1D*)f_eff_truth->Get(truth_name);
+                  }
+              }
+          }
+      } else {
+          std::cout << "\033[1;31m[WARNING] Could not load Data-Driven UE Swap files. Will default to weight = 1.0\033[0m" << std::endl;
+      }
+  }
+  // --- End Load Data-Driven UE Swap Efficiency Fits ---
 
   // --- MC normalization ---
   double number_A = 208; // Lead
@@ -391,6 +443,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     skimanalysis.Add(TString(matched_files[i]) + "/skimanalysis/HltTree");
     if (isPbPb) hiFJRhoAnalyzerFinerBins.Add(TString(matched_files[i]) + "/hiFJRhoAnalyzerFinerBins/t");
     hltanalysis.Add(TString(matched_files[i]) + "/hltanalysis/HltTree");
+    if (isPbPb) PbPbTracks.Add(TString(matched_files[i]) + "/PbPbTracks/trackTree");
+    else ppTracks.Add(TString(matched_files[i]) + "/ppTracks/trackTree");
   }
   // globfree(&globlist); // THIS IS DELETED
 
@@ -401,6 +455,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   data.AddFriend("skimanalysis");
   if (isPbPb) data.AddFriend("hiFJRhoAnalyzerFinerBins");
   data.AddFriend("hltanalysis");
+  if (isPbPb) data.AddFriend("PbPbTracks");
+  else data.AddFriend("ppTracks");
 
   // Calculate Total Events BEFORE initializing the Reader
   Long64_t total_events = data.GetEntries();
@@ -414,6 +470,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TTreeReaderValue<Int_t> lumi = {fReader, "lumi"};  // Luminosity block
   TTreeReaderValue<Float_t> vz = {fReader, "vz"};
   TTreeReaderValue<Float_t> hiHF = {fReader, "hiHF"};
+  TTreeReaderValue<Int_t> nVtx = {fReader, "nVtx"}; // Update "nVtx" to the exact name you found
   //TTreeReaderValue<float> Ncoll = {fReader, "Ncoll"}; // Ncoll
 
   // Declare leaves as pointers initialized to nullptr
@@ -429,6 +486,15 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     etaMax = new TTreeReaderArray<double>(fReader, "etaMax");
   }
   if (!isData) weight = new TTreeReaderValue<Float_t>(fReader, "weight"); // MC event weight, not used in data
+
+  // --- NEW: Pileup Branches for MC ---
+  TTreeReaderArray<int>* npus = nullptr;
+  TTreeReaderArray<float>* tnpus = nullptr;
+  if (!isData) {
+      npus = new TTreeReaderArray<int>(fReader, "npus");
+      tnpus = new TTreeReaderArray<float>(fReader, "tnpus");
+  }
+  // -----------------------------------
 
   // Filters
   TTreeReaderValue<int>* pprimaryVertexFilter = nullptr;
@@ -490,16 +556,27 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   std::string json_filename;
   if (collision_name.Contains("PbPb23")) json_filename = "HLT_HIL2SingleMu7_and_TightID_abseta1_pt1_cutAndCount_schemaV2.json";
   else if (collision_name.Contains("PbPb24")) json_filename = "HLT_HIL2SingleMu7_and_TightID_abseta1_pt1_cutAndCount_schemaV2.json"; // !!! to update
-  else if (collision_name.Contains("ppref24")) json_filename = "HLT_HIL2SingleMu7_and_TightID_abseta1_pt1_cutAndCount_schemaV2.json"; // !!! to update
+  else if (collision_name.Contains("ppref24")) json_filename = "ppRef_2024_MuonSF_schemaV2.json";
   std::ifstream json_file_stream(json_filename);
   if (!json_file_stream.is_open()) {
     std::cerr << "Error: Cannot open JSON file: " << json_filename << std::endl;
     return;
   }
 
+  // Read the JSON file into a string first
+  std::string json_str((std::istreambuf_iterator<char>(json_file_stream)),
+                        std::istreambuf_iterator<char>());
+  
+  // Sanitize non-standard JSON: Replace unquoted "Infinity" with "9999.0"
+  size_t pos = 0;
+  while ((pos = json_str.find("Infinity", pos)) != std::string::npos) {
+      json_str.replace(pos, 8, "9999.0  "); 
+      pos += 8;
+  }
+
   json sf_data;
   try {
-    sf_data = json::parse(json_file_stream);
+    sf_data = json::parse(json_str); // Parse the sanitized string
   } catch (json::parse_error& e) {
     std::cerr << "[Error] Failed to parse JSON file: " << json_filename << std::endl;
     std::cerr << e.what() << std::endl;
@@ -513,11 +590,12 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     std::cout << "Loaded '" << json_filename << "'" << std::endl;
     for (const auto& corr : sf_data["corrections"]) {
       std::string name = corr["name"];
-      if (name == "NUM_TightID_DEN_genTracks") {
+      // Support both PbPb and ppRef scale factor keys
+      if (name == "NUM_TightID_DEN_genTracks" || name == "NUM_TightID_DEN_generalTracks") {
         tightID_SF.load(corr["data"]);
         tightID_loaded = true;
         std::cout << "Loaded '" << name << "'" << std::endl;
-      } else if (name == "NUM_HLT_HIL2SingleMu7_v_DEN_TightID") {
+      } else if (name == "NUM_HLT_HIL2SingleMu7_v_DEN_TightID" || name == "NUM_HLT_PPRefL2SingleMu7_v_DEN_TightID") {
         hlt_SF.load(corr["data"]);
         hlt_loaded = true;
         std::cout << "Loaded '" << name << "'" << std::endl;
@@ -527,8 +605,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
 
   if (!tightID_loaded || !hlt_loaded) {
     std::cerr << "Error: Failed to load required corrections from JSON." << std::endl;
-    if (!tightID_loaded) std::cerr << "  'NUM_TightID_DEN_genTracks' was not found." << std::endl;
-    if (!hlt_loaded) std::cerr << "  'NUM_HLT_HIL2SingleMu7_v_DEN_TightID' was not found." << std::endl;
+    if (!tightID_loaded) std::cerr << "  'NUM_TightID_DEN_genTracks' or 'NUM_TightID_DEN_generalTracks' was not found." << std::endl;
+    if (!hlt_loaded) std::cerr << "  'NUM_HLT_HIL2SingleMu7_v_DEN_TightID' or 'NUM_HLT_PPRefL2SingleMu7_v_DEN_TightID' was not found." << std::endl;
     return;
   }
 
@@ -536,9 +614,18 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   std::string iso_json_filename = "NUM_Iso_DEN_TightID_abseta_pt_schemaV2.json"; // <--- CHANGED FILENAME
   std::ifstream iso_json_file(iso_json_filename);
   if (iso_json_file.is_open()) {
+      // Read and sanitize
+      std::string iso_json_str((std::istreambuf_iterator<char>(iso_json_file)),
+                                std::istreambuf_iterator<char>());
+      size_t pos2 = 0;
+      while ((pos2 = iso_json_str.find("Infinity", pos2)) != std::string::npos) {
+          iso_json_str.replace(pos2, 8, "9999.0  ");
+          pos2 += 8;
+      }
+
       json iso_data;
       try {
-          iso_data = json::parse(iso_json_file);
+          iso_data = json::parse(iso_json_str); // Parse the sanitized string
           for (const auto& corr : iso_data["corrections"]) {
               // Extract ONLY the WP95 scale factors, ignoring WP80, WP85, etc.
               if (corr["name"] == "NUM_IsoWP95_DEN_TightID") {
@@ -604,15 +691,17 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
      // Missing L2Residual
     }
     else if (collision_name.Contains("ppref24")) {
-      std::cout << "Warning!!! Using jtpt instead of JEC for ppref" << endl;
+      //std::cout << "Warning!!! Using jtpt instead of JEC for ppref" << endl;
       // 1. Pileup Correction
-      Files.push_back("Spring18_ppRef5TeV_V6_DATA_L1FastJet_AK2PF.txt");
+      //Files.push_back("Spring18_ppRef5TeV_V6_DATA_L1FastJet_AK2PF.txt");
       // 2. Relative Response (or MC truth)
-      Files.push_back("Spring18_ppRef5TeV_V6_DATA_L2Relative_AK2PF.txt");
+      //Files.push_back("Spring18_ppRef5TeV_V6_DATA_L2Relative_AK2PF.txt");
+      Files.push_back("Prompt24HIpp_V1_MC_L2Relative_AK2PF.txt");
+      Files.push_back("My24HIpp_L2Residual_AK2PF.txt");
       // 3. Absolute Response
-      Files.push_back("Spring18_ppRef5TeV_V6_DATA_L3Absolute_AK2PF.txt");
+      //Files.push_back("Spring18_ppRef5TeV_V6_DATA_L3Absolute_AK2PF.txt");
       // 4. Data Residuals (Only for Data)
-      Files.push_back("Spring18_ppRef5TeV_V6_DATA_L2L3Residual_AK2PF.txt");
+      //Files.push_back("Spring18_ppRef5TeV_V6_DATA_L2L3Residual_AK2PF.txt");
     }
   }
   else {
@@ -623,10 +712,11 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       Files.push_back("PbPb_2024_noPUcorr_L2Relative_AK4PF.txt"); // !!! to update
     }
     else if (collision_name.Contains("ppref24")) { /// !!! old
-      std::cout << "Warning!!! Using jtpt instead of JEC for ppref" << endl;
-      Files.push_back("Spring18_ppRef5TeV_V6_MC_L1FastJet_AK2PF.txt");
-      Files.push_back("Spring18_ppRef5TeV_V6_MC_L2Relative_AK2PF.txt");
-      Files.push_back("Spring18_ppRef5TeV_V6_MC_L3Absolute_AK2PF.txt");
+      //std::cout << "Warning!!! Using jtpt instead of JEC for ppref" << endl;
+      //Files.push_back("Spring18_ppRef5TeV_V6_MC_L1FastJet_AK2PF.txt");
+      //Files.push_back("Spring18_ppRef5TeV_V6_MC_L2Relative_AK2PF.txt");
+      //Files.push_back("Spring18_ppRef5TeV_V6_MC_L3Absolute_AK2PF.txt");
+      Files.push_back("Prompt24HIpp_V1_MC_L2Relative_AK2PF.txt");
       // MC does NOT use Residuals
     }
   }
@@ -640,41 +730,41 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   std::string name_Uncertainty_file;
   if (collision_name.Contains("PbPb23")) name_Uncertainty_file = "Spring23PbPb_TotalUncertainties.txt";
   else if (collision_name.Contains("PbPb24")) name_Uncertainty_file = "Autumn18_HI_V8_MC_Uncertainty_AK2PF.txt"; //!!! Old, update
-  else if (collision_name.Contains("ppref24")) name_Uncertainty_file = "Spring18_ppRef5TeV_V6_MC_Uncertainty_AK2PF.txt"; //!!! Old, update
+  else if (collision_name.Contains("ppref24")) name_Uncertainty_file = "My24HIpp_AK2PF_NonClosure_missPUL3_Uncertainty.txt";
   JetUncertainty JEU(name_Uncertainty_file);
   std::cout << "Loaded JEC Uncertainty File: " << name_Uncertainty_file << endl;
 
-  // --- Initialize JER Provider ---
-  JERProvider jer;
+  // --- Initialize JER Providers ---
+  JERProvider jer_pp; 
+  JERProvider jer_PbPb; 
+  
   if (!isData) {
-    // Is MC
     cout << "Initializing JER..." << endl;
-    // Load both SF and Resolution Files
-    std::string jer_sf_file = "";
-    std::string jer_res_file = "";
-    // Define files based on collision type
-    if (collision_name.Contains("PbPb23")) {
-      jer_sf_file = "Autumn18_RunD_V7b_MC_SF_AK4PF.txt";  //!!! Old, update
-      jer_res_file = "Autumn18_RunD_V7b_MC_PtResolution_AK4PF.txt"; //!!! Old, update
-    }
-    else if (collision_name.Contains("PbPb24")) {
-      jer_sf_file = "Autumn18_RunD_V7b_MC_SF_AK4PF.txt"; //!!! Old, update
-      jer_res_file = "Autumn18_RunD_V7b_MC_PtResolution_AK4PF.txt"; //!!! Old, update
+    
+    if (collision_name.Contains("PbPb23") || collision_name.Contains("PbPb24")) {
+      std::string jer_sf_file = "Summer23Prompt23_RunCv4_JRV1m_MC_SF_AK4PFPuppi.txt"; 
+      std::string jer_res_file = "derive_JER_AK2/My_PbPb23_MC_PtResolution_AK2PF.txt"; 
+      std::string jer_sf_unc_file = "Summer23Prompt23_RunCv4_JRV1m_MC_SFUncertainty_AK4PFPuppi.txt"; 
+      
+      std::cout << "Loading JER SF (PbPb): " << jer_sf_file << std::endl;
+      jer_PbPb.LoadSF(jer_sf_file);
+      std::cout << "Loading JER Resolution (PbPb): " << jer_res_file << std::endl;
+      jer_PbPb.LoadResolution(jer_res_file);
+      std::cout << "Loading JER SF Uncertainty (PbPb): " << jer_sf_unc_file << std::endl;
+      jer_PbPb.LoadSFUncertainty(jer_sf_unc_file);
     }
     else if (collision_name.Contains("ppref24")) {
-      jer_sf_file = "Fall17_V3b_MC_SF_AK4PF.txt"; //!!! Old, update
-      jer_res_file = "Fall17_V3b_MC_PtResolution_AK4PF.txt"; //!!! Old, update
+      std::string jer_sf_file = "Summer24Prompt24_JRV1_MC_SF_AK4PFPuppi.txt";
+      std::string jer_res_file = "derive_JER_AK2/My_ppref24_MC_PtResolution_AK2PF.txt";
+      std::string jer_sf_unc_file = "My24ppRef_JER_SFUncertainty_AK2PF.txt"; 
+      
+      std::cout << "Loading JER SF (ppref): " << jer_sf_file << std::endl;
+      jer_pp.LoadSF(jer_sf_file);
+      std::cout << "Loading JER Resolution (ppref): " << jer_res_file << std::endl;
+      jer_pp.LoadResolution(jer_res_file);
+      std::cout << "Loading JER SF Uncertainty (ppref): " << jer_sf_unc_file << std::endl;
+      jer_pp.LoadSFUncertainty(jer_sf_unc_file);
     }
-    // Print and Load
-    if (!jer_sf_file.empty()) {
-        std::cout << "Loading JER SF: " << jer_sf_file << std::endl;
-        jer.LoadSF(jer_sf_file);
-    }
-    if (!jer_res_file.empty()) {
-        std::cout << "Loading JER Resolution: " << jer_res_file << std::endl;
-        jer.LoadResolution(jer_res_file);
-    }
-    // Note: We typically don't apply Phi/Eta smearing for standard analysis, so we only load PtResolution.
   }
 
   // Pre-calculate GenJet Vectors for easier passing to JER function
@@ -890,17 +980,26 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TH1D *h_deltaPhi_Zj = new TH1D("h_deltaPhi_Zj", "Hist;#Delta#phi_{Zj}; Entries", 20, 0, pi_value);
   TH1D *h_xZj = new TH1D("h_xZj", "Hist;x_{Zj}; Entries", nbins_xZj_meas, xZj_bins_meas);
   TH1D *h_xZj_fixbinw = new TH1D("h_xZj_fixbinw", "Hist;x_{Zj}; Entries", 30, 0., 3.);
-  TH2F *h_jet_etaphi_before = new TH2F("h_jet_etaphi_before", "Jets Before Veto;#eta;#phi", 40, -2.5, 2.5, 40, -pi_value, pi_value);
-  TH2F *h_jet_etaphi_after  = new TH2F("h_jet_etaphi_after",  "Jets After Veto;#eta;#phi",  40, -2.5, 2.5, 40, -pi_value, pi_value);
+  TH2F *h_jet_etaphi_before = new TH2F("h_jet_etaphi_before", "Jets Before Veto;#eta;#phi", 40, -2.1, 2.1, 40, -pi_value, pi_value);
+  TH2F *h_jet_etaphi_after  = new TH2F("h_jet_etaphi_after",  "Jets After Veto;#eta;#phi",  40, -2.1, 2.1, 40, -pi_value, pi_value);
   TH1D *h_muon_iso_nocut = new TH1D("h_muon_iso_nocut", "Muon Isolation (before cut); recoMVAIso; Entries", 20, 0, 1.0);
 
   TH1D *h_deltaPhi_Zj_all = new TH1D("h_deltaPhi_Zj_all", "Hist;#Delta#phi_{Zj} (All Jets); Entries", 20, 0, pi_value);
   TH1D *h_jet_pt_all = new TH1D("h_jet_pt_all", "Hist;inclusive jet p_{T} [GeV]; Entries", 30, 0, 300);
   TH1D *h_xZj_all = new TH1D("h_xZj_all", "Hist;x_{Zj} (All Jets); Entries", nbins_xZj_meas, xZj_bins_meas);
+  // 2D Histogram for Transverse Jet pT vs Centrality (used for Data-Driven Swaps)
+  TH2D *h_transverse_pt_max_vs_cen = new TH2D("h_transverse_pt_max_vs_cen", "Max Transverse Jet p_{T} vs Centrality;hiBin;Max Transverse p_{T} [GeV]", 200, 0, 200, 30, 0, 300);
 
   TH1D *h_vz = new TH1D("h_vz", "Hist; vz; Entries", 30, -20, 20);
   TH1D *h_avg_rho = new TH1D("h_avg_rho", "Hist; <#rho>; Entries", 50, 0, 400);
   auto *h_avg_rho_vs_cen = new TProfile("h_avg_rho_vs_cen", "Profile of <#rho> vs centrality bin", 200, 0, 200, 0, 400);
+
+  // --- NEW: Pileup Check Histograms ---
+  TH1D *h_nVtx = new TH1D("h_nVtx", "Number of Primary Vertices; nVtx; Normalized to unity", 20, 0, 20);
+  TH1D *h_npus_size = new TH1D("h_npus_size", "Size of npus vector; Vector Size; Entries", 10, 0, 10);
+  TH1D *h_npus      = new TH1D("h_npus", "Number of PU interactions (npus[0]); npus; Entries", 20, 0, 20);
+  TH1D *h_tnpus     = new TH1D("h_tnpus", "True number of PU interactions (tnpus[0]); tnpus; Entries", 20, 0, 20);
+  // ------------------------------------
 
   TH1D *h_deltaPhi_Zj_MinBias = new TH1D("h_deltaPhi_Zj_MinBias", "Hist;#Delta#phi_{Zj}; Entries", 20, 0,pi_value);
   TH1D *h_jet_pt_lj_MinBias = new TH1D("h_jet_pt_lj_MinBias", "Hist;leading jet p_{T} [GeV]; Entries", 30, 0, 300);
@@ -917,9 +1016,27 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TH1D *h_deltaPhi_Zj_all_matched = new TH1D("h_deltaPhi_Zj_all_matched", "Hist;#Delta#phi_{Zj} (All Matched); Entries", 20, 0, pi_value);
   TH1D *h_jet_pt_all_matched = new TH1D("h_jet_pt_all_matched", "Hist;inclusive jet p_{T} [GeV] (Matched); Entries", 30, 0, 300);
   TH1D *h_xZj_all_matched = new TH1D("h_xZj_all_matched", "Hist;x_{Zj} (All Matched); Entries", nbins_xZj_meas, xZj_bins_meas);
+
+  // True MC Efficiency Histograms
+  TH2D *h2_gen_pt_total_vs_cen = nullptr;
+  TH2D *h2_gen_pt_matched_vs_cen = nullptr;
+  if (!isData) {
+      h2_gen_pt_total_vs_cen = new TH2D("h2_gen_pt_total_vs_cen", "Total Gen Jets vs Cen;hiBin;Gen p_{T} [GeV]", 200, 0, 200, 30, 0, 300);
+      h2_gen_pt_matched_vs_cen = new TH2D("h2_gen_pt_matched_vs_cen", "Matched Gen Jets vs Cen;hiBin;Gen p_{T} [GeV]", 200, 0, 200, 30, 0, 300);
+  }
+  // --- NEW: Pure Swap Isolation Histograms ---
+  TH2D *h2_swap_pure_den_vs_cen = nullptr;
+  TH2D *h2_swap_pure_num_vs_cen = nullptr;
+  if (!isData) {
+      h2_swap_pure_den_vs_cen = new TH2D("h2_swap_pure_den_vs_cen", "Valid Gen Jets vs Cen;hiBin;Gen p_{T} [GeV]", 200, 0, 200, 30, 0, 300);
+      h2_swap_pure_num_vs_cen = new TH2D("h2_swap_pure_num_vs_cen", "Uneclipsed Gen Jets vs Cen;hiBin;Gen p_{T} [GeV]", 200, 0, 200, 30, 0, 300);
+  }
+
+  TProfile *p_jes_vs_pt = new TProfile("p_jes_vs_pt", "Jet Response;Reco Jet p_{T} (GeV);Reco Jet p_{T} / Gen Jet p_{T}", 25, 0, 250);
+  TProfile *p_jes_vs_eta = new TProfile("p_jes_vs_eta", "Jet Response ;Reco Jet #eta;Reco Jet p_{T} / Gen Jet p_{T}", 42, -2.1, 2.1);
   // --- RooUnfold Histograms ---
 
-  TH1D *h_deltaR_gen_reco = new TH1D("h_deltaR_gen_reco", "Matching Distance;#DeltaR(Reco, Gen);Entries", 50, 0, 0.5);
+  TH1D *h_deltaR_gen_reco = new TH1D("h_deltaR_gen_reco", "Matching Distance;#DeltaR(Reco, Gen);Entries", 50, 0, 1.0);
 
   TH1D* h_xZj_true = new TH1D("h_xZj_true", "True x_{Zj};x_{Zj};Entries", nbins_xZj, xZj_bins);     // For true MC
   TH1D *h_xZj_for_JEWEL_w = new TH1D("h_xZj_for_JEWEL_w", "True x_{Zj};Entries", 60, 0.,3.);
@@ -973,6 +1090,11 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       cout << "Running binning variation (systFlag = 8)" << endl;
       file_output_HI_mu = new TFile("./syst_binning/output_"+name_output+"_mu_data_binning" + run_tag + ".root", "RECREATE");
     }
+    if (systFlag == 20) {
+      cout << "Running Systematic: No Isolation Cut applied on DATA (systFlag = 20)" << endl;
+      // Saving in a logical directory. Make sure ./syst_SF_muon/ exists, or change it to ./plot/
+      file_output_HI_mu = new TFile("./syst_SF_muon/output_"+name_output+"_mu_data_NoIso" + run_tag + ".root", "RECREATE");
+    }
   }
 
   if (weight_phase == 0 && isPbPb) {
@@ -985,18 +1107,27 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     }
   }
 
-  if (weight_phase == 1 && isPbPb) {
+   if (weight_phase == 1) {
     if (!isData) {
-      cout << "Running weight_phase " << weight_phase << " for computing rho_weights" << endl;
-      file_output_HI_mu = new TFile("./weights_MC/rho_weights_1/output_"+name_output+"_mu_MC_rho_weights" + run_tag + ".root", "RECREATE");
+      if (isPbPb) {
+          cout << "Running weight_phase 1 for computing rho_weights" << endl;
+          file_output_HI_mu = new TFile("./weights_MC/rho_weights_1/output_"+name_output+"_mu_MC_rho_weights" + run_tag + ".root", "RECREATE");
+      } else {
+          cout << "Running weight_phase 1 for computing pu_weights (ppref)" << endl;
+          file_output_HI_mu = new TFile("./weights_MC/rho_weights_1/output_"+name_output+"_mu_MC_pu_weights" + run_tag + ".root", "RECREATE");
+      }
     }
   }
-
-  // This is just for plotting rho distributions after reweighting
-  if (weight_phase == -1 && isPbPb) {
+  // This is just for plotting distributions after reweighting
+  if (weight_phase == -1) {
     if (!isData) {
-      cout << "Running weight_phase " << weight_phase << " for plotting rho distributions after reweighting" << endl;
-      file_output_HI_mu = new TFile("./weights_MC/vz_weights_2/output_"+name_output+"_mu_MC_rho_weights_after" + run_tag + ".root", "RECREATE");
+      if (isPbPb) {
+          cout << "Running weight_phase " << weight_phase << " for plotting rho distributions after reweighting" << endl;
+          file_output_HI_mu = new TFile("./weights_MC/vz_weights_2/output_"+name_output+"_mu_MC_rho_weights_after" + run_tag + ".root", "RECREATE");
+      } else {
+          cout << "Running weight_phase " << weight_phase << " for plotting PU distributions after reweighting" << endl;
+          file_output_HI_mu = new TFile("./weights_MC/vz_weights_2/output_"+name_output+"_mu_MC_pu_weights_after" + run_tag + ".root", "RECREATE");
+      }
     }
   }
 
@@ -1065,6 +1196,16 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       else if (systFlag == 18) {
         cout << "Running Systematic (SF HLT) - UP variation (systFlag = 18)" << endl;
         file_output_HI_mu = new TFile("./syst_SF_muon/output_"+name_output+"_mu_MC_SF_HLT_up" + run_tag + ".root", "RECREATE");
+      }
+      else if (systFlag == 19) {
+        cout << "Running Data-Driven UE Swap systematic (systFlag = 19)" << endl;
+        // Make sure the directory ./syst_datadriven/ exists on your farm!
+        file_output_HI_mu = new TFile("./syst_datadriven/output_"+name_output+"_mu_MC_syst_datadriven" + run_tag + ".root", "RECREATE");
+      }
+      else if (systFlag == 20) {
+        cout << "Running Systematic: No Isolation Cut applied (systFlag = 20)" << endl;
+        // Outputting to syst_SF_muon folder to keep it with the other muon systematics
+        file_output_HI_mu = new TFile("./syst_SF_muon/output_"+name_output+"_mu_MC_NoIso" + run_tag + ".root", "RECREATE");
       }
     }
   }
@@ -1206,11 +1347,20 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         }
       }
     }
-    else {
+    else { // for ppref
+      // Apply PU weight for ppref
+      if (!isData && (weight_phase == 2 || weight_phase == -1 || weight_phase == 3)) {
+        if (h_weight_pu) { // <--- ADDED NULL POINTER GUARD
+          int bin_pu = h_weight_pu->FindBin(*nVtx);
+          scale *= h_weight_pu->GetBinContent(bin_pu);
+        }
+      }
+      // Apply Vz weight for ppref (only in Phase 3)
       if (!isData && weight_phase == 3) {
-        // Apply only vz weight for ppref
-        int bin_vz = h_weight_vz->FindBin(*vz);
-        scale*=h_weight_vz->GetBinContent(bin_vz);
+        if (h_weight_vz) { // <--- ADDED NULL POINTER GUARD
+          int bin_vz = h_weight_vz->FindBin(*vz);
+          scale *= h_weight_vz->GetBinContent(bin_vz);
+        }
       }
     }
 
@@ -1249,7 +1399,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
             // Loop over gen jets
             for (int ijetGen = 0; ijetGen < genpt.GetSize(); ++ijetGen) {
               // Apply truth-level cuts
-              if (genpt[ijetGen] < 30 || abs(geneta[ijetGen]) > 2.5) continue;
+              if (genpt[ijetGen] < 30 || abs(geneta[ijetGen]) > 2.1) continue;
               if (getDeltaR(geneta[ijetGen], genphi[ijetGen], genmuMinus.Eta(), genmuMinus.Phi()) < 0.2) continue;
               if (getDeltaR(geneta[ijetGen], genphi[ijetGen], genmuPlus.Eta(), genmuPlus.Phi()) < 0.2) continue;
               if (ijetGenLeading_unfold == -1 || genpt[ijetGen] > genpt[ijetGenLeading_unfold]) {
@@ -1291,6 +1441,26 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     }
     // --- End fill information for unfolding ---
 
+    // =================================================================
+    // SNAPSHOT GENERATOR WEIGHT (Base + Priors, NO Detector SFs)
+    double weight_gen = scale;
+    // =================================================================
+
+    // --- NEW: Fill Pileup Histograms ---
+    if (!isData && npus && tnpus) {
+        // 1. Fill the size of the vector (Is it empty?)
+        h_npus_size->Fill(npus->GetSize(), weight_gen);
+        
+        // 2. If it is NOT empty, fill the in-time pileup (index 0)
+        if (npus->GetSize() > 0) {
+            h_npus->Fill((*npus)[0], weight_gen);
+        }
+        if (tnpus->GetSize() > 0) {
+            h_tnpus->Fill((*tnpus)[0], weight_gen);
+        }
+    }
+    // -----------------------------------
+
     // --- Reco Z Reconstruction ---
     if (*nReco < 2 ) continue;
     iEvent++;
@@ -1311,7 +1481,9 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         if (isPbPb && recoMVAIso) {
              h_muon_iso_nocut->Fill((*recoMVAIso)[iMu], scale);
         }
-        if (isPbPb && !(*recoMVAIsoWP95)[iMu]) continue;
+        if (isPbPb && !(*recoMVAIsoWP95)[iMu]) {
+            if (systFlag != 20) continue;
+        }
         // --- ADDED THIS BLOCK FOR PP ISOLATION ---
         if (!isPbPb && recoPFChIso && recoPFNeuIso && recoPFPhoIso && recoPFPUIso) {
             float chIso = (*recoPFChIso)[iMu];
@@ -1327,7 +1499,9 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
             h_muon_iso_nocut->Fill(relIso, scale);
 
             // Apply Tight WP cut (0.15) for ~95% efficiency
-            if (relIso > 0.15) continue;
+            if (relIso > 0.15) {
+                if (systFlag != 20) continue;
+            }
         }
         // -----------------------------------------
         //cout << "iMu: " << iMu << " pt = " << recoPt[iMu] <<  " Q = " << recoCharge[iMu] << endl;
@@ -1351,21 +1525,26 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       std::string iso_sf_flag = (systFlag == 15) ? "systdown" : (systFlag == 16 ? "systup" : "nominal");
       std::string hlt_sf_flag = (systFlag == 17) ? "systdown" : (systFlag == 18 ? "systup" : "nominal");
 
+      // The new ppRef json evaluates across standard eta (-2.4 to 2.4). PbPb evaluates across abseta (0 to 2.4).
+      double eta_mu_p = collision_name.Contains("ppref24") ? recoEta[iHighPtAntiMu] : abs(recoEta[iHighPtAntiMu]);
+      double eta_mu_m = collision_name.Contains("ppref24") ? recoEta[iHighPtMu] : abs(recoEta[iHighPtMu]);
+
       // 2. Apply TightID scale factors (using id_sf_flag) for both muons in the Z candidate
-      double id_sf_mu_p = tightID_SF.getValue(abs(recoEta[iHighPtAntiMu]), recoPt[iHighPtAntiMu], id_sf_flag);
-      double id_sf_mu_m = tightID_SF.getValue(abs(recoEta[iHighPtMu]), recoPt[iHighPtMu], id_sf_flag);
+      double id_sf_mu_p = tightID_SF.getValue(eta_mu_p, recoPt[iHighPtAntiMu], id_sf_flag);
+      double id_sf_mu_m = tightID_SF.getValue(eta_mu_m, recoPt[iHighPtMu], id_sf_flag);
       scale *= id_sf_mu_p * id_sf_mu_m;
 
       // 3. Apply HLT scale factor (using hlt_sf_flag) combining them as SF1 + SF2 - (SF1 * SF2)
       // For trigger we only need one to lepton to have fired, so we use the addition rule of probability
-      double hlt_sf_mu_p = hlt_SF.getValue(abs(recoEta[iHighPtAntiMu]), recoPt[iHighPtAntiMu], hlt_sf_flag);
-      double hlt_sf_mu_m = hlt_SF.getValue(abs(recoEta[iHighPtMu]), recoPt[iHighPtMu], hlt_sf_flag);
+      double hlt_sf_mu_p = hlt_SF.getValue(eta_mu_p, recoPt[iHighPtAntiMu], hlt_sf_flag);
+      double hlt_sf_mu_m = hlt_SF.getValue(eta_mu_m, recoPt[iHighPtMu], hlt_sf_flag);
       scale *= (hlt_sf_mu_p + hlt_sf_mu_m - (hlt_sf_mu_p * hlt_sf_mu_m));
 
       // 4. Apply ISO SF (using iso_sf_flag)
+      // Note: Iso JSON ("NUM_Iso_DEN_TightID_abseta_pt_schemaV2.json") still requires abseta for ppref
       double iso_sf_mu_p = iso_SF.getValue(abs(recoEta[iHighPtAntiMu]), recoPt[iHighPtAntiMu], iso_sf_flag);
       double iso_sf_mu_m = iso_SF.getValue(abs(recoEta[iHighPtMu]), recoPt[iHighPtMu], iso_sf_flag);
-      scale *= iso_sf_mu_p * iso_sf_mu_m;
+      if (systFlag != 20) scale *= iso_sf_mu_p * iso_sf_mu_m;
     }
 
     // Z from muon-antimuon pairs
@@ -1373,7 +1552,33 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     if (Z.M() < 60 || Z.M() > 120 || Z.Pt() < ptZ_min || Z.Pt() >= ptZ_max) continue;
     if (muMinus.Pt() < 20 || abs(muMinus.Eta()) > 2.4 || muPlus.Pt() < 20 || abs(muPlus.Eta()) > 2.4) continue;
 
+    // --- DEBUGGING SNIPPET ---
+    // Catch anomalously large scales. Normal event weights are likely << 1.0
+    if (!isData && std::abs(scale) > 50.0) { 
+        std::cout << "\033[1;31m\n[DEBUG] MASSIVE WEIGHT DETECTED" << ".\033[0m" << std::endl;
+        std::cout << "Event Index : " << itotev << std::endl;
+        std::cout << "Final Scale : " << scale << std::endl;
+        std::cout << "norm_MC_w   : " << norm_MC_w << std::endl;
+        std::cout << "Tree weight : " << (**weight) << std::endl;
+        
+        if (weight_phase == 3 || weight_phase == -1 || weight_phase == 2) {
+            if (isPbPb && h_weight_rho) {
+                int bin_rho = h_weight_rho->FindBin(avg_rho);
+                std::cout << "Rho weight  : " << h_weight_rho->GetBinContent(bin_rho) << " (avg_rho = " << avg_rho << ")" << std::endl;
+            }
+            if (h_weight_vz) {
+                int bin_vz = h_weight_vz->FindBin(*vz);
+                std::cout << "Vz weight   : " << h_weight_vz->GetBinContent(bin_vz) << " (vz = " << *vz << ")" << std::endl;
+            }
+        }
+        std::cout << "Z Kinematics: Mass = " << Z.M() << ", pT = " << Z.Pt() << std::endl;
+        std::cout << "-------------------------------------------\n" << std::endl;
+        std::cout << "\033[1;31m[WARNING] Skipping event" << ".\033[0m" << std::endl;
+        continue;
+    }
+    // -------------------------
     h_vz->Fill(*vz, scale);
+    h_nVtx->Fill(*nVtx, scale);
     h_avg_rho->Fill(avg_rho, scale);
     h_avg_rho_vs_cen->Fill(hiBin_to_use, avg_rho, scale);
     h_cen->Fill((hiBin_to_use)/2, scale);
@@ -1392,9 +1597,18 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     // --- Loop over Jets ---
     unsigned int njets = 0;
     int ijetLeading = -1;
+    int ijetLeading_signal = -1; 
     int iGenjetMatchedtoLeadingReco = -1;
     bool isLeadingJetMatched = false;
+    
+    // --- NEW: Track matches specifically for the Signal Window jet ---
+    int iGenjetMatchedtoSignalReco = -1; 
+    bool isSignalLeadingJetMatched = false; 
+    // -----------------------------------------------------------------
+
     double jtpt_corr[20000];
+    double max_pt_transverse = 0.0; // NEW: Reset highest transverse jet pT for this event
+    int iRecoMatchedToGenLeading = -1; // NEW: Tracks if the gen leading jet survived reco cuts
     for(int ijet=0; ijet<*nref; ijet++){
       // Apply JEC and JEC uncertainty
       //cout << "before JEC: " << rawpt[ijet] << endl;
@@ -1403,7 +1617,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       JEC.SetJetPhi(jtphi[ijet]);
       double Correction = JEC.GetCorrection();
 //!!!    For ppref we use for now jtpt
-      double CorrectedPT = isPbPb ? JEC.GetCorrectedPT() : jtpt[ijet];
+//      double CorrectedPT = isPbPb ? JEC.GetCorrectedPT() : jtpt[ijet];
+      double CorrectedPT = JEC.GetCorrectedPT();
       JEU.SetJetPT(CorrectedPT);
       JEU.SetJetEta(jteta[ijet]);
       JEU.SetJetPhi(jtphi[ijet]);
@@ -1433,13 +1648,17 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         if (systFlag == 11) jer_syst = -1; // Down
         if (systFlag == 12) jer_syst = 1;  // Up
 
-        pt_final = jer.GetSmearedPt(pt_jec_applied, jteta[ijet], jtphi[ijet], jetRho, v_gen_pts, v_gen_etas, v_gen_phis, jer_syst);
+        if (isPbPb) {
+            pt_final = jer_PbPb.GetSmearedPt(pt_jec_applied, jteta[ijet], jtphi[ijet], jetRho, v_gen_pts, v_gen_etas, v_gen_phis, jer_syst);
+        } else {
+            pt_final = jer_pp.GetSmearedPt(pt_jec_applied, jteta[ijet], jtphi[ijet], jetRho, v_gen_pts, v_gen_etas, v_gen_phis, jer_syst);
+        }
       }
       jtpt_corr[ijet] = pt_final;
       //jtpt_corr[ijet] = rawpt[ijet];
 
       // Selections
-      if (jtpt_corr[ijet] < 30 || abs(jteta[ijet]) > 2.5) continue;
+      if (jtpt_corr[ijet] < 30 || abs(jteta[ijet]) > 2.1) continue;
       // Apply Combined Jet ID and Veto Map
       h_jet_etaphi_before->Fill(jteta[ijet], jtphi[ijet], scale);
       bool passJetID = false;
@@ -1456,10 +1675,28 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       // Z-Jet dR Cleaning
       if (getDeltaR(jteta[ijet], jtphi[ijet], muMinus.Eta(), muMinus.Phi()) < 0.2) continue;
       if (getDeltaR(jteta[ijet], jtphi[ijet], muPlus.Eta(), muPlus.Phi()) < 0.2) continue;
-
+      // --- NEW: Check if this valid reco jet is the true leading gen jet ---
+      if (!isData && ijetGenLeading_unfold != -1) {
+          double dR_to_gen_lead = getDeltaR(jteta[ijet], jtphi[ijet], geneta[ijetGenLeading_unfold], genphi[ijetGenLeading_unfold]);
+          if (dR_to_gen_lead < 0.1) {
+              // If multiple reco jets match (rare), keep the hardest one
+              if (iRecoMatchedToGenLeading == -1 || jtpt_corr[ijet] > jtpt_corr[iRecoMatchedToGenLeading]) {
+                  iRecoMatchedToGenLeading = ijet;
+              }
+          }
+      }
+      // ---------------------------------------------------------------------
       // --- Inclusive Jet Kinematics ---
       double dPhi_Zj_current = RelativePhi(Z.Phi(), jtphi[ijet]);
       double xZj_current = jtpt_corr[ijet] / Z.Pt();
+      // --- NEW: Data-Driven UE Swap Check ---
+      // Check if the jet is in the exact perpendicular window (pi/8 wide, centered at pi/2)
+      if (dPhi_Zj_current > 7 * pi_value / 16 && dPhi_Zj_current < 9 * pi_value / 16) {
+          if (jtpt_corr[ijet] > max_pt_transverse) {
+              max_pt_transverse = jtpt_corr[ijet];
+          }
+      }
+      // --------------------------------------
 
       // Fill delta phi for all valid jets
       h_deltaPhi_Zj_all->Fill(dPhi_Zj_current, scale);
@@ -1503,6 +1740,18 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
           if (dPhi_Zj_current > 7 * pi_value / 8) {
               h_jet_pt_all_matched->Fill(jtpt_corr[ijet], scale);
               h_xZj_all_matched->Fill(xZj_current, scale);
+              // --- NEW: Calculate and Fill Jet Response ---
+              double matched_gen_pt = genpt[matched_gen_jet_idx];
+              if (matched_gen_pt > 0) {
+                  double response = jtpt_corr[ijet] / matched_gen_pt;
+
+                  // Left Plot: Response vs Reco Jet pT
+                  p_jes_vs_pt->Fill(jtpt_corr[ijet], response, scale);
+
+                  // Right Plot: Response vs Reco Jet Eta
+                  p_jes_vs_eta->Fill(jteta[ijet], response, scale);
+              }
+              // --------------------------------------------
           }
       }
 
@@ -1521,9 +1770,28 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
           }
         }
       }
+      // NEW: Local leading jet logic for the signal window
+      if (dPhi_Zj_current > 7 * pi_value / 8) {
+        if (ijetLeading_signal == -1 || jtpt_corr[ijet] > jtpt_corr[ijetLeading_signal]) {
+          ijetLeading_signal = ijet;
+          if (!isData) {
+            if (min_dR < 0.1) {
+              isSignalLeadingJetMatched = true;
+              iGenjetMatchedtoSignalReco = matched_gen_jet_idx;
+            } else {
+              isSignalLeadingJetMatched = false;
+              iGenjetMatchedtoSignalReco = -1;
+            }
+          }
+        }
+      }
     } //cout << "ijetLeading = " << ijetLeading << endl;
     h_njet->Fill(njets, scale);
     // --- end loop over jets ---
+
+    // --- NEW: Fill Transverse pT for Data-Driven UE Swaps ---
+    h_transverse_pt_max_vs_cen->Fill(hiBin_to_use, max_pt_transverse, scale);
+    // --------------------------------------------------------
 
     // --- Reco leading jet selection ---
     double signal_leading_pt = (ijetLeading != -1) ? jtpt_corr[ijetLeading] : 0.0;
@@ -1643,61 +1911,186 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
             } // closes if (current_global_bin_n != -1...)
         } // end isPbPb
 
+      // =====================================================================
+      // 1. GLOBAL LEADING JET PLOTS (For the full Azimuthal distributions)
+      // =====================================================================
       if (ijetLeading != -1) {
-      double dPhi_Zj = RelativePhi(Z.Phi(), jtphi[ijetLeading]);
-      double xZj = jtpt_corr[ijetLeading]/Z.Pt();
-      //Remove overflow and put it in the last bin
-      //if (xZj > xZj_max) xZj = xZj_max - 0.01;
-      h_deltaPhi_Zj->Fill(dPhi_Zj, scale);
-
-
-      if (!isData && isLeadingJetMatched) {
-        double dPhi_Zj_matched = RelativePhi(Z.Phi(), jtphi[ijetLeading]);
-        h_deltaPhi_Zj_matched->Fill(dPhi_Zj_matched, scale);
-      }
-
-      if (dPhi_Zj > 7 * pi_value / 8) {
-        h_mumu_j->Fill(Z.M(), scale);
-        h_Z_pt_j->Fill(Z.Pt(), scale);
-        h_jet_pt_lj->Fill(jtpt_corr[ijetLeading], scale);
-        h_xZj->Fill(xZj, scale);
-        h_xZj_fixbinw->Fill(xZj, scale);
-        if (!isData && ijetGenLeading_unfold != -1 && dPhi_Zj_Gen > 7 * pi_value / 8) {
-          h_response_unmatched->Fill(xZj, true_xZj, scale);
-          if (itotev < 0.6*Ngen) h_response_closure_unmatched->Fill(xZj, true_xZj, scale);
-        }
-        if (itotev < 0.6*Ngen) h_xZj_train_closure->Fill(xZj, scale);
-        else h_xZj_test_closure->Fill(xZj, scale);
-        h_cen_j->Fill((hiBin_to_use)/2, scale);
-        h_HF_j->Fill(*hiHF, scale);
-
-        if (!isData && isLeadingJetMatched) {
-          h_jet_pt_lj_matched->Fill(jtpt_corr[ijetLeading], scale);
-          h_xZj_matched->Fill(xZj, scale);
-        }
-      }
-
-      if (dPhi_Zj > 2 * pi_value / 3) h_jet_pt_lj_2pi_3->Fill(jtpt_corr[ijetLeading], scale);
-      h_jet_pt_lj_nocut->Fill(jtpt_corr[ijetLeading], scale);
-
-      // --- Fill information for unfolding ---
-      if (RelativePhi(Z.Phi(), jtphi[ijetLeading]) > 7 * pi_value / 8) {
-        if (!isData && ijetGenLeading_unfold != -1 && dPhi_Zj_Gen > 7 * pi_value / 8) {
-          // Calculate true x_Zj
-          // Check if the leading gen jet is matched to leading reconstructed jet
-          if (ijetGenLeading_unfold == iGenjetMatchedtoLeadingReco) {
-            h_response->Fill(xZj, true_xZj, scale);
-            h_xZj_reco->Fill(xZj, scale);
-            if (itotev < 0.6*Ngen) {
-              h_response_closure->Fill(xZj, true_xZj, scale);
-              h_xZj_train_closure_matched->Fill(xZj, scale);
-            } else h_xZj_test_closure_matched->Fill(xZj, scale);
+          double dPhi_Zj_global = RelativePhi(Z.Phi(), jtphi[ijetLeading]);
+          h_deltaPhi_Zj->Fill(dPhi_Zj_global, scale);
+          h_jet_pt_lj_nocut->Fill(jtpt_corr[ijetLeading], scale);
+          
+          if (dPhi_Zj_global > 2 * pi_value / 3) {
+              h_jet_pt_lj_2pi_3->Fill(jtpt_corr[ijetLeading], scale);
           }
-        }
-      } // --- end filling information for unfolding ---
-    } // ---end reco leading jet selection ---
-  }
+          if (!isData && isLeadingJetMatched) {
+              h_deltaPhi_Zj_matched->Fill(dPhi_Zj_global, scale);
+          }
+      }
 
+      // =====================================================================
+      // 2. SIGNAL LEADING JET PLOTS (For final analysis observables)
+      // =====================================================================
+      if (ijetLeading_signal != -1) {
+          double xZj_signal = jtpt_corr[ijetLeading_signal] / Z.Pt();
+          double weight_swap = 1.0;
+
+          if (!isData) {
+              double eff_data = 1.0, eff_mc_fit = 1.0, eff_mc_truth = 1.0;
+              // Clamp evaluation at 499 GeV to stay inside the TF1 domain [0, 500].
+              // By 150+ GeV, the efficiency is already 1.0, so this is physically exact.
+              double pt_eval = std::min((double)jtpt_corr[ijetLeading_signal], 499.0);
+              
+              if (!isPbPb && fit_swap_eff_pp_data && fit_swap_eff_pp_mc && hist_swap_eff_pp_mc_truth) {
+                  eff_data = fit_swap_eff_pp_data->Eval(pt_eval);
+                  eff_mc_fit = fit_swap_eff_pp_mc->Eval(pt_eval);
+                  
+                  double truth_val = hist_swap_eff_pp_mc_truth->GetBinContent(hist_swap_eff_pp_mc_truth->FindBin(pt_eval));
+                  // If the truth histogram is empty (out of stats), fallback to the fit (which is ~1.0)
+                  if (truth_val > 0.0) eff_mc_truth = truth_val;
+                  else eff_mc_truth = eff_mc_fit;
+                  
+              } else if (isPbPb) {
+                  double cen_pct = hiBin_to_use / 2.0;
+                  for (const auto& kv : map_swap_eff_PbPb_data) {
+                      if (cen_pct >= kv.first.first && cen_pct < kv.first.second) {
+                          eff_data = kv.second->Eval(pt_eval);
+                          eff_mc_fit = map_swap_eff_PbPb_mc[kv.first]->Eval(pt_eval);
+                          
+                          TH1D* h_truth = map_swap_eff_PbPb_mc_truth[kv.first];
+                          if (h_truth) {
+                              double truth_val = h_truth->GetBinContent(h_truth->FindBin(pt_eval));
+                              // If the truth histogram is empty (out of stats), fallback to the fit
+                              if (truth_val > 0.0) eff_mc_truth = truth_val;
+                              else eff_mc_truth = eff_mc_fit;
+                          }
+                          break;
+                      }
+                  }
+              }
+
+              // Boundaries to prevent math errors and runaway weights
+              if (eff_data < 0.05) eff_data = 0.05; if (eff_data > 1.0) eff_data = 1.0;
+              if (eff_mc_fit < 0.05) eff_mc_fit = 0.05; if (eff_mc_fit > 1.0) eff_mc_fit = 1.0;
+              if (eff_mc_truth < 0.05) eff_mc_truth = 0.05; if (eff_mc_truth > 1.0) eff_mc_truth = 1.0;
+              
+              // 1. NOMINAL WEIGHT (Data Fit / MC Fit)
+              weight_swap = eff_data / eff_mc_fit;
+
+              // 2. SYSTEMATIC NON-CLOSURE WEIGHT (Data Fit / MC Truth)
+              if (systFlag == 19) {
+                  weight_swap = eff_data / eff_mc_truth;
+              }
+              // 3. UE CUTOFF (The Physics Fix)
+              // Above 80 GeV, UE eclipsing is physically impossible. 
+              // Any inefficiency here is JER-driven, which is already handled by the Response Matrix.
+              if (jtpt_corr[ijetLeading_signal] > 80.0) {
+                  weight_swap = 1.0;
+              }
+          }
+          // ---------------------------------------
+
+          // Create a local scale for Reco plots so the global scale remains nominal for True plots!
+          double scale_reco = scale * weight_swap;
+
+          h_mumu_j->Fill(Z.M(), scale_reco);
+          h_Z_pt_j->Fill(Z.Pt(), scale_reco);
+          h_jet_pt_lj->Fill(jtpt_corr[ijetLeading_signal], scale_reco);
+          h_xZj->Fill(xZj_signal, scale_reco);
+          h_xZj_fixbinw->Fill(xZj_signal, scale_reco);
+          h_cen_j->Fill((hiBin_to_use)/2, scale_reco);
+          h_HF_j->Fill(*hiHF, scale_reco);
+
+          // <--- INSERT THE EVENT DISPLAY SNIPPET HERE --->
+          if (isData && isPbPb && hiBin_to_use < 60 && Z.Pt() > 80.0 && xZj_signal >= 0.5 && xZj_signal < 0.7) {
+    std::cout << "\n>>> EVENT DISPLAY CANDIDATE FOUND <<<" << std::endl;
+    std::cout << "Run: " << *run << " | Lumi: " << *lumi << " | Event: " << *evt << std::endl;
+    std::cout << "Centrality (hiBin): " << hiBin_to_use << std::endl;
+    std::cout << "Z Boson Mass: " << Z.M() << " GeV | Z pT: " << Z.Pt() << " GeV | Z eta: " << Z.Eta() << " | Z phi: " << Z.Phi() << std::endl;
+    std::cout << "  -> Muon 1 (+): pT = " << muPlus.Pt()  << " GeV, eta = " << muPlus.Eta()  << ", phi = " << muPlus.Phi()  << std::endl;
+    std::cout << "  -> Muon 2 (-): pT = " << muMinus.Pt() << " GeV, eta = " << muMinus.Eta() << ", phi = " << muMinus.Phi() << std::endl;
+    std::cout << "Leading Jet: pT = " << jtpt_corr[ijetLeading_signal] << " GeV, eta = " << jteta[ijetLeading_signal] << ", phi = " << jtphi[ijetLeading_signal] << std::endl;
+    std::cout << "x_Zj: " << xZj_signal << " | DeltaPhi: " << RelativePhi(Z.Phi(), jtphi[ijetLeading_signal]) << std::endl;
+    std::cout << "---------------------------------------" << std::endl;
+}
+          // <--------------------------------------------->
+
+          if (!isData && isSignalLeadingJetMatched) {
+              h_jet_pt_lj_matched->Fill(jtpt_corr[ijetLeading_signal], scale_reco);
+              h_xZj_matched->Fill(xZj_signal, scale_reco);
+          }
+
+          if (!isData && ijetGenLeading_unfold != -1 && dPhi_Zj_Gen > 7 * pi_value / 8) {
+              h_response_unmatched->Fill(xZj_signal, true_xZj, scale_reco);
+              if (itotev < 0.6*Ngen) h_response_closure_unmatched->Fill(xZj_signal, true_xZj, scale_reco);
+          }
+          
+          if (itotev < 0.6*Ngen) h_xZj_train_closure->Fill(xZj_signal, scale_reco);
+          else h_xZj_test_closure->Fill(xZj_signal, scale_reco);
+      }
+
+      // =====================================================================
+      // 3. FILL TRUE MC EFFICIENCY & ROOUNFOLD (Using Signal Matches)
+      // =====================================================================
+      if (!isData && ijetGenLeading_unfold != -1 && dPhi_Zj_Gen > 7 * pi_value / 8) {
+          double gen_pt_val = genpt[ijetGenLeading_unfold];
+          
+          // --- Use NOMINAL scale for True Histograms to preserve the denominator ---
+          if (iRecoMatchedToGenLeading != -1) {
+              double matched_reco_pt = jtpt_corr[iRecoMatchedToGenLeading]; // <--- Use Reco pT
+              h2_swap_pure_den_vs_cen->Fill(hiBin_to_use, matched_reco_pt, weight_gen);
+              if (iRecoMatchedToGenLeading == ijetLeading_signal) {
+                  h2_swap_pure_num_vs_cen->Fill(hiBin_to_use, matched_reco_pt, weight_gen);
+              }
+          }
+          h2_gen_pt_total_vs_cen->Fill(hiBin_to_use, gen_pt_val, weight_gen); 
+          if (ijetGenLeading_unfold == iGenjetMatchedtoSignalReco) {
+              h2_gen_pt_matched_vs_cen->Fill(hiBin_to_use, gen_pt_val, weight_gen);
+          }
+
+          // --- Unfolding Response Matrices ---
+          if (ijetLeading_signal != -1) {
+              double xZj_signal = jtpt_corr[ijetLeading_signal] / Z.Pt();
+              
+              // Recalculate the systematic weight for the Response Matrix
+              double weight_swap = 1.0;
+              if (systFlag == 19) {
+                  double eff_data = 1.0, eff_mc = 1.0;
+                  double pt_eval = jtpt_corr[ijetLeading_signal];
+                  if (!isPbPb && fit_swap_eff_pp_data && fit_swap_eff_pp_mc) {
+                      eff_data = fit_swap_eff_pp_data->Eval(pt_eval);
+                      eff_mc   = fit_swap_eff_pp_mc->Eval(pt_eval);
+                  } else if (isPbPb) {
+                      double cen_pct = hiBin_to_use / 2.0;
+                      for (const auto& kv : map_swap_eff_PbPb_data) {
+                          if (cen_pct >= kv.first.first && cen_pct < kv.first.second) {
+                              eff_data = kv.second->Eval(pt_eval);
+                              eff_mc   = map_swap_eff_PbPb_mc[kv.first]->Eval(pt_eval);
+                              break;
+                          }
+                      }
+                  }
+                  if (eff_data < 0.05) eff_data = 0.05; if (eff_data > 1.0) eff_data = 1.0;
+                  if (eff_mc < 0.05) eff_mc = 0.05;     if (eff_mc > 1.0) eff_mc = 1.0;
+                  weight_swap = eff_data / eff_mc;
+              }
+              
+              // Apply weight ONLY to the matrix fill!
+              double scale_reco = scale * weight_swap;
+
+              if (ijetGenLeading_unfold == iGenjetMatchedtoSignalReco) {
+                  h_response->Fill(xZj_signal, true_xZj, scale_reco);
+                  h_xZj_reco->Fill(xZj_signal, scale_reco);
+                  if (itotev < 0.6*Ngen) {
+                      h_response_closure->Fill(xZj_signal, true_xZj, scale_reco);
+                      h_xZj_train_closure_matched->Fill(xZj_signal, scale_reco);
+                  } else {
+                      h_xZj_test_closure_matched->Fill(xZj_signal, scale_reco);
+                  }
+              }
+          }
+      }
+      // =====================================================================
+}
   // =================================================================================
   //   END MAIN EVENT LOOP
   // =================================================================================
@@ -1873,7 +2266,16 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   h_jet_etaphi_after->Write();
   h_muon_iso_nocut->Write();
   h_vz->Write();
+  h_nVtx->Write();
   h_avg_rho->Write();
+  h_transverse_pt_max_vs_cen->Write();
+  // --- NEW: Write Pileup Histograms ---
+  if (!isData) {
+      h_npus_size->Write();
+      h_npus->Write();
+      h_tnpus->Write();
+  }
+  // ------------------------------------
   if (isPbPb) {
     h_jet_pt_lj_MinBias->Write();
     h_jet_pt_lj_subtracted->Write();
@@ -1892,6 +2294,10 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   // Write unfolding specific histograms
   if (!isData) {
     h_deltaR_gen_reco->Write();
+    h2_gen_pt_total_vs_cen->Write();
+    h2_gen_pt_matched_vs_cen->Write();
+    h2_swap_pure_den_vs_cen->Write();
+    h2_swap_pure_num_vs_cen->Write();
     h_eff_curve->Write();
     h_jet_pt_lj_matched->Write();
     h_deltaPhi_Zj_matched->Write();
@@ -1901,6 +2307,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     h_jet_pt_all_matched->Write();
     h_xZj_all_matched->Write();
     h_xZj_for_JEWEL_w->Write();
+    p_jes_vs_pt->Write();
+    p_jes_vs_eta->Write();
     h_mumu_true->Write();
     h_xZj_reco->Write();
     h_response->Write();

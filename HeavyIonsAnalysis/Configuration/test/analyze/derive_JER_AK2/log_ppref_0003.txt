@@ -1,0 +1,11 @@
+
+Processing derive_JER_AK2_ppref.C("260526_133929/0003/*.root", "AK2_forjer_ppref_0003.root")...
+Loaded Jet Veto Map using JetSelect_pp from: ../Winter24Prompt24_2024BCDEFGHI.root
+Successfully loaded 0 files into chains.
+Initializing JEC...
+Loaded JEC File: ../Prompt24HIpp_V1_MC_L2Relative_AK2PF.txt
+Starting Event Loop...
+=====================================================================
+DONE! The file 'AK2_forjer_ppref_0003.root' has been created.
+Successfully filled 0 matched, cleaned jets into the 3D histogram!
+Please pass this file to the expert's runMCJER.C script to extract the parameters.

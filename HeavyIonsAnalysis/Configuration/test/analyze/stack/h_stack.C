@@ -88,6 +88,17 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
     TCanvas *c[20];
     int ih = 0;
 
+    // --- Check if missing samples are defined in MC_samples.h ---
+    bool found_WZto3LNu = false;
+    bool found_ZZto2L2Q = false;
+    bool used_fallback_WZto3LNu = false;
+    bool used_fallback_ZZto2L2Q = false;
+
+    for (const auto& file : *targetVector) {
+        if (file.label == "WZto3LNu") found_WZto3LNu = true;
+        if (file.label == "ZZto2L2Q") found_ZZto2L2Q = true;
+    }
+
     // --- Loop over histograms ---
     for (const auto& histo : histo_par) {
         const std::string& histo_name = histo.histo_name;
@@ -133,8 +144,31 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
 
             TFile* file_ = TFile::Open(full_fname, "READ");
             if (!file_ || file_->IsZombie()) {
-                // Optional: std::cout << "Skip: " << full_fname << std::endl;
-                continue;
+                // --- FALLBACK LOGIC ---
+                std::string fallback_label = "";
+                if (label == "WZto3LNu") fallback_label = "WWto2L2Nu";
+
+                std::string string_WZto2L2Q = isPbPb ? "WZto2L2Q" : "WZTo2L2Q";
+                if (label == "ZZto2L2Q") fallback_label = string_WZto2L2Q;
+
+                if (fallback_label != "") {
+                    TString fallback_fname = Form("../plot/output_%s_mu_MC_%s%s.root", name_output.Data(), fallback_label.c_str(), run_tag.Data());
+
+                    // Use ih == 1 so it only prints on the first histogram loop, preventing spam!
+                    if (ih == 1) std::cout << "Warning: Could not open " << full_fname << ". Attempting to use fallback file: " << fallback_label << " instead..." << std::endl;
+
+                    file_ = TFile::Open(fallback_fname, "READ");
+                    if (file_ && !file_->IsZombie()) {
+                        if (label == "WZto3LNu") used_fallback_WZto3LNu = true;
+                        if (label == "ZZto2L2Q") used_fallback_ZZto2L2Q = true;
+                        if (ih == 1) std::cout << "Fallback successful for " << label << std::endl;
+                    } else {
+                        if (ih == 1) std::cerr << "Warning: Fallback file also failed to open!" << std::endl;
+                        continue; 
+                    }
+                } else {
+                    continue; // Not a target for fallback, move to next file
+                }
             }
 
             // Retrieve from correct internal directory (HI/Muons, ppref/Muons, etc)
@@ -157,7 +191,7 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
               h_TT->SetLineColor(h_TT->GetFillColor());
               h_TT->Add(h);
             }
-            else if (label=="WWto2L2Nu" || label=="WZto2L2Q" || label=="WZto3LNu" || label=="ZZto2L2Q" || label=="ZZto2L2Nu" || label=="ZZto4L") {
+            else if (label=="WWto2L2Nu" || label=="WZTo2L2Q" || label=="WZto3LNu" || label=="ZZto2L2Q" || label=="ZZto2L2Nu" || label=="ZZto4L") {
               h_diboson->SetFillColor(TColor::GetColor("#9c9ca1"));
               h_diboson->SetLineColor(h_diboson->GetFillColor());
               h_diboson->Add(h);
@@ -167,7 +201,44 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
               h_others->SetLineColor(h_others->GetFillColor());
               h_others->Add(h);
             }
+        }// <-- This closes the loop over MC files
+
+        // --- EXPLICIT FALLBACK LOGIC FOR SAMPLES MISSING IN MC_samples.h ---
+        if (!found_WZto3LNu) {
+            TString fallback_fname = Form("../plot/output_%s_mu_MC_WWto2L2Nu%s.root", name_output.Data(), run_tag.Data());
+            TFile* f_fallback = TFile::Open(fallback_fname, "READ");
+            if (f_fallback && !f_fallback->IsZombie()) {
+                TDirectoryFile* dir = (TDirectoryFile*)f_fallback->Get(name_output + "/Muons");
+                if (dir) {
+                    TH1D* h_fb = (TH1D*)dir->Get(histo_name.c_str());
+                    if (h_fb) {
+                        h_diboson->Add(h_fb);
+                        used_fallback_WZto3LNu = true;
+                        if (ih == 1) std::cout << "Missing WZto3LNu in MC_samples.h. Fallback to WWto2L2Nu successful." << std::endl;
+                    }
+                }
+                f_fallback->Close();
+            }
         }
+
+        if (!found_ZZto2L2Q) {
+            std::string fallback_label = isPbPb ? "WZto2L2Q" : "WZTo2L2Q";
+            TString fallback_fname = Form("../plot/output_%s_mu_MC_%s%s.root", name_output.Data(), fallback_label.c_str(), run_tag.Data());
+            TFile* f_fallback = TFile::Open(fallback_fname, "READ");
+            if (f_fallback && !f_fallback->IsZombie()) {
+                TDirectoryFile* dir = (TDirectoryFile*)f_fallback->Get(name_output + "/Muons");
+                if (dir) {
+                    TH1D* h_fb = (TH1D*)dir->Get(histo_name.c_str());
+                    if (h_fb) {
+                        h_diboson->Add(h_fb);
+                        used_fallback_ZZto2L2Q = true;
+                        if (ih == 1) std::cout << "Missing ZZto2L2Q in MC_samples.h. Fallback to " << fallback_label << " successful." << std::endl;
+                    }
+                }
+                f_fallback->Close();
+            }
+        }
+        // -------------------------------------------------------------------
 
         hs->Add(h_others);
         hs->Add(h_TT);
@@ -306,7 +377,7 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
         latex1->SetTextSize(0.045);
         latex1->SetTextColor(kBlack);
         latex1->SetTextFont(52);
-        latex1->DrawLatexNDC(0.19, 0.92, "Preliminary");
+//        latex1->DrawLatexNDC(0.19, 0.92, "Preliminary");
 
         TLatex* latex2 = new TLatex();
         latex2->SetTextSize(0.05);
@@ -321,11 +392,11 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
         }
 
         // DYNAMIC LABELS
-        latex2->SetTextSize(0.035);
+        latex2->SetTextSize(0.034);
         float textX = 0.63; // Starting X position
         float textY = 0.60; // Starting Y position
         if (histo_name == "h_deltaPhi_Zj") {
-          textX = 0.40;
+          textX = 0.39;
           textY = 0.82;
         }
         if (histo_name.find("mumu") != std::string::npos) textY = 0.82;
@@ -339,8 +410,8 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
         }
 
         // 2. Z Kinematics (Always shown)
-        if (ptZ_max > 9000) latex2->DrawLatexNDC(textX, textY, Form("p_{T}^{Z} > %.0f GeV", ptZ_min));
-        else latex2->DrawLatexNDC(textX, textY, Form("p_{T}^{Z}: %.0f-%.0f GeV", ptZ_min, ptZ_max));
+        if (ptZ_max > 9000) latex2->DrawLatexNDC(textX, textY, Form("p_{T}^{Z} > %.0f GeV, p_{T}^{#mu} > 20 GeV", ptZ_min));
+        else latex2->DrawLatexNDC(textX, textY, Form("p_{T}^{Z}: %.0f-%.0f GeV, p_{T}^{#mu} > 20 GeV", ptZ_min, ptZ_max));
         textY -= 0.05;
 
         // 3. Jet/Selection Specific Labels
@@ -353,7 +424,7 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
         if (isJetPlot) {
             latex2->DrawLatexNDC(textX, textY, "AK2 jets");
             textY -= 0.05;
-            latex2->DrawLatexNDC(textX, textY, "p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.5");
+            latex2->DrawLatexNDC(textX, textY, "p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.1");
             textY -= 0.05;
 
             // Only add dPhi cut label for specific back-to-back plots
@@ -376,5 +447,21 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
         // Dynamic output filename with run_tag to prevent overwriting
         if (isAlternative) c[ih]->Print((histo_name + "_" + name_output.Data() + run_tag.Data() + "_alternative_stack.pdf").c_str());
         else c[ih]->Print((histo_name + "_" + name_output.Data() + run_tag.Data() + "_stack.pdf").c_str());
+    } // End of histogram loop
+
+    // ==============================================================================
+    // PRINT RED WARNING FOR FALLBACKS
+    // ==============================================================================
+    if (used_fallback_WZto3LNu || used_fallback_ZZto2L2Q) {
+        std::string string_WZto2L2Q = isPbPb ? "WZto2L2Q" : "WZTo2L2Q";
+        std::cout << "\n\033[1;31m=========================================================\033[0m" << std::endl;
+        std::cout << "\033[1;31mWARNING!!! FALLBACK BACKGROUND SAMPLES WERE USED:\033[0m" << std::endl;
+        if (used_fallback_WZto3LNu) {
+            std::cout << "\033[1;31m -> Missing WZto3LNu was replaced with WWto2L2Nu\033[0m" << std::endl;
+        }
+        if (used_fallback_ZZto2L2Q) {
+            std::cout << "\033[1;31m -> Missing ZZto2L2Q was replaced with " << string_WZto2L2Q << "\033[0m" << std::endl;
+        }
+        std::cout << "\033[1;31m=========================================================\033[0m\n" << std::endl;
     }
 }

@@ -49,13 +49,19 @@ if [[ "$COLLISION" == *"PbPb"* ]]; then
 
 else
     # ==============================================================================
-    #  ppref WORKFLOW (Skip Ncoll/Rho -> Start at Vz)
+    #  ppref WORKFLOW (Pileup -> Vz -> Final)
     # ==============================================================================
-    echo "=== Step 0 & 1: Skipped for ppref (No Ncoll/Rho reweighting) ==="
-    # We still need to run Data (Phase 1) to produce the output file containing
-    # the Vz distribution that Step 2 will compare against.
-    echo "-> Running Data (Phase 1) for reference histograms..."
+    echo "=== Step 1: Pileup Weights (ppref only) ==="
+    echo "-> Running Data (Phase 1)..."
     root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"$COLLISION\", \"data\", 1, 0, $CENT_MIN, $CENT_MAX, $PTZ_MIN, $PTZ_MAX)"
+    
+    echo "-> Running MC (Phase 1)..."
+    root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"$COLLISION\", \"signal\", 1, 0, $CENT_MIN, $CENT_MAX, $PTZ_MIN, $PTZ_MAX)"
+    
+    echo "-> Computing PU Weights..."
+    cd weights_MC/rho_weights_1/
+    root -l -b -q "pu_weight_1.C(\"$COLLISION\", 0, $CENT_MIN, $CENT_MAX, $PTZ_MIN, $PTZ_MAX)"
+    cd "$ORIGINAL_DIR"
 fi
 
 # ==============================================================================
@@ -65,13 +71,17 @@ fi
 echo "=== Step 2: Vz Weights ==="
 echo "-> Running MC (Phase 2 - Calculate Vz Weights)..."
 
-# Note: For PbPb we optionally run Phase -1 (Rho check) here.
-# For ppref we skip it because there is no Rho reweighting to check.
 if [[ "$COLLISION" == *"PbPb"* ]]; then
    echo "-> (Optional) Checking Rho reweighting..."
    root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"$COLLISION\", \"signal\", -1, 0, $CENT_MIN, $CENT_MAX, $PTZ_MIN, $PTZ_MAX)"
    cd weights_MC/rho_weights_1/
    root -l -b -q "rho_weight_1.C(\"$COLLISION\", 1, $CENT_MIN, $CENT_MAX, $PTZ_MIN, $PTZ_MAX)"
+   cd "$ORIGINAL_DIR"
+else
+   echo "-> (Optional) Checking PU reweighting..."
+   root -l -b -q "analyze_HI_TTreeReader_ZMM.C(\"$COLLISION\", \"signal\", -1, 0, $CENT_MIN, $CENT_MAX, $PTZ_MIN, $PTZ_MAX)"
+   cd weights_MC/rho_weights_1/
+   root -l -b -q "pu_weight_1.C(\"$COLLISION\", 1, $CENT_MIN, $CENT_MAX, $PTZ_MIN, $PTZ_MAX)"
    cd "$ORIGINAL_DIR"
 fi
 
@@ -101,5 +111,47 @@ fi
 cd weights_MC/final_weight_3/
 root -l -b -q "JEWEL_weight_3.C(\"$COLLISION\", 0, $CENT_MIN, $CENT_MAX, $PTZ_MIN, $PTZ_MAX)"
 cd "$ORIGINAL_DIR"
+
+# ==============================================================================
+#  Step 4: Data-Driven UE Swap Efficiencies
+# ==============================================================================
+echo "=== Step 4: Data-Driven UE Swap Efficiencies ==="
+
+# 0. Format variables to match C++ "%.0f" (removes decimals, e.g., 40.0 -> 40)
+PTZ_MIN_INT=${PTZ_MIN%.*}
+PTZ_MAX_INT=${PTZ_MAX%.*}
+
+# 1. Build the dynamic tags for file naming
+if [[ "$PTZ_MAX" == "9999"* ]]; then
+    PT_TAG="_ptZ${PTZ_MIN_INT}_Inf"
+else
+    PT_TAG="_ptZ${PTZ_MIN_INT}_${PTZ_MAX_INT}"
+fi
+
+# 2. Determine System and Prefix
+if [[ "$COLLISION" == *"PbPb"* ]]; then
+    RUN_TAG="_Cen${CENT_MIN}_${CENT_MAX}${PT_TAG}"
+    PREFIX="HI"
+    if [[ "$COLLISION" == *"24"* ]]; then PREFIX="HI24"; fi
+    DIR_NAME="${PREFIX}/Muons"
+    IS_PBPB=1
+
+    echo "-> Running Data-Driven Fits for PbPb..."
+    root -l -b -q "compute_swap_efficiency_fit.C(\"plot/output_${PREFIX}_mu_data${RUN_TAG}.root\", \"swap_efficiency_PbPb.root\", \"${DIR_NAME}\")"
+    root -l -b -q "compute_swap_efficiency_fit.C(\"plot/output_${PREFIX}_mu_MC_signal${RUN_TAG}.root\", \"swap_efficiency_PbPb_MC.root\", \"${DIR_NAME}\")"
+else
+    RUN_TAG="${PT_TAG}"
+    PREFIX="ppref"
+    DIR_NAME="ppref/Muons"
+    IS_PBPB=0
+
+    echo "-> Running Data-Driven Fits for pp..."
+    root -l -b -q "compute_swap_efficiency_fit.C(\"plot/output_${PREFIX}_mu_data${RUN_TAG}.root\", \"swap_efficiency_ppref.root\", \"${DIR_NAME}\")"
+    root -l -b -q "compute_swap_efficiency_fit.C(\"plot/output_${PREFIX}_mu_MC_signal${RUN_TAG}.root\", \"swap_efficiency_ppref_MC.root\", \"${DIR_NAME}\")"
+fi
+
+# 3. Generate summary plots and extract Truth histograms
+echo "-> Generating Data-Driven Summary Plots and extracting MC Truth..."
+root -l -b -q "plot_swap_efficiency_summary.C(${IS_PBPB}, \"${RUN_TAG}\", \"${PREFIX}\")"
 
 echo "Complete."

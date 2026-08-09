@@ -60,11 +60,12 @@ const std::vector<FileInfo> files_ppref = {
     {"/eos/infnts/cms/store/user/rdelliga/WminusToMuminusNu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_WminusToMuminusNu/260411_091355/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_WminusToMuminusNu.root", "WminusToMuminusNu", 2.73 * 1000, 9844580},
     {"/eos/infnts/cms/store/user/rdelliga/TT_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_TT/260411_031237/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_TT.root", "TT", 6.62 * 10, 10000000},
     {"/eos/infnts/cms/store/user/rdelliga/ZZTo4L_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_ZZTo4L/260410_191057/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_ZZto4L.root", "ZZto4L", 5.04 / 10, 999040},
+    {"/eos/infnts/cms/store/user/rdelliga/WZTo2L2Q_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_WZTo2L2Q/260607_125059/0000/*.root", "output_ppref_mu_MC_WZTo2L2Q.root", "WZTo2L2Q", 2.19 , 1000000},
     {"/eos/infnts/cms/store/user/rdelliga/WWTo2L2Nu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_WWTo2L2Nu/260410_231147/0000/HiForestMiniAOD_*.root", "output_HI_mu_MC_WWto2L2Nu.root", "WWto2L2Nu", 3.066, 1000000},
     {"/eos/infnts/cms/store/user/rdelliga/ZZTo2L2Nu_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_ZZTo2L2Nu/260410_211120/0000/HiForestMiniAOD_*.root", "output_HI_mu_MC_ZZto2L2Nu.root", "ZZto2L2Nu", 2.917 / 10, 997195},
 //    {"/eos/infnts/cms/store/user/kdeleo/DYToMuMu_M-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test18_mc_ppRef_ZMM_DYto2Mu/251115_123708/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_signal.root", "signal", 6.57 * 100, 9999999} //old
     {"/eos/infnts/cms/store/user/rdelliga/DYToMuMu_M-50_TuneCP5_5p36TeV_powheg-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_DYtoMuMu/260410_145930/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_alternative.root", "alternative", 6.57 * 100, 9999999},
-    {"/eos/infnts/cms/store/user/rdelliga/DYto2L-2Jets_MLL-50_TuneCP5_5p36TeV_amcatnloFXFX-pythia8/CRAB3_Analysis_test25_run3_ppref_MC_ZMM_DYto2L_2Jets/260410_103348/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_signal.root", "signal", 2.328 * 1000, 30156049}
+    {"/eos/infnts/cms/store/user/rdelliga/DYto2L-2Jets_MLL-50_TuneCP5_5p36TeV_amcatnloFXFX-pythia8/CRAB3_Analysis_test27_run3_ppref_MC_ZMM_DYto2L_2Jets/260708_083506/0000/HiForestMiniAOD_*.root", "output_ppref_mu_MC_signal.root", "signal", 2.328 * 1000, 30156049}
 };
 
 #endif // MC_SAMPLES_H

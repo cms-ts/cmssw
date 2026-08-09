@@ -1,0 +1,49 @@
+//==============================================================================
+//   Gen-Level Jet Radius Comparison (R=0.2, 0.3, 0.4) - README
+//==============================================================================
+
+//--------------------------------
+// 0. Quick commands
+//--------------------------------
+./do_GenLevel_Zjets.sh ppref24
+root -l -b -q 'plot_compare_radius.C("ppref")'
+
+//--------------------------------
+// 1. Single Analysis (Interactive)
+//--------------------------------
+// Run the Gen-Level analyzer macro directly for a specific jet radius.
+// Arguments: (collision_type, jet_R, cent_min, cent_max, ptZ_min, ptZ_max)
+
+// --- pp Ref 2024 (Example with default cuts: pT > 40) ---
+root -l -b -q 'analyze_GenLevel_Zjets.C("ppref24", 0.2, 0, 30, 40, 9999)'   // R = 0.2
+root -l -b -q 'analyze_GenLevel_Zjets.C("ppref24", 0.3, 0, 30, 40, 9999)'   // R = 0.3
+root -l -b -q 'analyze_GenLevel_Zjets.C("ppref24", 0.4, 0, 30, 40, 9999)'   // R = 0.4
+
+
+//--------------------------------
+// 2. Automated Wrapper (Runs all radii)
+//--------------------------------
+// Runs the analyzer in the background (nohup) for R=0.2, 0.3, and 0.4 simultaneously.
+// Usage: ./do_GenLevel_Zjets.sh [collision] [cent_min] [cent_max] [ptZ_min] [ptZ_max]
+chmod +x do_GenLevel_Zjets.sh
+
+// Examples:
+./do_GenLevel_Zjets.sh                              // Runs ppref24, pT > 40 (Default)
+./do_GenLevel_Zjets.sh ppref24 0 30 40 80           // Runs ppref24, pT 40-80
+// Logs saved in: GenLevel_log/
+
+// If you need to kill background jobs launched by the wrapper:
+killall -9 root.exe
+
+
+//--------------------------------
+// 3. Plotting & Comparison
+//--------------------------------
+// Overlays the x_Zj distributions for the three radii, normalizes them, 
+// prints the mean values as a LaTeX table to the console, and saves a PDF.
+// Arguments: (collision_type, ptZ_min, ptZ_max, cent_min, cent_max)
+
+// Examples:
+root -l -b -q 'plot_compare_radius.C("ppref24")'             // Default cuts (pT > 40)
+root -l -b -q 'plot_compare_radius.C("ppref24", 40, 80)'     // Custom cuts (pT 40-80)
+// Plots saved in: plot_RadiusCompare/
