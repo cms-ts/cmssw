@@ -234,9 +234,9 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
     cout << "Initializing JER..." << endl;
     
     // Define files (applies to both 2023 and 2024 PbPb)
-    std::string jer_sf_file = "../Summer23Prompt23_RunCv4_JRV1m_MC_SF_AK4PFPuppi.txt"; 
+    std::string jer_sf_file = "../Summer23BPixPrompt23_RunD_JRV3_MC_SF_AK4PFchs.txt"; 
     std::string jer_res_file = "../derive_JER_AK2/My_PbPb23_MC_PtResolution_AK2PF.txt"; 
-    std::string jer_sf_unc_file = "../Summer23Prompt23_RunCv4_JRV1m_MC_SFUncertainty_AK4PFPuppi.txt"; 
+    std::string jer_sf_unc_file = "../Summer23BPixPrompt23_RunD_JRV3_MC_SFUncertainty_AK4PFchs.txt";
 
     // Print and Load
     if (!jer_sf_file.empty()) {
@@ -256,11 +256,11 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
   // Initialize Jet Selector as pointers
   JetSelect* js_PbPb = nullptr;
 
-  // Load specific map file (same for now)
+  // Load specific map file
   if (is2023) {
-    js_PbPb = new JetSelect("../Winter24Prompt24_2024BCDEFGHI.root");
+    js_PbPb = new JetSelect("../Summer23BPixPrompt23_RunD_v1.root");
   } else {
-    js_PbPb = new JetSelect("../Winter24Prompt24_2024BCDEFGHI.root");
+    js_PbPb = new JetSelect("../Winter25Prompt25_RunCDE.root");
   }
   std::cout << "------------------------------------------------" << std::endl;
 
@@ -526,7 +526,7 @@ void analyze_MinBias_TTreeReader(const char* year_str = "PbPb23", bool isData = 
       // Apply JER if MC
       double pt_final = CorrectedPT;
       if (!isData) {
-        pt_final = jer.GetSmearedPt(CorrectedPT, jteta[ijet], jtphi[ijet], jetRho, v_gen_pts, v_gen_etas, v_gen_phis, 0);
+        pt_final = jer.GetSmearedPt(CorrectedPT, jteta[ijet], jtphi[ijet], jetRho, v_gen_pts, v_gen_etas, v_gen_phis, 0, *evt);
       }
       jtpt_corr[ijet] = pt_final;
       // Selections

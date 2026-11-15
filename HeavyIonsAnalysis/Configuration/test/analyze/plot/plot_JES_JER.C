@@ -103,5 +103,5 @@ void plot_JES_JER(double test_pt = 40.0, double test_rho = 80.0) {
     g_JER->Draw("APL");
     latex->DrawLatexNDC(0.5, 0.16, jer_file.c_str());
 
-    c->SaveAs("JES_JER_Performance.pdf");
+    c->SaveAs("JES_JER_Performance_ppref.pdf");
 }

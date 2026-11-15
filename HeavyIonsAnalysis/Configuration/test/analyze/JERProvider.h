@@ -8,7 +8,7 @@
 #include <sstream>
 #include <cmath>
 #include <algorithm>
-#include "TRandom3.h"
+#include <random>
 #include "TMath.h"
 
 // ---------------------------------------------------------------------------------------------------------
@@ -181,20 +181,19 @@ public:
             }
         }
 
-        // Apply absolute shift
-        float final_sf = (syst_var == 1) ? (nominal_sf + unc) : (nominal_sf - unc);
+        // Apply relative multiplicative shift (Official CMS Recommendation)
+        float final_sf = nominal_sf;
+        if (syst_var == 1)  final_sf = nominal_sf * (1.0f + unc);
+        if (syst_var == -1) final_sf = nominal_sf * (1.0f - unc);
         
         return final_sf;
     }
 
-    // Main Hybrid Smearing Function
-    // (jetRho is kept in the signature to prevent breaking existing main macros, but it is ignored)
+    // Main Hybrid Smearing Function (Now completely stateless & reproducible)
     float GetSmearedPt(float pt_reco, float eta_reco, float phi_reco, float jetRho,
                        const std::vector<float>& gen_pts, const std::vector<float>& gen_etas, const std::vector<float>& gen_phis,
-                       int syst_var = 0) {
+                       int syst_var = 0, unsigned long long eventID = 0) { // <--- Added eventID
         
-        (void)jetRho; // Suppress unused variable warning
-
         float resolution = GetResolution(pt_reco, eta_reco);
         float sf = GetSF(pt_reco, eta_reco, syst_var);
 
@@ -207,8 +206,8 @@ public:
             if (dPhi > TMath::Pi()) dPhi = 2 * TMath::Pi() - dPhi;
             float dR = std::sqrt(dEta * dEta + dPhi * dPhi);
 
-            // Matching: dR < 0.1 (adjust if using AK4 instead of AK2) and dPt < 3 * sigma
-            if (dR < 0.1 && std::abs(pt_reco - gen_pts[i]) < 3.0f * resolution * pt_reco) {
+            // Matching: dR < 0.1 (AK2 specific) and dPt < 3 * sigma
+            if (dR < 0.1f && std::abs(pt_reco - gen_pts[i]) < 3.0f * resolution * pt_reco) {
                 if (dR < min_dR) {
                     min_dR = dR;
                     best_match_idx = i;
@@ -226,9 +225,27 @@ public:
         } else {
             // Stochastic Smearing (No Gen Match)
             if (sf > 1.0f) {
-                rand.SetSeed(1 + std::abs((int)(phi_reco * 100000)));
+                // --- STATELESS HASH PRNG ---
+                // a. Create a unique, deterministic seed using CMS recommended entropy sources
+                std::size_t seed = 0;
+                auto hash_combine = [&seed](std::size_t hash_val) {
+                    seed ^= hash_val + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+                };
+                
+                hash_combine(std::hash<unsigned long long>{}(eventID));
+                hash_combine(std::hash<float>{}(pt_reco));
+                hash_combine(std::hash<float>{}(eta_reco));
+                hash_combine(std::hash<float>{}(jetRho));
+
+                // b. Initialize a lightweight local random engine
+                // (minstd_rand is an LCG, effectively zero setup cost for per-jet instantiation)
+                std::minstd_rand lcg(static_cast<uint32_t>(seed));
+                
+                // c. Draw from a Gaussian distribution
                 float width = resolution * std::sqrt(std::max(sf * sf - 1.0f, 0.0f));
-                float smear_factor = rand.Gaus(0, width);
+                std::normal_distribution<float> gauss_dist(0.0f, width);
+                
+                float smear_factor = gauss_dist(lcg);
                 pt_smeared = std::max(0.0f, pt_reco * (1.0f + smear_factor));
             }
         }

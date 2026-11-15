@@ -20,7 +20,7 @@ Initializing JEC...
 Loaded JEC File: Prompt23HIPbPb_V1_MC_L2Relative_AK2PF.txt
 Loaded JEC File: Prompt23HIPbPb_V1_DATA_L2Residual_AK2PF.txt
 Loaded JEC Uncertainty File: Spring23PbPb_TotalUncertainties.txt
-Loaded Jet Veto Map using JetSelect_PbPb from: Winter24Prompt24_2024BCDEFGHI.root
+Loaded Jet Veto Map using JetSelect_PbPb from: Summer23BPixPrompt23_RunD_v1.root
 ------------------------------------------------
 Caching MinBias events into memory...
 Found 9000 MinBias entries in 'jet_tree'.
@@ -33,22 +33,622 @@ Running binning variation (systFlag = 8)
 File created: ./syst_binning/output_HI_mu_data_binning_Cen0_30_ptZ40_Inf.root
 ------------------------------------------------
 Starting Analysis Loop over 25441 events...
-[Analysis] Processing: 1 / 25441 (0.00%)[Analysis] Processing: 254 / 25441 (1.00%)[Analysis] Processing: 508 / 25441 (2.00%)[Analysis] Processing: 762 / 25441 (3.00%)[Analysis] Processing: 1016 / 25441 (3.99%)[Analysis] Processing: 1270 / 25441 (4.99%)[Analysis] Processing: 1524 / 25441 (5.99%)[Analysis] Processing: 1778 / 25441 (6.99%)[Analysis] Processing: 2032 / 25441 (7.99%)[Analysis] Processing: 2286 / 25441 (8.99%)[Analysis] Processing: 2540 / 25441 (9.98%)[Analysis] Processing: 2794 / 25441 (10.98%)[Analysis] Processing: 3048 / 25441 (11.98%)[Analysis] Processing: 3302 / 25441 (12.98%)[Analysis] Processing: 3556 / 25441 (13.98%)[Analysis] Processing: 3810 / 25441 (14.98%)[Analysis] Processing: 4064 / 25441 (15.97%)[Analysis] Processing: 4318 / 25441 (16.97%)[Analysis] Processing: 4572 / 25441 (17.97%)[Analysis] Processing: 4826 / 25441 (18.97%)[Analysis] Processing: 5080 / 25441 (19.97%)[Analysis] Processing: 5334 / 25441 (20.97%)[Analysis] Processing: 5588 / 25441 (21.96%)[Analysis] Processing: 5842 / 25441 (22.96%)[Analysis] Processing: 6096 / 25441 (23.96%)[Analysis] Processing: 6350 / 25441 (24.96%)[Analysis] Processing: 6604 / 25441 (25.96%)[Analysis] Processing: 6858 / 25441 (26.96%)[Analysis] Processing: 7112 / 25441 (27.95%)[Analysis] Processing: 7366 / 25441 (28.95%)[Analysis] Processing: 7620 / 25441 (29.95%)[Analysis] Processing: 7874 / 25441 (30.95%)[Analysis] Processing: 8128 / 25441 (31.95%)[Analysis] Processing: 8382 / 25441 (32.95%)[Analysis] Processing: 8636 / 25441 (33.95%)[Analysis] Processing: 8890 / 25441 (34.94%)[Analysis] Processing: 9144 / 25441 (35.94%)[Analysis] Processing: 9398 / 25441 (36.94%)[Analysis] Processing: 9652 / 25441 (37.94%)[Analysis] Processing: 9906 / 25441 (38.94%)[Analysis] Processing: 10160 / 25441 (39.94%)[Analysis] Processing: 10414 / 25441 (40.93%)[Analysis] Processing: 10668 / 25441 (41.93%)[Analysis] Processing: 10922 / 25441 (42.93%)[Analysis] Processing: 11176 / 25441 (43.93%)[Analysis] Processing: 11430 / 25441 (44.93%)[Analysis] Processing: 11684 / 25441 (45.93%)[Analysis] Processing: 11938 / 25441 (46.92%)[Analysis] Processing: 12192 / 25441 (47.92%)[Analysis] Processing: 12446 / 25441 (48.92%)!!! WARNING: hiBin = 14 hiHF = 3934.40 hiBin nominal = 15 hiBin up = 15 hiBin down = 14
-[Analysis] Processing: 12700 / 25441 (49.92%)[Analysis] Processing: 12954 / 25441 (50.92%)[Analysis] Processing: 13208 / 25441 (51.92%)[Analysis] Processing: 13462 / 25441 (52.91%)[Analysis] Processing: 13716 / 25441 (53.91%)[Analysis] Processing: 13970 / 25441 (54.91%)[Analysis] Processing: 14224 / 25441 (55.91%)[Analysis] Processing: 14478 / 25441 (56.91%)[Analysis] Processing: 14732 / 25441 (57.91%)[Analysis] Processing: 14986 / 25441 (58.90%)[Analysis] Processing: 15240 / 25441 (59.90%)[Analysis] Processing: 15494 / 25441 (60.90%)[Analysis] Processing: 15748 / 25441 (61.90%)[Analysis] Processing: 16002 / 25441 (62.90%)[Analysis] Processing: 16256 / 25441 (63.90%)[Analysis] Processing: 16510 / 25441 (64.90%)[Analysis] Processing: 16764 / 25441 (65.89%)[Analysis] Processing: 17018 / 25441 (66.89%)[Analysis] Processing: 17272 / 25441 (67.89%)[Analysis] Processing: 17526 / 25441 (68.89%)[Analysis] Processing: 17780 / 25441 (69.89%)[Analysis] Processing: 18034 / 25441 (70.89%)[Analysis] Processing: 18288 / 25441 (71.88%)[Analysis] Processing: 18542 / 25441 (72.88%)[Analysis] Processing: 18796 / 25441 (73.88%)[Analysis] Processing: 19050 / 25441 (74.88%)[Analysis] Processing: 19304 / 25441 (75.88%)[Analysis] Processing: 19558 / 25441 (76.88%)[Analysis] Processing: 19812 / 25441 (77.87%)[Analysis] Processing: 20066 / 25441 (78.87%)[Analysis] Processing: 20320 / 25441 (79.87%)[Analysis] Processing: 20574 / 25441 (80.87%)[Analysis] Processing: 20828 / 25441 (81.87%)[Analysis] Processing: 21082 / 25441 (82.87%)[Analysis] Processing: 21336 / 25441 (83.86%)[Analysis] Processing: 21590 / 25441 (84.86%)[Analysis] Processing: 21844 / 25441 (85.86%)[Analysis] Processing: 22098 / 25441 (86.86%)[Analysis] Processing: 22352 / 25441 (87.86%)[Analysis] Processing: 22606 / 25441 (88.86%)[Analysis] Processing: 22860 / 25441 (89.85%)[Analysis] Processing: 23114 / 25441 (90.85%)[Analysis] Processing: 23368 / 25441 (91.85%)[Analysis] Processing: 23622 / 25441 (92.85%)[Analysis] Processing: 23876 / 25441 (93.85%)[Analysis] Processing: 24130 / 25441 (94.85%)[Analysis] Processing: 24384 / 25441 (95.85%)[Analysis] Processing: 24638 / 25441 (96.84%)[Analysis] Processing: 24892 / 25441 (97.84%)[Analysis] Processing: 25146 / 25441 (98.84%)[Analysis] Processing: 25400 / 25441 (99.84%)[Analysis] Processing: 25441 / 25441 (100.0%) - Complete.
+[Analysis] Processing: 1 / 25441 (0.00%)[Analysis] Processing: 254 / 25441 (1.00%)[Analysis] Processing: 508 / 25441 (2.00%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375455 | Lumi: 136 | Event: 146600997
+Centrality (hiBin): 41
+Z Boson Mass: 82.07 GeV | Z pT: 102.80 GeV | Z eta: 1.97 | Z phi: -0.83
+  -> Muon 1 (+): pT = 89.02 GeV, eta = 1.80, phi = -1.25
+  -> Muon 2 (-): pT = 41.96 GeV, eta = 1.60, phi = 0.21
+Leading Jet: pT = 67.80 GeV, eta = 0.87, phi = 2.44
+x_Zj: 0.66 | DeltaPhi: 3.02
+---------------------------------------
+
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375823 | Lumi: 325 | Event: 390160791
+Centrality (hiBin): 29
+Z Boson Mass: 81.55 GeV | Z pT: 82.85 GeV | Z eta: -0.17 | Z phi: -0.13
+  -> Muon 1 (+): pT = 25.10 GeV, eta = 0.27, phi = 1.53
+  -> Muon 2 (-): pT = 88.60 GeV, eta = -0.24, phi = -0.41
+Leading Jet: pT = 52.41 GeV, eta = 1.52, phi = -3.10
+x_Zj: 0.63 | DeltaPhi: 2.97
+---------------------------------------
+[Analysis] Processing: 762 / 25441 (3.00%)[Analysis] Processing: 1016 / 25441 (3.99%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 374719 | Lumi: 581 | Event: 452594380
+Centrality (hiBin): 6
+Z Boson Mass: 86.82 GeV | Z pT: 124.11 GeV | Z eta: -1.03 | Z phi: 2.56
+  -> Muon 1 (+): pT = 126.95 GeV, eta = -0.82, phi = 2.75
+  -> Muon 2 (-): pT = 23.35 GeV, eta = -1.17, phi = 0.96
+Leading Jet: pT = 65.42 GeV, eta = 1.90, phi = -0.57
+x_Zj: 0.53 | DeltaPhi: 3.14
+---------------------------------------
+
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375746 | Lumi: 756 | Event: 1247588248
+Centrality (hiBin): 33
+Z Boson Mass: 91.14 GeV | Z pT: 104.63 GeV | Z eta: -0.62 | Z phi: 1.83
+  -> Muon 1 (+): pT = 50.92 GeV, eta = -1.09, phi = 2.47
+  -> Muon 2 (-): pT = 70.86 GeV, eta = -0.03, phi = 1.38
+Leading Jet: pT = 70.43 GeV, eta = 0.24, phi = -1.69
+x_Zj: 0.67 | DeltaPhi: 2.76
+---------------------------------------
+[Analysis] Processing: 1270 / 25441 (4.99%)[Analysis] Processing: 1524 / 25441 (5.99%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375549 | Lumi: 149 | Event: 146787267
+Centrality (hiBin): 30
+Z Boson Mass: 92.57 GeV | Z pT: 97.81 GeV | Z eta: 0.05 | Z phi: 1.85
+  -> Muon 1 (+): pT = 75.42 GeV, eta = -0.20, phi = 1.26
+  -> Muon 2 (-): pT = 54.27 GeV, eta = 0.36, phi = 2.72
+Leading Jet: pT = 57.55 GeV, eta = -1.41, phi = -1.32
+x_Zj: 0.59 | DeltaPhi: 3.11
+---------------------------------------
+[Analysis] Processing: 1778 / 25441 (6.99%)[Analysis] Processing: 2032 / 25441 (7.99%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 374970 | Lumi: 79 | Event: 31021372
+Centrality (hiBin): 2
+Z Boson Mass: 90.88 GeV | Z pT: 117.58 GeV | Z eta: -0.64 | Z phi: -0.49
+  -> Muon 1 (+): pT = 71.68 GeV, eta = -0.12, phi = 0.01
+  -> Muon 2 (-): pT = 64.59 GeV, eta = -0.96, phi = -1.05
+Leading Jet: pT = 61.42 GeV, eta = -1.18, phi = 2.28
+x_Zj: 0.52 | DeltaPhi: 2.77
+---------------------------------------
+[Analysis] Processing: 2286 / 25441 (8.99%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375413 | Lumi: 145 | Event: 107332610
+Centrality (hiBin): 22
+Z Boson Mass: 91.86 GeV | Z pT: 90.80 GeV | Z eta: 0.30 | Z phi: 0.06
+  -> Muon 1 (+): pT = 62.91 GeV, eta = 0.40, phi = 0.84
+  -> Muon 2 (-): pT = 64.06 GeV, eta = 0.03, phi = -0.71
+Leading Jet: pT = 45.71 GeV, eta = -0.02, phi = 3.08
+x_Zj: 0.50 | DeltaPhi: 3.02
+---------------------------------------
+[Analysis] Processing: 2540 / 25441 (9.98%)[Analysis] Processing: 2794 / 25441 (10.98%)[Analysis] Processing: 3048 / 25441 (11.98%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375055 | Lumi: 120 | Event: 62029918
+Centrality (hiBin): 6
+Z Boson Mass: 84.59 GeV | Z pT: 257.03 GeV | Z eta: -2.19 | Z phi: -0.74
+  -> Muon 1 (+): pT = 203.42 GeV, eta = -2.23, phi = -0.59
+  -> Muon 2 (-): pT = 63.60 GeV, eta = -1.85, phi = -1.24
+Leading Jet: pT = 138.56 GeV, eta = 0.91, phi = 2.47
+x_Zj: 0.54 | DeltaPhi: 3.07
+---------------------------------------
+[Analysis] Processing: 3302 / 25441 (12.98%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375463 | Lumi: 173 | Event: 200559929
+Centrality (hiBin): 2
+Z Boson Mass: 93.80 GeV | Z pT: 173.98 GeV | Z eta: 0.66 | Z phi: -2.62
+  -> Muon 1 (+): pT = 124.32 GeV, eta = 0.77, phi = -2.31
+  -> Muon 2 (-): pT = 67.79 GeV, eta = 0.27, phi = 3.06
+Leading Jet: pT = 113.64 GeV, eta = 1.12, phi = 0.49
+x_Zj: 0.65 | DeltaPhi: 3.11
+---------------------------------------
+[Analysis] Processing: 3556 / 25441 (13.98%)[Analysis] Processing: 3810 / 25441 (14.98%)[Analysis] Processing: 4064 / 25441 (15.97%)[Analysis] Processing: 4318 / 25441 (16.97%)[Analysis] Processing: 4572 / 25441 (17.97%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375055 | Lumi: 803 | Event: 851425891
+Centrality (hiBin): 39
+Z Boson Mass: 104.68 GeV | Z pT: 81.87 GeV | Z eta: 1.21 | Z phi: 1.40
+  -> Muon 1 (+): pT = 27.25 GeV, eta = 1.83, phi = 2.93
+  -> Muon 2 (-): pT = 85.18 GeV, eta = 0.47, phi = 1.08
+Leading Jet: pT = 53.56 GeV, eta = 0.46, phi = -1.87
+x_Zj: 0.65 | DeltaPhi: 3.01
+---------------------------------------
+[Analysis] Processing: 4826 / 25441 (18.97%)[Analysis] Processing: 5080 / 25441 (19.97%)[Analysis] Processing: 5334 / 25441 (20.97%)[Analysis] Processing: 5588 / 25441 (21.96%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375513 | Lumi: 422 | Event: 481970199
+Centrality (hiBin): 11
+Z Boson Mass: 77.46 GeV | Z pT: 80.28 GeV | Z eta: 2.04 | Z phi: -0.99
+  -> Muon 1 (+): pT = 85.53 GeV, eta = 1.73, phi = -1.30
+  -> Muon 2 (-): pT = 26.02 GeV, eta = 1.71, phi = 0.63
+Leading Jet: pT = 46.68 GeV, eta = 1.82, phi = 2.33
+x_Zj: 0.58 | DeltaPhi: 2.97
+---------------------------------------
+[Analysis] Processing: 5842 / 25441 (22.96%)[Analysis] Processing: 6096 / 25441 (23.96%)[Analysis] Processing: 6350 / 25441 (24.96%)[Analysis] Processing: 6604 / 25441 (25.96%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375013 | Lumi: 596 | Event: 634083554
+Centrality (hiBin): 31
+Z Boson Mass: 110.68 GeV | Z pT: 118.71 GeV | Z eta: -0.35 | Z phi: -0.80
+  -> Muon 1 (+): pT = 100.11 GeV, eta = 0.16, phi = -0.59
+  -> Muon 2 (-): pT = 30.20 GeV, eta = -1.42, phi = -1.61
+Leading Jet: pT = 73.77 GeV, eta = -0.41, phi = 1.95
+x_Zj: 0.62 | DeltaPhi: 2.75
+---------------------------------------
+
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375491 | Lumi: 357 | Event: 352442923
+Centrality (hiBin): 3
+Z Boson Mass: 94.21 GeV | Z pT: 130.86 GeV | Z eta: 0.42 | Z phi: -0.18
+  -> Muon 1 (+): pT = 23.16 GeV, eta = 0.46, phi = 1.62
+  -> Muon 2 (-): pT = 137.89 GeV, eta = 0.32, phi = -0.34
+Leading Jet: pT = 83.90 GeV, eta = 1.72, phi = -3.13
+x_Zj: 0.64 | DeltaPhi: 2.95
+---------------------------------------
+[Analysis] Processing: 6858 / 25441 (26.96%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375413 | Lumi: 444 | Event: 327044217
+Centrality (hiBin): 29
+Z Boson Mass: 89.20 GeV | Z pT: 94.64 GeV | Z eta: 2.42 | Z phi: 2.63
+  -> Muon 1 (+): pT = 99.29 GeV, eta = 2.21, phi = 2.34
+  -> Muon 2 (-): pT = 28.36 GeV, eta = 1.75, phi = -2.07
+Leading Jet: pT = 50.99 GeV, eta = 0.26, phi = -0.78
+x_Zj: 0.54 | DeltaPhi: 2.87
+---------------------------------------
+[Analysis] Processing: 7112 / 25441 (27.95%)[Analysis] Processing: 7366 / 25441 (28.95%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375202 | Lumi: 99 | Event: 67572547
+Centrality (hiBin): 19
+Z Boson Mass: 93.46 GeV | Z pT: 107.07 GeV | Z eta: 0.44 | Z phi: 0.79
+  -> Muon 1 (+): pT = 78.78 GeV, eta = 0.33, phi = 1.42
+  -> Muon 2 (-): pT = 63.35 GeV, eta = 0.33, phi = -0.03
+Leading Jet: pT = 65.52 GeV, eta = -1.35, phi = -2.24
+x_Zj: 0.61 | DeltaPhi: 3.03
+---------------------------------------
+
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375507 | Lumi: 633 | Event: 726159624
+Centrality (hiBin): 37
+Z Boson Mass: 90.04 GeV | Z pT: 152.85 GeV | Z eta: 0.90 | Z phi: -2.86
+  -> Muon 1 (+): pT = 38.95 GeV, eta = 0.03, phi = 2.84
+  -> Muon 2 (-): pT = 122.02 GeV, eta = 1.07, phi = -2.69
+Leading Jet: pT = 102.66 GeV, eta = 0.41, phi = 0.44
+x_Zj: 0.67 | DeltaPhi: 2.97
+---------------------------------------
+[Analysis] Processing: 7620 / 25441 (29.95%)[Analysis] Processing: 7874 / 25441 (30.95%)[Analysis] Processing: 8128 / 25441 (31.95%)[Analysis] Processing: 8382 / 25441 (32.95%)[Analysis] Processing: 8636 / 25441 (33.95%)[Analysis] Processing: 8890 / 25441 (34.94%)[Analysis] Processing: 9144 / 25441 (35.94%)[Analysis] Processing: 9398 / 25441 (36.94%)[Analysis] Processing: 9652 / 25441 (37.94%)[Analysis] Processing: 9906 / 25441 (38.94%)[Analysis] Processing: 10160 / 25441 (39.94%)[Analysis] Processing: 10414 / 25441 (40.93%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375013 | Lumi: 122 | Event: 110661185
+Centrality (hiBin): 18
+Z Boson Mass: 91.92 GeV | Z pT: 94.15 GeV | Z eta: 1.49 | Z phi: -1.99
+  -> Muon 1 (+): pT = 22.74 GeV, eta = 0.03, phi = -0.91
+  -> Muon 2 (-): pT = 85.65 GeV, eta = 1.57, phi = -2.22
+Leading Jet: pT = 61.44 GeV, eta = -0.44, phi = 1.13
+x_Zj: 0.65 | DeltaPhi: 3.11
+---------------------------------------
+
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375463 | Lumi: 185 | Event: 215135129
+Centrality (hiBin): 5
+Z Boson Mass: 93.19 GeV | Z pT: 192.12 GeV | Z eta: -0.12 | Z phi: 2.70
+  -> Muon 1 (+): pT = 123.31 GeV, eta = 0.09, phi = 3.01
+  -> Muon 2 (-): pT = 84.18 GeV, eta = -0.40, phi = 2.22
+Leading Jet: pT = 127.25 GeV, eta = -0.67, phi = -0.38
+x_Zj: 0.66 | DeltaPhi: 3.07
+---------------------------------------
+[Analysis] Processing: 10668 / 25441 (41.93%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375658 | Lumi: 196 | Event: 180879607
+Centrality (hiBin): 44
+Z Boson Mass: 88.38 GeV | Z pT: 81.51 GeV | Z eta: 1.08 | Z phi: 0.10
+  -> Muon 1 (+): pT = 21.17 GeV, eta = 0.74, phi = -2.38
+  -> Muon 2 (-): pT = 99.02 GeV, eta = 0.81, phi = 0.23
+Leading Jet: pT = 50.88 GeV, eta = -0.79, phi = 3.05
+x_Zj: 0.62 | DeltaPhi: 2.96
+---------------------------------------
+[Analysis] Processing: 10922 / 25441 (42.93%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 374997 | Lumi: 68 | Event: 39364742
+Centrality (hiBin): 20
+Z Boson Mass: 96.92 GeV | Z pT: 105.30 GeV | Z eta: 0.68 | Z phi: 2.37
+  -> Muon 1 (+): pT = 51.27 GeV, eta = 1.08, phi = -3.14
+  -> Muon 2 (-): pT = 77.64 GeV, eta = 0.13, phi = 1.89
+Leading Jet: pT = 70.36 GeV, eta = -0.83, phi = -0.71
+x_Zj: 0.67 | DeltaPhi: 3.08
+---------------------------------------
+[Analysis] Processing: 11176 / 25441 (43.93%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 374810 | Lumi: 575 | Event: 486489685
+Centrality (hiBin): 2
+Z Boson Mass: 89.04 GeV | Z pT: 158.28 GeV | Z eta: -1.44 | Z phi: 0.19
+  -> Muon 1 (+): pT = 43.98 GeV, eta = -1.31, phi = -0.76
+  -> Muon 2 (-): pT = 137.62 GeV, eta = -1.32, phi = 0.46
+Leading Jet: pT = 110.22 GeV, eta = -0.86, phi = -2.89
+x_Zj: 0.70 | DeltaPhi: 3.08
+---------------------------------------
+[Analysis] Processing: 11430 / 25441 (44.93%)[Analysis] Processing: 11684 / 25441 (45.93%)[Analysis] Processing: 11938 / 25441 (46.92%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375776 | Lumi: 45 | Event: 25033472
+Centrality (hiBin): 11
+Z Boson Mass: 91.06 GeV | Z pT: 98.86 GeV | Z eta: 1.53 | Z phi: -2.08
+  -> Muon 1 (+): pT = 90.98 GeV, eta = 1.26, phi = -2.54
+  -> Muon 2 (-): pT = 43.41 GeV, eta = 1.24, phi = -0.92
+Leading Jet: pT = 65.53 GeV, eta = 1.85, phi = 1.06
+x_Zj: 0.66 | DeltaPhi: 3.14
+---------------------------------------
+[Analysis] Processing: 12192 / 25441 (47.92%)[Analysis] Processing: 12446 / 25441 (48.92%)!!! WARNING: hiBin = 14 hiHF = 3934.40 hiBin nominal = 15 hiBin up = 15 hiBin down = 14
+[Analysis] Processing: 12700 / 25441 (49.92%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375455 | Lumi: 184 | Event: 209344557
+Centrality (hiBin): 39
+Z Boson Mass: 92.44 GeV | Z pT: 145.85 GeV | Z eta: -0.79 | Z phi: -0.39
+  -> Muon 1 (+): pT = 62.43 GeV, eta = -0.96, phi = 0.32
+  -> Muon 2 (-): pT = 106.28 GeV, eta = -0.51, phi = -0.78
+Leading Jet: pT = 95.25 GeV, eta = 0.00, phi = 2.55
+x_Zj: 0.65 | DeltaPhi: 2.94
+---------------------------------------
+[Analysis] Processing: 12954 / 25441 (50.92%)[Analysis] Processing: 13208 / 25441 (51.92%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375055 | Lumi: 228 | Event: 151465569
+Centrality (hiBin): 26
+Z Boson Mass: 92.58 GeV | Z pT: 85.98 GeV | Z eta: 0.07 | Z phi: -2.41
+  -> Muon 1 (+): pT = 24.36 GeV, eta = 1.27, phi = -1.57
+  -> Muon 2 (-): pT = 72.04 GeV, eta = -0.46, phi = -2.67
+Leading Jet: pT = 53.51 GeV, eta = 0.48, phi = 0.83
+x_Zj: 0.62 | DeltaPhi: 3.04
+---------------------------------------
+[Analysis] Processing: 13462 / 25441 (52.91%)[Analysis] Processing: 13716 / 25441 (53.91%)[Analysis] Processing: 13970 / 25441 (54.91%)[Analysis] Processing: 14224 / 25441 (55.91%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375055 | Lumi: 520 | Event: 495840328
+Centrality (hiBin): 0
+Z Boson Mass: 83.93 GeV | Z pT: 532.68 GeV | Z eta: -1.42 | Z phi: 2.57
+  -> Muon 1 (+): pT = 164.29 GeV, eta = -1.49, phi = 2.79
+  -> Muon 2 (-): pT = 374.20 GeV, eta = -1.38, phi = 2.47
+Leading Jet: pT = 304.24 GeV, eta = 0.34, phi = -0.58
+x_Zj: 0.57 | DeltaPhi: 3.13
+---------------------------------------
+[Analysis] Processing: 14478 / 25441 (56.91%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375658 | Lumi: 530 | Event: 557715572
+Centrality (hiBin): 10
+Z Boson Mass: 92.05 GeV | Z pT: 144.80 GeV | Z eta: -0.24 | Z phi: 2.83
+  -> Muon 1 (+): pT = 66.22 GeV, eta = -0.84, phi = 2.72
+  -> Muon 2 (-): pT = 79.38 GeV, eta = 0.34, phi = 2.93
+Leading Jet: pT = 83.15 GeV, eta = 0.04, phi = -0.06
+x_Zj: 0.57 | DeltaPhi: 2.89
+---------------------------------------
+[Analysis] Processing: 14732 / 25441 (57.91%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375790 | Lumi: 151 | Event: 142054835
+Centrality (hiBin): 12
+Z Boson Mass: 88.57 GeV | Z pT: 91.39 GeV | Z eta: -1.84 | Z phi: 1.84
+  -> Muon 1 (+): pT = 88.66 GeV, eta = -1.47, phi = 2.26
+  -> Muon 2 (-): pT = 38.10 GeV, eta = -1.67, phi = 0.55
+Leading Jet: pT = 46.76 GeV, eta = 0.86, phi = -1.26
+x_Zj: 0.51 | DeltaPhi: 3.10
+---------------------------------------
+[Analysis] Processing: 14986 / 25441 (58.90%)[Analysis] Processing: 15240 / 25441 (59.90%)[Analysis] Processing: 15494 / 25441 (60.90%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375754 | Lumi: 491 | Event: 623659431
+Centrality (hiBin): 23
+Z Boson Mass: 89.46 GeV | Z pT: 95.07 GeV | Z eta: -0.00 | Z phi: 1.25
+  -> Muon 1 (+): pT = 33.73 GeV, eta = -0.03, phi = 2.69
+  -> Muon 2 (-): pT = 96.79 GeV, eta = 0.01, phi = 0.90
+Leading Jet: pT = 48.10 GeV, eta = 1.32, phi = -1.80
+x_Zj: 0.51 | DeltaPhi: 3.05
+---------------------------------------
+[Analysis] Processing: 15748 / 25441 (61.90%)[Analysis] Processing: 16002 / 25441 (62.90%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375483 | Lumi: 51 | Event: 34673369
+Centrality (hiBin): 32
+Z Boson Mass: 91.57 GeV | Z pT: 124.02 GeV | Z eta: -0.57 | Z phi: 2.83
+  -> Muon 1 (+): pT = 111.23 GeV, eta = -0.24, phi = 2.59
+  -> Muon 2 (-): pT = 30.95 GeV, eta = -1.21, phi = -2.42
+Leading Jet: pT = 79.22 GeV, eta = 0.26, phi = -0.12
+x_Zj: 0.64 | DeltaPhi: 2.96
+---------------------------------------
+[Analysis] Processing: 16256 / 25441 (63.90%)[Analysis] Processing: 16510 / 25441 (64.90%)[Analysis] Processing: 16764 / 25441 (65.89%)[Analysis] Processing: 17018 / 25441 (66.89%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375055 | Lumi: 375 | Event: 317226329
+Centrality (hiBin): 33
+Z Boson Mass: 91.31 GeV | Z pT: 133.21 GeV | Z eta: -0.81 | Z phi: 0.98
+  -> Muon 1 (+): pT = 25.09 GeV, eta = -1.79, phi = 0.30
+  -> Muon 2 (-): pT = 114.65 GeV, eta = -0.40, phi = 1.11
+Leading Jet: pT = 76.28 GeV, eta = 1.73, phi = -2.30
+x_Zj: 0.57 | DeltaPhi: 3.01
+---------------------------------------
+[Analysis] Processing: 17272 / 25441 (67.89%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 374833 | Lumi: 281 | Event: 195237240
+Centrality (hiBin): 41
+Z Boson Mass: 96.29 GeV | Z pT: 192.96 GeV | Z eta: 1.51 | Z phi: 0.25
+  -> Muon 1 (+): pT = 168.36 GeV, eta = 1.26, phi = 0.40
+  -> Muon 2 (-): pT = 36.48 GeV, eta = 2.09, phi = -0.51
+Leading Jet: pT = 121.65 GeV, eta = 0.10, phi = -2.99
+x_Zj: 0.63 | DeltaPhi: 3.04
+---------------------------------------
+[Analysis] Processing: 17526 / 25441 (68.89%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375659 | Lumi: 36 | Event: 46719275
+Centrality (hiBin): 11
+Z Boson Mass: 89.52 GeV | Z pT: 132.84 GeV | Z eta: -0.08 | Z phi: 0.76
+  -> Muon 1 (+): pT = 28.84 GeV, eta = 0.94, phi = 0.14
+  -> Muon 2 (-): pT = 110.61 GeV, eta = -0.37, phi = 0.91
+Leading Jet: pT = 83.91 GeV, eta = 1.17, phi = -2.36
+x_Zj: 0.63 | DeltaPhi: 3.11
+---------------------------------------
+[Analysis] Processing: 17780 / 25441 (69.89%)[Analysis] Processing: 18034 / 25441 (70.89%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375440 | Lumi: 80 | Event: 75749318
+Centrality (hiBin): 4
+Z Boson Mass: 90.09 GeV | Z pT: 99.12 GeV | Z eta: 1.22 | Z phi: -2.41
+  -> Muon 1 (+): pT = 29.45 GeV, eta = 1.04, phi = -0.80
+  -> Muon 2 (-): pT = 104.43 GeV, eta = 0.97, phi = -2.69
+Leading Jet: pT = 61.84 GeV, eta = 0.45, phi = 0.58
+x_Zj: 0.62 | DeltaPhi: 2.99
+---------------------------------------
+[Analysis] Processing: 18288 / 25441 (71.88%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375164 | Lumi: 68 | Event: 54848065
+Centrality (hiBin): 45
+Z Boson Mass: 92.45 GeV | Z pT: 118.12 GeV | Z eta: 0.85 | Z phi: -2.48
+  -> Muon 1 (+): pT = 26.68 GeV, eta = -0.45, phi = -1.91
+  -> Muon 2 (-): pT = 96.79 GeV, eta = 1.07, phi = -2.63
+Leading Jet: pT = 60.44 GeV, eta = -1.10, phi = 0.53
+x_Zj: 0.51 | DeltaPhi: 3.01
+---------------------------------------
+[Analysis] Processing: 18542 / 25441 (72.88%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375202 | Lumi: 385 | Event: 404704327
+Centrality (hiBin): 32
+Z Boson Mass: 94.83 GeV | Z pT: 127.91 GeV | Z eta: 1.93 | Z phi: -1.89
+  -> Muon 1 (+): pT = 33.19 GeV, eta = 1.15, phi = -3.06
+  -> Muon 2 (-): pT = 118.88 GeV, eta = 1.89, phi = -1.63
+Leading Jet: pT = 75.02 GeV, eta = 1.45, phi = 1.22
+x_Zj: 0.59 | DeltaPhi: 3.11
+---------------------------------------
+[Analysis] Processing: 18796 / 25441 (73.88%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375754 | Lumi: 130 | Event: 132768761
+Centrality (hiBin): 19
+Z Boson Mass: 87.09 GeV | Z pT: 110.84 GeV | Z eta: 0.40 | Z phi: 2.74
+  -> Muon 1 (+): pT = 112.01 GeV, eta = 0.40, phi = 2.98
+  -> Muon 2 (-): pT = 26.87 GeV, eta = -0.03, phi = 1.25
+Leading Jet: pT = 70.10 GeV, eta = 0.40, phi = -0.17
+x_Zj: 0.63 | DeltaPhi: 2.91
+---------------------------------------
+
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375300 | Lumi: 697 | Event: 801780690
+Centrality (hiBin): 21
+Z Boson Mass: 93.32 GeV | Z pT: 84.22 GeV | Z eta: 0.79 | Z phi: -3.07
+  -> Muon 1 (+): pT = 101.43 GeV, eta = 0.56, phi = -2.89
+  -> Muon 2 (-): pT = 24.27 GeV, eta = 0.53, phi = 0.95
+Leading Jet: pT = 58.54 GeV, eta = -0.43, phi = 0.04
+x_Zj: 0.70 | DeltaPhi: 3.12
+---------------------------------------
+[Analysis] Processing: 19050 / 25441 (74.88%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375513 | Lumi: 174 | Event: 179462648
+Centrality (hiBin): 2
+Z Boson Mass: 91.63 GeV | Z pT: 128.30 GeV | Z eta: -1.23 | Z phi: 1.66
+  -> Muon 1 (+): pT = 73.45 GeV, eta = -1.63, phi = 1.47
+  -> Muon 2 (-): pT = 57.91 GeV, eta = -0.37, phi = 1.90
+Leading Jet: pT = 73.66 GeV, eta = 0.25, phi = -1.54
+x_Zj: 0.57 | DeltaPhi: 3.08
+---------------------------------------
+[Analysis] Processing: 19304 / 25441 (75.88%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375754 | Lumi: 331 | Event: 387309526
+Centrality (hiBin): 32
+Z Boson Mass: 82.90 GeV | Z pT: 84.94 GeV | Z eta: 0.37 | Z phi: 1.18
+  -> Muon 1 (+): pT = 21.94 GeV, eta = 0.33, phi = -3.08
+  -> Muon 2 (-): pT = 96.70 GeV, eta = 0.26, phi = 0.97
+Leading Jet: pT = 44.73 GeV, eta = 0.50, phi = -2.06
+x_Zj: 0.53 | DeltaPhi: 3.04
+---------------------------------------
+[Analysis] Processing: 19558 / 25441 (76.88%)[Analysis] Processing: 19812 / 25441 (77.87%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375658 | Lumi: 72 | Event: 51725235
+Centrality (hiBin): 17
+Z Boson Mass: 88.56 GeV | Z pT: 83.86 GeV | Z eta: -1.19 | Z phi: 1.44
+  -> Muon 1 (+): pT = 47.17 GeV, eta = -1.08, phi = 2.50
+  -> Muon 2 (-): pT = 73.59 GeV, eta = -0.79, phi = 0.84
+Leading Jet: pT = 48.73 GeV, eta = 0.06, phi = -1.74
+x_Zj: 0.58 | DeltaPhi: 3.11
+---------------------------------------
+[Analysis] Processing: 20066 / 25441 (78.87%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375164 | Lumi: 192 | Event: 165408051
+Centrality (hiBin): 25
+Z Boson Mass: 91.06 GeV | Z pT: 116.10 GeV | Z eta: 2.11 | Z phi: 1.34
+  -> Muon 1 (+): pT = 80.78 GeV, eta = 1.86, phi = 1.93
+  -> Muon 2 (-): pT = 66.76 GeV, eta = 1.89, phi = 0.59
+Leading Jet: pT = 69.15 GeV, eta = 1.80, phi = -1.87
+x_Zj: 0.60 | DeltaPhi: 3.08
+---------------------------------------
+[Analysis] Processing: 20320 / 25441 (79.87%)[Analysis] Processing: 20574 / 25441 (80.87%)[Analysis] Processing: 20828 / 25441 (81.87%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375463 | Lumi: 689 | Event: 907898399
+Centrality (hiBin): 59
+Z Boson Mass: 97.54 GeV | Z pT: 83.72 GeV | Z eta: -0.50 | Z phi: 0.90
+  -> Muon 1 (+): pT = 87.37 GeV, eta = -0.56, phi = 1.29
+  -> Muon 2 (-): pT = 33.43 GeV, eta = 0.23, phi = -0.59
+Leading Jet: pT = 42.82 GeV, eta = -0.52, phi = -2.19
+x_Zj: 0.51 | DeltaPhi: 3.09
+---------------------------------------
+
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 374997 | Lumi: 125 | Event: 83531042
+Centrality (hiBin): 13
+Z Boson Mass: 89.90 GeV | Z pT: 111.26 GeV | Z eta: -1.53 | Z phi: 0.87
+  -> Muon 1 (+): pT = 88.55 GeV, eta = -1.69, phi = 1.13
+  -> Muon 2 (-): pT = 34.17 GeV, eta = -0.43, phi = 0.15
+Leading Jet: pT = 57.94 GeV, eta = -0.70, phi = -2.30
+x_Zj: 0.52 | DeltaPhi: 3.11
+---------------------------------------
+[Analysis] Processing: 21082 / 25441 (82.87%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375055 | Lumi: 729 | Event: 758827835
+Centrality (hiBin): 19
+Z Boson Mass: 92.08 GeV | Z pT: 81.95 GeV | Z eta: 1.43 | Z phi: -1.58
+  -> Muon 1 (+): pT = 75.16 GeV, eta = 1.53, phi = -1.83
+  -> Muon 2 (-): pT = 20.49 GeV, eta = -0.22, phi = -0.47
+Leading Jet: pT = 42.54 GeV, eta = 0.37, phi = 1.74
+x_Zj: 0.52 | DeltaPhi: 2.96
+---------------------------------------
+
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375064 | Lumi: 213 | Event: 149692678
+Centrality (hiBin): 5
+Z Boson Mass: 91.69 GeV | Z pT: 121.43 GeV | Z eta: -1.16 | Z phi: -0.23
+  -> Muon 1 (+): pT = 92.84 GeV, eta = -1.00, phi = -0.73
+  -> Muon 2 (-): pT = 59.26 GeV, eta = -0.95, phi = 0.61
+Leading Jet: pT = 74.63 GeV, eta = -1.91, phi = 2.95
+x_Zj: 0.61 | DeltaPhi: 3.10
+---------------------------------------
+[Analysis] Processing: 21336 / 25441 (83.86%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375790 | Lumi: 206 | Event: 204099054
+Centrality (hiBin): 18
+Z Boson Mass: 87.87 GeV | Z pT: 160.56 GeV | Z eta: -0.41 | Z phi: 0.68
+  -> Muon 1 (+): pT = 124.75 GeV, eta = -0.22, phi = 0.97
+  -> Muon 2 (-): pT = 54.06 GeV, eta = -0.69, phi = -0.03
+Leading Jet: pT = 84.54 GeV, eta = -0.57, phi = -2.55
+x_Zj: 0.53 | DeltaPhi: 3.05
+---------------------------------------
+
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375064 | Lumi: 398 | Event: 360330779
+Centrality (hiBin): 33
+Z Boson Mass: 91.91 GeV | Z pT: 98.60 GeV | Z eta: -1.38 | Z phi: -0.73
+  -> Muon 1 (+): pT = 60.66 GeV, eta = -0.55, phi = -1.22
+  -> Muon 2 (-): pT = 53.01 GeV, eta = -1.75, phi = -0.17
+Leading Jet: pT = 56.60 GeV, eta = -0.12, phi = 2.46
+x_Zj: 0.57 | DeltaPhi: 3.09
+---------------------------------------
+[Analysis] Processing: 21590 / 25441 (84.86%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 374681 | Lumi: 250 | Event: 133426035
+Centrality (hiBin): 36
+Z Boson Mass: 88.16 GeV | Z pT: 85.36 GeV | Z eta: -1.81 | Z phi: 2.06
+  -> Muon 1 (+): pT = 90.31 GeV, eta = -1.39, phi = 2.42
+  -> Muon 2 (-): pT = 31.14 GeV, eta = -1.72, phi = 0.51
+Leading Jet: pT = 47.91 GeV, eta = 0.12, phi = -1.16
+x_Zj: 0.56 | DeltaPhi: 3.06
+---------------------------------------
+
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375531 | Lumi: 308 | Event: 429989101
+Centrality (hiBin): 6
+Z Boson Mass: 90.12 GeV | Z pT: 81.16 GeV | Z eta: -0.28 | Z phi: -1.23
+  -> Muon 1 (+): pT = 30.66 GeV, eta = -0.78, phi = 0.21
+  -> Muon 2 (-): pT = 83.05 GeV, eta = 0.03, phi = -1.61
+Leading Jet: pT = 49.69 GeV, eta = 1.00, phi = 1.86
+x_Zj: 0.61 | DeltaPhi: 3.09
+---------------------------------------
+[Analysis] Processing: 21844 / 25441 (85.86%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375659 | Lumi: 285 | Event: 411578784
+Centrality (hiBin): 57
+Z Boson Mass: 84.93 GeV | Z pT: 93.57 GeV | Z eta: -1.49 | Z phi: -0.33
+  -> Muon 1 (+): pT = 40.33 GeV, eta = -1.51, phi = -1.43
+  -> Muon 2 (-): pT = 83.57 GeV, eta = -1.09, phi = 0.12
+Leading Jet: pT = 56.74 GeV, eta = -1.43, phi = 2.75
+x_Zj: 0.61 | DeltaPhi: 3.08
+---------------------------------------
+[Analysis] Processing: 22098 / 25441 (86.86%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375440 | Lumi: 134 | Event: 140285205
+Centrality (hiBin): 25
+Z Boson Mass: 92.54 GeV | Z pT: 93.73 GeV | Z eta: 1.91 | Z phi: -1.74
+  -> Muon 1 (+): pT = 22.35 GeV, eta = 0.51, phi = -3.05
+  -> Muon 2 (-): pT = 90.75 GeV, eta = 1.90, phi = -1.50
+Leading Jet: pT = 61.80 GeV, eta = 1.97, phi = 1.58
+x_Zj: 0.66 | DeltaPhi: 2.96
+---------------------------------------
+[Analysis] Processing: 22352 / 25441 (87.86%)[Analysis] Processing: 22606 / 25441 (88.86%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375665 | Lumi: 106 | Event: 89660203
+Centrality (hiBin): 52
+Z Boson Mass: 91.19 GeV | Z pT: 92.76 GeV | Z eta: -0.64 | Z phi: -2.38
+  -> Muon 1 (+): pT = 35.50 GeV, eta = -0.08, phi = 2.58
+  -> Muon 2 (-): pT = 90.70 GeV, eta = -0.62, phi = -1.99
+Leading Jet: pT = 48.72 GeV, eta = 0.68, phi = 0.82
+x_Zj: 0.53 | DeltaPhi: 3.08
+---------------------------------------
+[Analysis] Processing: 22860 / 25441 (89.85%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375695 | Lumi: 28 | Event: 22884522
+Centrality (hiBin): 31
+Z Boson Mass: 90.76 GeV | Z pT: 83.50 GeV | Z eta: 0.45 | Z phi: 0.85
+  -> Muon 1 (+): pT = 27.19 GeV, eta = -0.42, phi = -0.65
+  -> Muon 2 (-): pT = 86.07 GeV, eta = 0.55, phi = 1.17
+Leading Jet: pT = 51.99 GeV, eta = 2.01, phi = -2.28
+x_Zj: 0.62 | DeltaPhi: 3.13
+---------------------------------------
+
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375754 | Lumi: 186 | Event: 196472030
+Centrality (hiBin): 24
+Z Boson Mass: 89.76 GeV | Z pT: 131.25 GeV | Z eta: 1.26 | Z phi: 0.22
+  -> Muon 1 (+): pT = 55.27 GeV, eta = 0.57, phi = -0.37
+  -> Muon 2 (-): pT = 90.56 GeV, eta = 1.44, phi = 0.56
+Leading Jet: pT = 74.92 GeV, eta = 0.08, phi = -2.84
+x_Zj: 0.57 | DeltaPhi: 3.06
+---------------------------------------
+[Analysis] Processing: 23114 / 25441 (90.85%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375507 | Lumi: 164 | Event: 164640564
+Centrality (hiBin): 40
+Z Boson Mass: 108.18 GeV | Z pT: 139.90 GeV | Z eta: -0.61 | Z phi: 2.47
+  -> Muon 1 (+): pT = 154.55 GeV, eta = -0.53, phi = 2.36
+  -> Muon 2 (-): pT = 21.49 GeV, eta = -0.24, phi = -1.55
+Leading Jet: pT = 93.95 GeV, eta = 1.34, phi = -0.30
+x_Zj: 0.67 | DeltaPhi: 2.77
+---------------------------------------
+
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375507 | Lumi: 259 | Event: 274439544
+Centrality (hiBin): 7
+Z Boson Mass: 91.12 GeV | Z pT: 166.42 GeV | Z eta: 0.40 | Z phi: -2.65
+  -> Muon 1 (+): pT = 26.94 GeV, eta = -0.47, phi = -1.76
+  -> Muon 2 (-): pT = 150.95 GeV, eta = 0.52, phi = -2.79
+Leading Jet: pT = 95.01 GeV, eta = -0.74, phi = 0.46
+x_Zj: 0.57 | DeltaPhi: 3.11
+---------------------------------------
+
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375145 | Lumi: 59 | Event: 47443039
+Centrality (hiBin): 40
+Z Boson Mass: 92.14 GeV | Z pT: 106.67 GeV | Z eta: -0.98 | Z phi: 2.87
+  -> Muon 1 (+): pT = 54.76 GeV, eta = -0.70, phi = 1.94
+  -> Muon 2 (-): pT = 85.89 GeV, eta = -0.83, phi = -2.88
+Leading Jet: pT = 74.49 GeV, eta = -0.50, phi = -0.17
+x_Zj: 0.70 | DeltaPhi: 3.04
+---------------------------------------
+[Analysis] Processing: 23368 / 25441 (91.85%)[Analysis] Processing: 23622 / 25441 (92.85%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375790 | Lumi: 608 | Event: 694111341
+Centrality (hiBin): 18
+Z Boson Mass: 91.95 GeV | Z pT: 186.15 GeV | Z eta: 0.05 | Z phi: -0.50
+  -> Muon 1 (+): pT = 22.08 GeV, eta = 0.10, phi = 0.98
+  -> Muon 2 (-): pT = 185.50 GeV, eta = 0.03, phi = -0.62
+Leading Jet: pT = 112.56 GeV, eta = -0.10, phi = 2.70
+x_Zj: 0.60 | DeltaPhi: 3.09
+---------------------------------------
+[Analysis] Processing: 23876 / 25441 (93.85%)[Analysis] Processing: 24130 / 25441 (94.85%)
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375463 | Lumi: 46 | Event: 40921286
+Centrality (hiBin): 11
+Z Boson Mass: 96.03 GeV | Z pT: 514.29 GeV | Z eta: 0.56 | Z phi: 2.25
+  -> Muon 1 (+): pT = 42.77 GeV, eta = 0.18, phi = 1.75
+  -> Muon 2 (-): pT = 477.16 GeV, eta = 0.59, phi = 2.29
+Leading Jet: pT = 284.74 GeV, eta = -0.63, phi = -0.84
+x_Zj: 0.55 | DeltaPhi: 3.09
+---------------------------------------
+
+>>> EVENT DISPLAY CANDIDATE FOUND <<<
+Run: 375491 | Lumi: 132 | Event: 135499359
+Centrality (hiBin): 18
+Z Boson Mass: 69.81 GeV | Z pT: 210.16 GeV | Z eta: -0.12 | Z phi: 2.62
+  -> Muon 1 (+): pT = 55.61 GeV, eta = -0.51, phi = 3.00
+  -> Muon 2 (-): pT = 159.91 GeV, eta = 0.03, phi = 2.49
+Leading Jet: pT = 132.58 GeV, eta = -0.96, phi = -0.48
+x_Zj: 0.63 | DeltaPhi: 3.10
+---------------------------------------
+[Analysis] Processing: 24384 / 25441 (95.85%)[Analysis] Processing: 24638 / 25441 (96.84%)[Analysis] Processing: 24892 / 25441 (97.84%)[Analysis] Processing: 25146 / 25441 (98.84%)[Analysis] Processing: 25400 / 25441 (99.84%)[Analysis] Processing: 25441 / 25441 (100.0%) - Complete.
 ------------------------------------------------
 --- Analysis Summary ---
 Total Events Processed: 25441 average_weight = 1.00
 [Raw Info]
-Raw Integral (dPhi):   737.00        Raw Integral (pT):    417.00
+Raw Integral (dPhi):   749.00        Raw Integral (pT):    432.00
 [Background Subtraction Info]
-Bkg Integral (dPhi):   195.89        Bkg Integral (pT):    24.29
-Bkg Fraction (dPhi):   26.58 %        Bkg Fraction (pT):    5.82 %
+Bkg Integral (dPhi):   196.12        Bkg Integral (pT):    24.38
+Bkg Fraction (dPhi):   26.18 %        Bkg Fraction (pT):    5.64 %
 
 [DEBUG MinBias Mixing Pipeline]
 1. Total MB entries mixed: 154700
-2. Passed Muon Veto:       30452
-3. Passed pT > signal pt:  19589
-4. Filled into Bkg Hist:   2429
-Events with exactly 1 jet: 395.00 (94.72 % of Z+jet events)
+2. Passed Muon Veto:       30777
+3. Passed pT > signal pt:  19612
+4. Filled into Bkg Hist:   2438
+Events with exactly 1 jet: 409.00 (94.68 % of Z+jet events)
 --- End Analysis Sum ---
 ------------------------------------------------

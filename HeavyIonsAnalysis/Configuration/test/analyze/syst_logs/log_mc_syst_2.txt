@@ -25,13 +25,13 @@ Initializing JEC...
 Loaded JEC File: Prompt23HIPbPb_V1_MC_L2Relative_AK2PF.txt
 Loaded JEC Uncertainty File: Spring23PbPb_TotalUncertainties.txt
 Initializing JER...
-Loading JER SF (PbPb): Summer23Prompt23_RunCv4_JRV1m_MC_SF_AK4PFPuppi.txt
-JERProvider: Loaded 42 SF nominal records.
+Loading JER SF (PbPb): Summer23BPixPrompt23_RunD_JRV3_MC_SF_AK4PFchs.txt
+JERProvider: Loaded 0 SF nominal records.
 Loading JER Resolution (PbPb): derive_JER_AK2/My_PbPb23_MC_PtResolution_AK2PF.txt
 JERProvider: Loaded 24 Resolution records.
-Loading JER SF Uncertainty (PbPb): Summer23Prompt23_RunCv4_JRV1m_MC_SFUncertainty_AK4PFPuppi.txt
+Loading JER SF Uncertainty (PbPb): Summer23BPixPrompt23_RunD_JRV3_MC_SFUncertainty_AK4PFchs.txt
 JERProvider: Loaded 42 SF uncertainty records.
-Loaded Jet Veto Map using JetSelect_PbPb from: Winter24Prompt24_2024BCDEFGHI.root
+Loaded Jet Veto Map using JetSelect_PbPb from: Summer23BPixPrompt23_RunD_v1.root
 ------------------------------------------------
 Caching MinBias events into memory...
 Found 9000 MinBias entries in 'jet_tree'.
@@ -49,23 +49,23 @@ Starting Analysis Loop over 29444782 events...
 --- Analysis Summary ---
 Total Events Processed: 29444782 average_weight = 4773.32
 [Raw Info]
-Raw Integral (dPhi):   1069.85        Raw Integral (pT):    754.97
+Raw Integral (dPhi):   1086.76        Raw Integral (pT):    774.57
 [Background Subtraction Info]
-Bkg Integral (dPhi):   130.34        Bkg Integral (pT):    16.51
-Bkg Fraction (dPhi):   12.18 %        Bkg Fraction (pT):    2.19 %
+Bkg Integral (dPhi):   124.56        Bkg Integral (pT):    15.77
+Bkg Fraction (dPhi):   11.46 %        Bkg Fraction (pT):    2.04 %
 
 [DEBUG MinBias Mixing Pipeline]
 1. Total MB entries mixed: 19267200
-2. Passed Muon Veto:       3561497
-3. Passed pT > signal pt:  1593404
-4. Filled into Bkg Hist:   199912
+2. Passed Muon Veto:       3422755
+3. Passed pT > signal pt:  1518070
+4. Filled into Bkg Hist:   190085
 [MC Matching Info - Leading Jet]
-Raw - Matched (dPhi):  158.70        Raw - Matched (pT):   37.25
-Fraction Fake (dPhi):  14.83 %        Fraction Fake (pT):   4.93 %
+Raw - Matched (dPhi):  150.94        Raw - Matched (pT):   36.14
+Fraction Fake (dPhi):  13.89 %        Fraction Fake (pT):   4.67 %
 
 [MC Matching Info - Inclusive Jets]
-Raw - Matched (dPhi):  358.61        Raw - Matched (pT):   57.31
-Fraction Fake (dPhi):  25.00 %        Fraction Fake (pT):   7.24 %
-Events with exactly 1 jet: 709.96 (94.66 % of Z+jet events)
+Raw - Matched (dPhi):  347.08        Raw - Matched (pT):   55.40
+Fraction Fake (dPhi):  23.86 %        Fraction Fake (pT):   6.83 %
+Events with exactly 1 jet: 729.21 (94.77 % of Z+jet events)
 --- End Analysis Sum ---
 ------------------------------------------------

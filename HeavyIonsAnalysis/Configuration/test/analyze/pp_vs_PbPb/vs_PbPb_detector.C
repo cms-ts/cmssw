@@ -172,8 +172,8 @@ void vs_PbPb_detector(std::string variable = "xZj", const char* pb_type = "PbPb2
     textY -= 0.05;
 
     // Z Kinematics
-    if (ptZ_max > 9000) latex3->DrawLatex(textX, textY, Form("p_{T}^{Z} > %.0f GeV, p_{T}^{\mu} > 20 GeV", ptZ_min));
-    else latex3->DrawLatex(textX, textY, Form("p_{T}^{Z}: %.0f-%.0f GeV, p_{T}^{\mu} > 20 GeV", ptZ_min, ptZ_max));
+    if (ptZ_max > 9000) latex3->DrawLatex(textX, textY, Form("p_{T}^{Z} > %.0f GeV, p_{T}^{#mu} > 20 GeV", ptZ_min));
+    else latex3->DrawLatex(textX, textY, Form("p_{T}^{Z}: %.0f-%.0f GeV, p_{T}^{#mu} > 20 GeV", ptZ_min, ptZ_max));
     textY -= 0.05;
 
     // Jet Kinematics

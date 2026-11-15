@@ -694,14 +694,16 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       //std::cout << "Warning!!! Using jtpt instead of JEC for ppref" << endl;
       // 1. Pileup Correction
       //Files.push_back("Spring18_ppRef5TeV_V6_DATA_L1FastJet_AK2PF.txt");
+      Files.push_back("Prompt24HIpp_V1_MC_L1FastJet_AK2PF.txt");
       // 2. Relative Response (or MC truth)
       //Files.push_back("Spring18_ppRef5TeV_V6_DATA_L2Relative_AK2PF.txt");
-      Files.push_back("Prompt24HIpp_V1_MC_L2Relative_AK2PF.txt");
-      Files.push_back("My24HIpp_L2Residual_AK2PF.txt");
+      Files.push_back("Prompt24HIpp_V2_MC_L2Relative_AK2PF.txt");
       // 3. Absolute Response
       //Files.push_back("Spring18_ppRef5TeV_V6_DATA_L3Absolute_AK2PF.txt");
       // 4. Data Residuals (Only for Data)
       //Files.push_back("Spring18_ppRef5TeV_V6_DATA_L2L3Residual_AK2PF.txt");
+      //Files.push_back("My24HIpp_L2Residual_AK2PF.txt");
+      Files.push_back("Prompt24HIpp_V1_DATA_L2Residual_AK2PF.txt");
     }
   }
   else {
@@ -716,7 +718,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       //Files.push_back("Spring18_ppRef5TeV_V6_MC_L1FastJet_AK2PF.txt");
       //Files.push_back("Spring18_ppRef5TeV_V6_MC_L2Relative_AK2PF.txt");
       //Files.push_back("Spring18_ppRef5TeV_V6_MC_L3Absolute_AK2PF.txt");
-      Files.push_back("Prompt24HIpp_V1_MC_L2Relative_AK2PF.txt");
+      Files.push_back("Prompt24HIpp_V1_MC_L1FastJet_AK2PF.txt");
+      Files.push_back("Prompt24HIpp_V2_MC_L2Relative_AK2PF.txt");
       // MC does NOT use Residuals
     }
   }
@@ -730,7 +733,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   std::string name_Uncertainty_file;
   if (collision_name.Contains("PbPb23")) name_Uncertainty_file = "Spring23PbPb_TotalUncertainties.txt";
   else if (collision_name.Contains("PbPb24")) name_Uncertainty_file = "Autumn18_HI_V8_MC_Uncertainty_AK2PF.txt"; //!!! Old, update
-  else if (collision_name.Contains("ppref24")) name_Uncertainty_file = "My24HIpp_AK2PF_NonClosure_missPUL3_Uncertainty.txt";
+  else if (collision_name.Contains("ppref24")) name_Uncertainty_file = "Prompt24HIpp_AK2PF_NonClosure_missPUL3_Uncertainty.txt";
   JetUncertainty JEU(name_Uncertainty_file);
   std::cout << "Loaded JEC Uncertainty File: " << name_Uncertainty_file << endl;
 
@@ -742,9 +745,9 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     cout << "Initializing JER..." << endl;
     
     if (collision_name.Contains("PbPb23") || collision_name.Contains("PbPb24")) {
-      std::string jer_sf_file = "Summer23Prompt23_RunCv4_JRV1m_MC_SF_AK4PFPuppi.txt"; 
+      std::string jer_sf_file = "Summer23BPixPrompt23_RunD_JRV3_MC_SF_AK4PFchs.txt"; 
       std::string jer_res_file = "derive_JER_AK2/My_PbPb23_MC_PtResolution_AK2PF.txt"; 
-      std::string jer_sf_unc_file = "Summer23Prompt23_RunCv4_JRV1m_MC_SFUncertainty_AK4PFPuppi.txt"; 
+      std::string jer_sf_unc_file = "Summer23BPixPrompt23_RunD_JRV3_MC_SFUncertainty_AK4PFchs.txt"; 
       
       std::cout << "Loading JER SF (PbPb): " << jer_sf_file << std::endl;
       jer_PbPb.LoadSF(jer_sf_file);
@@ -754,9 +757,9 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       jer_PbPb.LoadSFUncertainty(jer_sf_unc_file);
     }
     else if (collision_name.Contains("ppref24")) {
-      std::string jer_sf_file = "Summer24Prompt24_JRV1_MC_SF_AK4PFPuppi.txt";
+      std::string jer_sf_file = "Summer24Prompt24_JRV2_MC_SF_AK4PFchs.txt";
       std::string jer_res_file = "derive_JER_AK2/My_ppref24_MC_PtResolution_AK2PF.txt";
-      std::string jer_sf_unc_file = "My24ppRef_JER_SFUncertainty_AK2PF.txt"; 
+      std::string jer_sf_unc_file = "Summer24Prompt24_JRV2_MC_SFUncertainty_AK4PFchs.txt"; 
       
       std::cout << "Loading JER SF (ppref): " << jer_sf_file << std::endl;
       jer_pp.LoadSF(jer_sf_file);
@@ -780,9 +783,18 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
 
   // Load specific map file
   if (isPbPb) {
-    js_PbPb = new JetSelect("Winter24Prompt24_2024BCDEFGHI.root");
+    if (collision_name.Contains("PbPb23")) {
+      // 2023 PbPb map (covers BPix leak era)
+      js_PbPb = new JetSelect("Summer23BPixPrompt23_RunD_v1.root"); 
+    } else if (collision_name.Contains("PbPb24")) {
+      // 2024 PbPb map
+      js_PbPb = new JetSelect("Winter25Prompt25_RunCDE.root"); 
+    }
   } else {
-    js_pp = new JetSelect_pp("Winter24Prompt24_2024BCDEFGHI.root");
+    if (collision_name.Contains("ppref24")) {
+      // 2024 pp reference map
+      js_pp = new JetSelect_pp("Winter25Prompt25_RunCDE.root"); 
+    }
   }
   std::cout << "------------------------------------------------" << std::endl;
 
@@ -1649,9 +1661,11 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         if (systFlag == 12) jer_syst = 1;  // Up
 
         if (isPbPb) {
-            pt_final = jer_PbPb.GetSmearedPt(pt_jec_applied, jteta[ijet], jtphi[ijet], jetRho, v_gen_pts, v_gen_etas, v_gen_phis, jer_syst);
+            // Pass *evt at the end for the stateless HashPRNG
+            pt_final = jer_PbPb.GetSmearedPt(pt_jec_applied, jteta[ijet], jtphi[ijet], jetRho, v_gen_pts, v_gen_etas, v_gen_phis, jer_syst, *evt);
         } else {
-            pt_final = jer_pp.GetSmearedPt(pt_jec_applied, jteta[ijet], jtphi[ijet], jetRho, v_gen_pts, v_gen_etas, v_gen_phis, jer_syst);
+            // Pass *evt at the end for the stateless HashPRNG
+            pt_final = jer_pp.GetSmearedPt(pt_jec_applied, jteta[ijet], jtphi[ijet], jetRho, v_gen_pts, v_gen_etas, v_gen_phis, jer_syst, *evt);
         }
       }
       jtpt_corr[ijet] = pt_final;

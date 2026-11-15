@@ -56,18 +56,18 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
 
     // --- 2. Create a vector of histoPar structs ---
     std::vector<histoPar> histo_par = {
-    {"h_mumu", "m_{#mu#mu} [GeV]", "Events", 20, 60, 120},
-    {"h_Z_pt", "p_{T}^{Z} [GeV]", "Events", 30, 0, 300},
-    {"h_njet", "n_{jet}", "Events", 5, 0, 5},
+    {"h_mumu", "#it{m}_{#mu#mu} [GeV]", "Events", 20, 60, 120},
+    {"h_Z_pt", "#it{p}_{T}^{Z} [GeV]", "Events", 30, 0, 300},
+    {"h_njet", "#it{n}_{jet}", "Events", 5, 0, 5},
     {"h_cen", "cen", "Events", 20, 0, 100},
-    {"h_mumu_j", "m_{#mu#mu} [GeV]", "Events", 20, 60, 120},
-    {"h_Z_pt_j", "p_{T}^{Z} [GeV]", "Events", 30, 0, 300},
-    {"h_jet_pt_lj", "leading jet p_{T} [GeV]", "Events", 30, 0, 300},
-    {"h_jet_pt_lj_nocut", "leading jet p_{T} [GeV]", "Events", 30, 0, 300},
-    {"h_jet_pt_lj_2pi_3", "leading jet p_{T} [GeV]", "Events", 30, 0, 300},
+    {"h_mumu_j", "#it{m}_{#mu#mu} [GeV]", "Events", 20, 60, 120},
+    {"h_Z_pt_j", "#it{p}_{T}^{Z} [GeV]", "Events", 30, 0, 300},
+    {"h_jet_pt_lj", "leading jet #it{p}_{T} [GeV]", "Events", 30, 0, 300},
+    {"h_jet_pt_lj_nocut", "leading jet #it{p}_{T} [GeV]", "Events", 30, 0, 300},
+    {"h_jet_pt_lj_2pi_3", "leading jet #it{p}_{T} [GeV]", "Events", 30, 0, 300},
     {"h_cen_j", "cen_j", "Events", 20, 0, 100},
     {"h_deltaPhi_Zj", "#Delta#phi_{Zj}", "Events" , 20, 0, std::acos(-1)},
-    {"h_xZj_fixbinw", "x_{Zj}", "Events", 30, 0., 3.},
+    {"h_xZj_fixbinw", "#it{x}_{Zj}", "Events", 30, 0., 3.},
     {"h_vz", "vz", "Events", 30, -20, 20},
     {"h_avg_rho", "<#rho>", "Entries", 50, 0, 400}
     //{"h_jetgirth", "girth", "Events", 10, 0, 0.2},
@@ -125,14 +125,14 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
         TH1D* h_MC_tot = new TH1D(Form("h_MC_tot_%d", ih), histo_name.c_str(), n_bin, x_min, x_max);
 
         // Create legend
-        float X_leg = 0.622;
-        float Y_leg = 0.65;
-        if (histo_name == "h_deltaPhi_Zj") X_leg = 0.15;
-        if (histo_name.find("h_jet_pt_lj") != std::string::npos) X_leg = 0.4;
-        if (histo_name.find("h_njet") != std::string::npos) X_leg = 0.4;
-        if (histo_name.find("mumu") != std::string::npos) X_leg = 0.15;
-        if (histo_name == "h_xZj_fixbinw") X_leg = 0.46;
-        TLegend* legend = new TLegend(X_leg, Y_leg, X_leg+0.19, Y_leg+0.2);
+        float X_leg = 0.544;
+        float Y_leg = 0.624;
+        if (histo_name == "h_deltaPhi_Zj") X_leg = 0.12;
+        if (histo_name.find("h_jet_pt_lj") != std::string::npos) X_leg = 0.37;
+        if (histo_name.find("h_njet") != std::string::npos) X_leg = 0.37;
+        if (histo_name.find("mumu") != std::string::npos) X_leg = 0.12;
+        if (histo_name == "h_xZj_fixbinw") X_leg = 0.43;
+        TLegend* legend = new TLegend(X_leg, Y_leg, X_leg+0.19, Y_leg+0.23);
         legend->SetBorderSize(0);
 
         // --- Loop over MC files (using the correct vector) ---
@@ -318,15 +318,15 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
         h_ratio->SetH2DrawOpt("HIST");
         h_ratio->Draw();
         h_ratio->GetLowerRefGraph()->SetMarkerStyle(20);
-        h_ratio->GetLowerRefGraph()->SetMinimum(0.6);
-        h_ratio->GetLowerRefGraph()->SetMaximum(1.4);
+        h_ratio->GetLowerRefGraph()->SetMinimum(-0.01);
+        h_ratio->GetLowerRefGraph()->SetMaximum(2.);
         if (histo_name == "h_xZj_fixbinw" || histo_name == "h_njet" || histo_name.find("h_jet_pt_lj") != std::string::npos) {
-          h_ratio->GetLowerRefGraph()->SetMinimum(0.2);
-          h_ratio->GetLowerRefGraph()->SetMaximum(1.8);
+          h_ratio->GetLowerRefGraph()->SetMinimum(-0.01);
+          h_ratio->GetLowerRefGraph()->SetMaximum(2.);
         }
         if (histo_name == "h_deltaPhi_Zj") {
-          h_ratio->GetLowerRefGraph()->SetMinimum(0.4);
-          h_ratio->GetLowerRefGraph()->SetMaximum(1.6);
+          h_ratio->GetLowerRefGraph()->SetMinimum(-0.01);
+          h_ratio->GetLowerRefGraph()->SetMaximum(2.);
         }
 
         // --- FORCE THE RANGE AFTER DRAWING ---
@@ -336,9 +336,9 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
 
         // Draw stack and data
         double y_max = h_data->GetBinContent(h_data->GetMaximumBin());
-        if (histo_name == "h_vz") h_data->SetMaximum(180*y_max);
-        if (histo_name == "h_njet") h_data->SetMaximum(30*y_max);
-        else  h_data->SetMaximum(8.*y_max);
+        if (histo_name == "h_vz") h_data->SetMaximum(300*y_max);
+        if (histo_name == "h_njet") h_data->SetMaximum(40*y_max);
+        else  h_data->SetMaximum(14.*y_max);
         if (!isPbPb && (histo_name == "h_mumu" || histo_name == "h_Z_pt")) h_data->SetMinimum(0.2);
         else h_data->SetMinimum(0.02);
         h_data->GetXaxis()->SetTitle(x_title.c_str());
@@ -362,13 +362,13 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
         h_data->Draw("EsameX0");
         legend->SetTextFont(42);
         legend->SetTextColor(kBlack);
-        legend->SetTextSize(0.036);
+        legend->SetTextSize(0.044);
         legend->Draw();
 
         // --- Latex Labels
         // Standard CMS
         TLatex* latex = new TLatex();
-        latex->SetTextSize(0.06);
+        latex->SetTextSize(0.07);
         latex->SetTextColor(kBlack);
         latex->SetTextFont(61);
         latex->DrawLatexNDC(0.1, 0.92, "CMS");
@@ -380,23 +380,23 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
 //        latex1->DrawLatexNDC(0.19, 0.92, "Preliminary");
 
         TLatex* latex2 = new TLatex();
-        latex2->SetTextSize(0.05);
+        latex2->SetTextSize(0.06);
         latex2->SetTextColor(kBlack);
         latex2->SetTextFont(42);
 
         // Adaptive Label for PbPb vs pp
         if (isPbPb) {
-          latex2->DrawLatexNDC(0.54, 0.92, TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", Lumi));
+          latex2->DrawLatexNDC(0.47, 0.92, TString::Format("PbPb %.2f nb^{-1} (5.36 TeV)", Lumi));
         } else {
-          latex2->DrawLatexNDC(0.59, 0.92, TString::Format("pp %.0f pb^{-1} (5.36 TeV)", Lumi));
+          latex2->DrawLatexNDC(0.53, 0.92, TString::Format("pp %.0f pb^{-1} (5.36 TeV)", Lumi));
         }
 
         // DYNAMIC LABELS
-        latex2->SetTextSize(0.034);
-        float textX = 0.63; // Starting X position
-        float textY = 0.60; // Starting Y position
+        latex2->SetTextSize(0.044);
+        float textX = 0.55; // Starting X position
+        float textY = 0.56; // Starting Y position
         if (histo_name == "h_deltaPhi_Zj") {
-          textX = 0.39;
+          textX = 0.38;
           textY = 0.82;
         }
         if (histo_name.find("mumu") != std::string::npos) textY = 0.82;
@@ -406,13 +406,13 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
         // 1. Centrality (Only for PbPb)
         if (isPbPb) {
             latex2->DrawLatexNDC(textX, textY, TString::Format("Centrality %d-%d%%", cent_min, cent_max));
-            textY -= 0.05;
+            textY -= 0.06;
         }
 
         // 2. Z Kinematics (Always shown)
-        if (ptZ_max > 9000) latex2->DrawLatexNDC(textX, textY, Form("p_{T}^{Z} > %.0f GeV, p_{T}^{#mu} > 20 GeV", ptZ_min));
-        else latex2->DrawLatexNDC(textX, textY, Form("p_{T}^{Z}: %.0f-%.0f GeV, p_{T}^{#mu} > 20 GeV", ptZ_min, ptZ_max));
-        textY -= 0.05;
+        if (ptZ_max > 9000) latex2->DrawLatexNDC(textX, textY, Form("#it{p}_{T}^{Z} > %.0f GeV, #it{p}_{T}^{#mu} > 20 GeV", ptZ_min));
+        else latex2->DrawLatexNDC(textX, textY, Form("#it{p}_{T}^{Z}: %.0f-%.0f GeV, #it{p}_{T}^{#mu} > 20 GeV", ptZ_min, ptZ_max));
+        textY -= 0.06;
 
         // 3. Jet/Selection Specific Labels
         // Check if the current plot is a "Jet Plot"
@@ -422,10 +422,10 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
                           histo_name.find("_j")  != std::string::npos);
 
         if (isJetPlot) {
-            latex2->DrawLatexNDC(textX, textY, "AK2 jets");
-            textY -= 0.05;
-            latex2->DrawLatexNDC(textX, textY, "p_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.1");
-            textY -= 0.05;
+            latex2->DrawLatexNDC(textX, textY, "anti-#it{k}_{T} jets, R=0.2");
+            textY -= 0.06;
+            latex2->DrawLatexNDC(textX, textY, "#it{p}_{T}^{jet} > 30 GeV, |#eta^{jet}| < 2.1");
+            textY -= 0.06;
 
             // Only add dPhi cut label for specific back-to-back plots
             if (histo_name != "h_deltaPhi_Zj" &&
@@ -441,6 +441,14 @@ void h_stack(const char * collision_type = "PbPb23", bool isAlternative = false,
         h_ratio->GetUpperRefYaxis()->SetTitle(y_title.c_str());
         std::vector<double> onlyOneGridline = {1.0};  // Keep only the line at 1.0
         h_ratio->SetGridlines(onlyOneGridline);
+
+        // Ensure TRatioPlot respects the larger sizes (it sometimes ignores tdrstyle)
+        h_ratio->GetUpperRefYaxis()->SetLabelSize(0.035);
+        h_ratio->GetUpperRefYaxis()->SetTitleSize(0.041);
+        h_ratio->GetUpperRefYaxis()->SetTitleOffset(1.1); // Push title left
+
+        // On x axis less offset
+        h_ratio->GetLowerRefXaxis()->SetTitleOffset(1.);
 
         c[ih]->Update();
 
