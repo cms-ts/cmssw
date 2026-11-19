@@ -103,3 +103,178 @@ Traceback (most recent call last):
     raise ConfigurationException("CRAB configuration file %s not found." % (configname))
 CRABClient.ClientExceptions.ConfigurationException: CRAB configuration file crab_run3_ppref_DATA_ZMM_PPRefSingleMuon3 not found.
 INFO 2026-04-12 05:36:38.627 UTC: 	 Log file is /gpfs/cms/users/rdelliga/work/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab.log
+DEBUG 2026-06-15 21:00:30.762 UTC: 	 CRAB Client version: v3.251020
+DEBUG 2026-06-15 21:00:30.762 UTC: 	 Running on: Linux farmui02.ts.infn.it 5.14.0-570.58.1.el9_6.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Oct 29 06:24:11 EDT 2025 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-06-15 21:00:30.762 UTC: 	 Using SINGULARITY image: el8:x86_64
+DEBUG 2026-06-15 21:00:30.762 UTC: 	 Operating System: AlmaLinux 8.10 (Cerulean Leopard)
+DEBUG 2026-06-15 21:00:30.762 UTC: 	 Executing command: 'submit'
+DEBUG 2026-06-15 21:00:30.763 UTC: 	 Found CRAB cache file /home/rdelliga/.crab3
+DEBUG 2026-06-15 21:25:24.734 UTC: 	 CRAB Client version: v3.251020
+DEBUG 2026-06-15 21:25:24.734 UTC: 	 Running on: Linux farmui02.ts.infn.it 5.14.0-570.58.1.el9_6.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Oct 29 06:24:11 EDT 2025 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-06-15 21:25:24.734 UTC: 	 Using SINGULARITY image: el8:x86_64
+DEBUG 2026-06-15 21:25:24.734 UTC: 	 Operating System: AlmaLinux 8.10 (Cerulean Leopard)
+DEBUG 2026-06-15 21:25:24.735 UTC: 	 Executing command: 'submit'
+DEBUG 2026-06-15 21:25:24.735 UTC: 	 Found CRAB cache file /home/rdelliga/.crab3
+INFO 2026-06-15 21:25:24.737 UTC: 	 Will use CRAB configuration file crab_run3_ppref_MC_QCD.py
+DEBUG 2026-06-15 21:25:24.737 UTC: 	 Loading CRAB configuration file.
+DEBUG 2026-06-15 21:25:24.739 UTC: 	 Will use CRAB plugin ANALYSIS (i.e. will run an analysis job type).
+ERROR 2026-06-15 21:25:24.739 UTC: 	 Working area '/gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_QCD' already exists 
+Please change the requestName in the config file
+ERROR 2026-06-15 21:25:24.739 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/bin/crab.py", line 157, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/bin/crab.py", line 135, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])  # the crab command to be executed
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/submit.py", line 37, in __init__
+    SubCommand.__init__(self, logger, cmdargs, disable_interspersed_args=True)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/SubCommand.py", line 328, in __init__
+    self.requestarea, self.requestname, self.logfile = createWorkArea(
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/ClientUtilities.py", line 392, in createWorkArea
+    raise ConfigException("Working area '%s' already exists \nPlease change the requestName in the config file" % fullpath)
+CRABClient.ClientExceptions.ConfigException: Working area '/gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_QCD' already exists 
+Please change the requestName in the config file
+INFO 2026-06-15 21:25:24.741 UTC: 	 Log file is /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab.log
+DEBUG 2026-06-15 21:32:24.338 UTC: 	 CRAB Client version: v3.251020
+DEBUG 2026-06-15 21:32:24.338 UTC: 	 Running on: Linux farmui02.ts.infn.it 5.14.0-570.58.1.el9_6.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Oct 29 06:24:11 EDT 2025 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-06-15 21:32:24.338 UTC: 	 Using SINGULARITY image: el8:x86_64
+DEBUG 2026-06-15 21:32:24.338 UTC: 	 Operating System: AlmaLinux 8.10 (Cerulean Leopard)
+DEBUG 2026-06-15 21:32:24.338 UTC: 	 Executing command: 'status'
+DEBUG 2026-06-15 21:32:24.339 UTC: 	 Found CRAB cache file /home/rdelliga/.crab3
+ERROR 2026-06-15 21:32:24.342 UTC: 	 Cannot find .requestcache file in CRAB project directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_QCD
+ERROR 2026-06-15 21:32:24.342 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/bin/crab.py", line 157, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/bin/crab.py", line 135, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])  # the crab command to be executed
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/status.py", line 50, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/SubCommand.py", line 281, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/SubCommand.py", line 695, in validateOptions
+    self.loadLocalCache()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/SubCommand.py", line 537, in loadLocalCache
+    raise ex
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/Commands/SubCommand.py", line 531, in loadLocalCache
+    self.cachedinfo, self.logfile = loadCache(self.requestarea, self.logger)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.251020.00/lib/CRABClient/ClientUtilities.py", line 445, in loadCache
+    raise CachefileNotFoundException(msg)
+CRABClient.ClientExceptions.CachefileNotFoundException: Cannot find .requestcache file in CRAB project directory /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_QCD
+INFO 2026-06-15 21:32:24.344 UTC: 	 Log file is /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab.log
+DEBUG 2026-07-08 12:03:37.130 UTC: 	 CRAB Client version: v3.251020
+DEBUG 2026-07-08 12:03:37.131 UTC: 	 Running on: Linux farmui02.ts.infn.it 5.14.0-570.58.1.el9_6.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Oct 29 06:24:11 EDT 2025 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-07-08 12:03:37.131 UTC: 	 Using SINGULARITY image: el8:x86_64
+DEBUG 2026-07-08 12:03:37.131 UTC: 	 Operating System: AlmaLinux 8.10 (Cerulean Leopard)
+DEBUG 2026-07-08 12:03:37.131 UTC: 	 Executing command: 'status'
+DEBUG 2026-07-08 12:03:37.131 UTC: 	 Found CRAB cache file /home/rdelliga/.crab3
+DEBUG 2026-11-15 11:52:15.206 UTC: 	 CRAB Client version: v3.260630
+DEBUG 2026-11-15 11:52:15.207 UTC: 	 Running on: Linux farmui01.ts.infn.it 5.14.0-687.66.2.el9_8.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Nov 6 16:20:31 EST 2026 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-11-15 11:52:15.207 UTC: 	 Using SINGULARITY image: el8:x86_64
+DEBUG 2026-11-15 11:52:15.207 UTC: 	 Operating System: AlmaLinux 8.10 (Cerulean Leopard)
+DEBUG 2026-11-15 11:52:15.207 UTC: 	 Executing command: 'submit'
+DEBUG 2026-11-15 11:52:15.207 UTC: 	 Found CRAB cache file /home/rdelliga/.crab3
+INFO 2026-11-15 11:52:15.208 UTC: 	 Will use CRAB configuration file crab_run3_ppref_MC_ZMM_WZto3LNu.py
+DEBUG 2026-11-15 11:52:15.209 UTC: 	 Loading CRAB configuration file.
+DEBUG 2026-11-15 11:52:15.210 UTC: 	 Will use CRAB plugin ANALYSIS (i.e. will run an analysis job type).
+ERROR 2026-11-15 11:52:15.211 UTC: 	 Working area '/gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_ZMM_WZto3LNu' already exists 
+Please change the requestName in the config file
+ERROR 2026-11-15 11:52:15.211 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/bin/crab.py", line 157, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/bin/crab.py", line 135, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])  # the crab command to be executed
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/Commands/submit.py", line 37, in __init__
+    SubCommand.__init__(self, logger, cmdargs, disable_interspersed_args=True)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/Commands/SubCommand.py", line 328, in __init__
+    self.requestarea, self.requestname, self.logfile = createWorkArea(
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/ClientUtilities.py", line 392, in createWorkArea
+    raise ConfigException("Working area '%s' already exists \nPlease change the requestName in the config file" % fullpath)
+CRABClient.ClientExceptions.ConfigException: Working area '/gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab_test25_run3_ppref_MC_ZMM_WZto3LNu' already exists 
+Please change the requestName in the config file
+INFO 2026-11-15 11:52:15.213 UTC: 	 Log file is /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab.log
+DEBUG 2026-11-15 11:58:51.357 UTC: 	 CRAB Client version: v3.260630
+DEBUG 2026-11-15 11:58:51.358 UTC: 	 Running on: Linux farmui01.ts.infn.it 5.14.0-687.66.2.el9_8.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Nov 6 16:20:31 EST 2026 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-11-15 11:58:51.358 UTC: 	 Using SINGULARITY image: el8:x86_64
+DEBUG 2026-11-15 11:58:51.358 UTC: 	 Operating System: AlmaLinux 8.10 (Cerulean Leopard)
+DEBUG 2026-11-15 11:58:51.358 UTC: 	 Executing command: 'submit'
+DEBUG 2026-11-15 11:58:51.358 UTC: 	 Found CRAB cache file /home/rdelliga/.crab3
+ERROR 2026-11-15 11:58:51.359 UTC: 	 CRAB configuration file crab_run3_ppref_MC_ZMM_WZto3LNu.py not found.
+ERROR 2026-11-15 11:58:51.360 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/bin/crab.py", line 157, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/bin/crab.py", line 135, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])  # the crab command to be executed
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/Commands/submit.py", line 37, in __init__
+    SubCommand.__init__(self, logger, cmdargs, disable_interspersed_args=True)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/Commands/SubCommand.py", line 326, in __init__
+    self.loadConfig(self.options.config, self.args)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/Commands/SubCommand.py", line 52, in loadConfig
+    raise ConfigurationException("CRAB configuration file %s not found." % (configname))
+CRABClient.ClientExceptions.ConfigurationException: CRAB configuration file crab_run3_ppref_MC_ZMM_WZto3LNu.py not found.
+INFO 2026-11-15 11:58:51.361 UTC: 	 Log file is /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab.log
+DEBUG 2026-11-15 18:44:43.227 UTC: 	 CRAB Client version: v3.260630
+DEBUG 2026-11-15 18:44:43.227 UTC: 	 Running on: Linux farmui01.ts.infn.it 5.14.0-687.66.2.el9_8.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Nov 6 16:20:31 EST 2026 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-11-15 18:44:43.227 UTC: 	 Using SINGULARITY image: el8:x86_64
+DEBUG 2026-11-15 18:44:43.227 UTC: 	 Operating System: AlmaLinux 8.10 (Cerulean Leopard)
+DEBUG 2026-11-15 18:44:43.227 UTC: 	 Executing command: 'status'
+DEBUG 2026-11-15 18:44:43.228 UTC: 	 Found CRAB cache file /home/rdelliga/.crab3
+ERROR 2026-11-15 18:44:43.229 UTC: 	 Error: --verboseErrors./crab_test25_run3_ppref_MC_ZMM_WZTo3LNu is not a valid CRAB project directory.
+ERROR 2026-11-15 18:44:43.229 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/bin/crab.py", line 157, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/bin/crab.py", line 135, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])  # the crab command to be executed
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/Commands/status.py", line 50, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/Commands/SubCommand.py", line 281, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/Commands/SubCommand.py", line 691, in validateOptions
+    raise ConfigurationException(msg)
+CRABClient.ClientExceptions.ConfigurationException: [91mError[0m: --verboseErrors./crab_test25_run3_ppref_MC_ZMM_WZTo3LNu is not a valid CRAB project directory.
+INFO 2026-11-15 18:44:43.231 UTC: 	 Log file is /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab.log
+DEBUG 2026-11-15 18:44:50.106 UTC: 	 CRAB Client version: v3.260630
+DEBUG 2026-11-15 18:44:50.106 UTC: 	 Running on: Linux farmui01.ts.infn.it 5.14.0-687.66.2.el9_8.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Nov 6 16:20:31 EST 2026 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-11-15 18:44:50.106 UTC: 	 Using SINGULARITY image: el8:x86_64
+DEBUG 2026-11-15 18:44:50.106 UTC: 	 Operating System: AlmaLinux 8.10 (Cerulean Leopard)
+DEBUG 2026-11-15 18:44:50.106 UTC: 	 Executing command: 'status'
+DEBUG 2026-11-15 18:44:50.106 UTC: 	 Found CRAB cache file /home/rdelliga/.crab3
+ERROR 2026-11-15 18:44:50.107 UTC: 	 Error: --verboseErrors is not a valid CRAB project directory.
+ERROR 2026-11-15 18:44:50.108 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/bin/crab.py", line 157, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/bin/crab.py", line 135, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])  # the crab command to be executed
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/Commands/status.py", line 50, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/Commands/SubCommand.py", line 281, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/Commands/SubCommand.py", line 691, in validateOptions
+    raise ConfigurationException(msg)
+CRABClient.ClientExceptions.ConfigurationException: [91mError[0m: --verboseErrors is not a valid CRAB project directory.
+INFO 2026-11-15 18:44:50.109 UTC: 	 Log file is /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab.log
+DEBUG 2026-11-18 17:17:35.754 UTC: 	 CRAB Client version: v3.260630
+DEBUG 2026-11-18 17:17:35.754 UTC: 	 Running on: Linux farmui01.ts.infn.it 5.14.0-687.66.2.el9_8.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Nov 6 16:20:31 EST 2026 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2026-11-18 17:17:35.754 UTC: 	 Using SINGULARITY image: el8:x86_64
+DEBUG 2026-11-18 17:17:35.754 UTC: 	 Operating System: AlmaLinux 8.10 (Cerulean Leopard)
+DEBUG 2026-11-18 17:17:35.754 UTC: 	 Executing command: 'status'
+DEBUG 2026-11-18 17:17:35.755 UTC: 	 Found CRAB cache file /home/rdelliga/.crab3
+ERROR 2026-11-18 17:17:35.756 UTC: 	 Error: crab_run3_ppref_MC_ZMM_ZZTo2L2Q.py is not a valid CRAB project directory.
+ERROR 2026-11-18 17:17:35.756 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/bin/crab.py", line 157, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/bin/crab.py", line 135, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])  # the crab command to be executed
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/Commands/status.py", line 50, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/Commands/SubCommand.py", line 281, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.260630.00/lib/CRABClient/Commands/SubCommand.py", line 691, in validateOptions
+    raise ConfigurationException(msg)
+CRABClient.ClientExceptions.ConfigurationException: [91mError[0m: crab_run3_ppref_MC_ZMM_ZZTo2L2Q.py is not a valid CRAB project directory.
+INFO 2026-11-18 17:17:35.758 UTC: 	 Log file is /gfsvol01/cms/users/rdelliga/work/Hi_forest/CMSSW_14_1_9/src/HeavyIonsAnalysis/Configuration/test/crabJobs/crab.log
