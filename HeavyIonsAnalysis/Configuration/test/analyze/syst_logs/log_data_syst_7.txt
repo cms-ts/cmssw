@@ -641,14 +641,14 @@ Total Events Processed: 25441 average_weight = 1.00
 [Raw Info]
 Raw Integral (dPhi):   748.00        Raw Integral (pT):    431.00
 [Background Subtraction Info]
-Bkg Integral (dPhi):   195.69        Bkg Integral (pT):    24.46
-Bkg Fraction (dPhi):   26.16 %        Bkg Fraction (pT):    5.68 %
+Bkg Integral (dPhi):   195.69        Bkg Integral (pT):    36.63
+Bkg Fraction (dPhi):   26.16 %        Bkg Fraction (pT):    8.50 %
 
 [DEBUG MinBias Mixing Pipeline]
 1. Total MB entries mixed: 154300
 2. Passed Muon Veto:       30701
-3. Passed pT > signal pt:  19569
-4. Filled into Bkg Hist:   2446
+3. Has a jet in the recoil window: 4667
+4. Filled into Bkg Hist:   3663
 Events with exactly 1 jet: 408.00 (94.66 % of Z+jet events)
 --- End Analysis Sum ---
 ------------------------------------------------

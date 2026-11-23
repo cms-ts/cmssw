@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <random>
 #include "TMath.h"
+#include <stdexcept>
 
 // ---------------------------------------------------------------------------------------------------------
 // JER PROVIDER CLASS (Updated for Summer23/2026 Run 3 Continuous Calibration Formats)
@@ -28,6 +29,12 @@ public:
         float p0, p1, p2, p3, p4, p5; // Parameters for the continuous SF formula
     };
 
+    struct BinnedSFRecord {
+    float etaMin, etaMax;
+    float ptMin, ptMax;
+    float sf;
+    };
+
     struct SFUncRecord {
         float etaMin, etaMax;
         std::vector<float> pts;
@@ -36,6 +43,7 @@ public:
     };
 
     std::vector<SFRecord> sfRecords;
+    std::vector<BinnedSFRecord> binnedSFRecords;
     std::vector<ResRecord> resRecords;
     std::vector<SFUncRecord> sfUncRecords;
     TRandom3 rand;
@@ -65,23 +73,46 @@ public:
 
     // 2. Load Scale Factor text file (Continuous Formula)
     void LoadSF(std::string filename) {
-        std::ifstream file(filename);
-        if (!file.is_open()) { std::cerr << "JERProvider Error: Cannot open SF file " << filename << std::endl; return; }
-        std::string line;
-        while (std::getline(file, line)) {
-            if (line.empty() || line[0] == '{' || line[0] == '[') continue;
-            std::stringstream ss(line);
-            
-            // Format: EtaMin EtaMax nParams PtMin PtMax p0 p1 p2 p3 p4 p5
-            float etaMin, etaMax, ptMin, ptMax, p0, p1, p2, p3, p4, p5;
-            int nParams;
-            
-            if (ss >> etaMin >> etaMax >> nParams >> ptMin >> ptMax >> p0 >> p1 >> p2 >> p3 >> p4 >> p5) {
-                SFRecord r = {etaMin, etaMax, ptMin, ptMax, p0, p1, p2, p3, p4, p5};
-                sfRecords.push_back(r);
-            }
+    std::ifstream file(filename);
+    if (!file) {
+        throw std::runtime_error("Cannot open JER SF file: " + filename);
+    }
+
+    sfRecords.clear();
+    binnedSFRecords.clear();
+
+    std::string line;
+    while (std::getline(file, line)) {
+        const auto first = line.find_first_not_of(" \t\r");
+        if (first == std::string::npos || line[first] == '{' ||
+            line[first] == '[' || line[first] == '#') continue;
+
+        std::stringstream ss(line);
+        std::vector<float> fields;
+        for (float value; ss >> value;) {
+            fields.push_back(value);
         }
-        std::cout << "JERProvider: Loaded " << sfRecords.size() << " SF nominal records." << std::endl;
+
+        if (fields.size() == 8 && fields[4] == 3) {
+            binnedSFRecords.push_back({
+                fields[0], fields[1], fields[2], fields[3], fields[7]
+            });
+        } else if (fields.size() == 11 && fields[2] == 8) {
+            sfRecords.push_back({
+                fields[0], fields[1], fields[3], fields[4],
+                fields[5], fields[6], fields[7], fields[8], fields[9], fields[10]
+            });
+        } else {
+            throw std::runtime_error("Unexpected JER SF row in " + filename + ": " + line);
+        }
+    }
+
+    if (binnedSFRecords.empty() && sfRecords.empty()) {
+        throw std::runtime_error("No nominal JER SF records in " + filename);
+    }
+
+    std::cout << "JERProvider: Loaded " << binnedSFRecords.size()
+              << " binned and " << sfRecords.size() << " formula SF records.\n";
     }
 
     // 3. Load Scale Factor Uncertainty text file
@@ -137,6 +168,14 @@ public:
     // Calculate Nominal SF and apply uncertainties
     float GetSF(float pt, float eta, int syst_var = 0) {
         float nominal_sf = 1.0f;
+
+        for (const auto& r : binnedSFRecords) {
+          if (eta >= r.etaMin && eta < r.etaMax &&
+          pt >= r.ptMin && pt < r.ptMax) {
+            nominal_sf = r.sf;
+            break;
+          }
+        }
         
         // 1. Calculate Nominal SF
         for (const auto& r : sfRecords) {

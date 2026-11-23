@@ -113,11 +113,16 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   // File with MinBias sample
   TFile *inFile_MinBias = nullptr;
 
-  bool isData = false;
+  const bool isData = file_name.Contains("data");
   bool isPbPb = collision_name.Contains("PbPb");
   bool is2023 = collision_name.Contains("23");
   bool isSignal = file_name.Contains("signal");
   bool isAlternative = file_name.Contains("alternative");
+  // Phase 1 data also supplies the final data histograms in plot/.
+  const bool weights_only = systFlag == 0 &&
+      ((isPbPb && weight_phase == 0) ||
+       (!isData && (weight_phase == -1 || weight_phase == 1 || weight_phase == 2)));
+  const bool use_min_bias = isPbPb && !weights_only;
   double Xsec = 1;
   double Ngen = 1;
 
@@ -154,15 +159,17 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   else if (collision_name.Contains("ppref24")) std::cout << "Running 2024 ppref collisions" << endl;
   std::cout << "isPbPb = " << isPbPb << " is2023 = " << is2023 << " isSignal = " << isSignal << std::endl;
 
-  if (file_name.Contains("data")) {
-    isData = true;
+  if (isData) {
     if (isPbPb) {
       if (is2023)
         search_pattern = "/eos/infnts/cms/store/user/rdelliga/HIPhysicsRawPrime*/CRAB3_Analysis_test24_ZMM_Prime*/*/*.root";
       else
           // Pattern "PbPb24[AB]_" matches "PbPb24A_..." and "PbPb24B_..." but EXCLUDES "PbPb24_..."
         search_pattern = "/eos/infnts/cms/store/user/rdelliga/HIPhysicsRawPrime*/CRAB3_Analysis_test21_ZMM_PbPb24[AB]_*/*/*.root";
-
+    } else {
+      search_pattern = "/eos/infnts/cms/store/user/rdelliga/PPRefSingleMuon*/CRAB3_Analysis_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon*/*/000*.root";
+    }
+    if (use_min_bias) {
       // Dynamic Prefix for MinBias files
       TString mb_prefix = (is2023) ? "" : "HI24_";
 
@@ -175,10 +182,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       else if (binning_option == 1) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "inclusive_jets_data_VZ" + cent_tag + ".root");
       else if (binning_option == 2) inFile_MinBias = TFile::Open("./MixEvSub/MinBias_" + mb_prefix + "inclusive_jets_data_VZ_Cen_Combined" + cent_tag + ".root");
       else { cerr << "Invalid binning_option for data MinBias file." << endl; return; }
-      cout << "This is PbPb data (" << (is2023 ? "2023" : "2024") << ")" << endl;
-    } else {
-      search_pattern = "/eos/infnts/cms/store/user/rdelliga/PPRefSingleMuon*/CRAB3_Analysis_test25_run3_ppref_DATA_ZMM_PPRefSingleMuon*/*/000*.root";
     }
+    if (isPbPb) cout << "This is PbPb data (" << (is2023 ? "2023" : "2024") << ")" << endl;
   } else { //MC
     // Loop over files
     for (const auto& file : *targetVector) {
@@ -191,7 +196,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
         else std::cout << " xsec = "  << Xsec << " pb^-1" << std::endl;
       }
     }
-    if (isPbPb) {
+    if (use_min_bias) {
       TString mb_prefix = (is2023) ? "" : "HI24_";
 
       TString cent_tag = "";
@@ -244,7 +249,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   }
   // ----------------------------------------------
 
-  if (isPbPb) {
+  if (use_min_bias) {
     if (inFile_MinBias && !inFile_MinBias->IsZombie()) {
       cout << "Opened MinBias file: " << inFile_MinBias->GetName() << endl;
     } else {
@@ -304,8 +309,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   std::map<std::pair<double, double>, TF1*> map_swap_eff_PbPb_mc;
   std::map<std::pair<double, double>, TH1D*> map_swap_eff_PbPb_mc_truth; // NEW
 
-  // We now load this for ALL MC to apply the nominal correction!
-  if (!isData) { 
+  // The swap correction applies only when filling the jet response.
+  if (!isData && !weights_only) {
       TString eff_data_filename = isPbPb ? "swap_efficiency_PbPb.root" : "swap_efficiency_ppref.root";
       TString eff_mc_filename = isPbPb ? "swap_efficiency_PbPb_MC.root" : "swap_efficiency_ppref_MC.root";
       TString eff_truth_filename = isPbPb ? "swap_efficiency_PbPb_MC_Truth.root" : "swap_efficiency_ppref_MC_Truth.root";
@@ -723,25 +728,27 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       // MC does NOT use Residuals
     }
   }
-  JetCorrector JEC(Files);
-  // --- For debugging ---
-  cout << "Initializing JEC..." << endl;
-  for (const auto& file : Files) {
-      cout << "Loaded JEC File: " << file << endl;
-  }
-  // ---------------------
+  JetCorrector JEC;
+  JetUncertainty JEU;
   std::string name_Uncertainty_file;
   if (collision_name.Contains("PbPb23")) name_Uncertainty_file = "Spring23PbPb_TotalUncertainties.txt";
   else if (collision_name.Contains("PbPb24")) name_Uncertainty_file = "Autumn18_HI_V8_MC_Uncertainty_AK2PF.txt"; //!!! Old, update
   else if (collision_name.Contains("ppref24")) name_Uncertainty_file = "Prompt24HIpp_AK2PF_NonClosure_missPUL3_Uncertainty.txt";
-  JetUncertainty JEU(name_Uncertainty_file);
-  std::cout << "Loaded JEC Uncertainty File: " << name_Uncertainty_file << endl;
+  if (!weights_only) {
+    JEC.Initialize(Files);
+    cout << "Initializing JEC..." << endl;
+    for (const auto& file : Files) {
+      cout << "Loaded JEC File: " << file << endl;
+    }
+    JEU.Initialize(name_Uncertainty_file);
+    cout << "Loaded JEC Uncertainty File: " << name_Uncertainty_file << endl;
+  }
 
   // --- Initialize JER Providers ---
   JERProvider jer_pp; 
   JERProvider jer_PbPb; 
   
-  if (!isData) {
+  if (!isData && !weights_only) {
     cout << "Initializing JER..." << endl;
     
     if (collision_name.Contains("PbPb23") || collision_name.Contains("PbPb24")) {
@@ -782,7 +789,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   JetSelect_pp* js_pp = nullptr; // Assumes class name is JetSelect_pp
 
   // Load specific map file
-  if (isPbPb) {
+  if (isPbPb && !weights_only) {
     if (collision_name.Contains("PbPb23")) {
       // 2023 PbPb map (covers BPix leak era)
       js_PbPb = new JetSelect("Summer23BPixPrompt23_RunD_v1.root"); 
@@ -790,11 +797,9 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       // 2024 PbPb map
       js_PbPb = new JetSelect("Winter25Prompt25_RunCDE.root"); 
     }
-  } else {
-    if (collision_name.Contains("ppref24")) {
-      // 2024 pp reference map
-      js_pp = new JetSelect_pp("Winter25Prompt25_RunCDE.root"); 
-    }
+  } else if (!isPbPb && !weights_only && collision_name.Contains("ppref24")) {
+    // 2024 pp reference map
+    js_pp = new JetSelect_pp("Winter25Prompt25_RunCDE.root");
   }
   std::cout << "------------------------------------------------" << std::endl;
 
@@ -812,8 +817,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   TTreeReaderArray<Int_t> genMuPID = {fReader, isData ? "recoCharge" : "genPID"};
 
   // Access MinBias sample
-  TTree *inputTree;
-  if (isPbPb) {
+  TTree *inputTree = nullptr;
+  if (use_min_bias) {
     inputTree = (TTree*)inFile_MinBias->Get("jet_tree");
     if (!inputTree) {
       std::cerr << "Error: Could not find TTree 'jet_tree' in the input file!" << std::endl;
@@ -821,7 +826,6 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       return;
     }
   }
-  else {inputTree = nullptr;}
 
   // --- Define struct for cache ---
   struct MinBiasJetInfo { float pt; float eta; float phi; };
@@ -840,7 +844,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   Float_t jet_eta_MB[500];
 
   // Set branch addresses to link variables to tree branches
-  if (isPbPb) {
+  if (use_min_bias) {
     inputTree->SetBranchAddress("HF_MinBias", &HF_MinBias);
     inputTree->SetBranchAddress("vz_MinBias", &vz_MinBias);
     inputTree->SetBranchAddress("hiBin_MinBias", &hiBin_MinBias); // Link new branch
@@ -888,7 +892,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   int total_mixed_bins_expected = 0; // Total expected bins for the selected option in MinBias
   int events_per_mixed_bin_limit = 0; // The max events collected per bin in MinBias
 
-  if (isPbPb) {
+  if (use_min_bias) {
     if (binning_option == 0) { // HF binning
       total_mixed_bins_expected = BinningConfig::tot_bins;
       events_per_mixed_bin_limit = BinningConfig::ev_per_bin;
@@ -943,20 +947,6 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
 
   // Canvas
   gStyle->SetOptStat(0);
-  TCanvas* c1 = new TCanvas("c1", "c1", 1200, 800);
-  c1->Divide(1,1);
-  TCanvas* c2 = new TCanvas("c2", "c2", 1200, 800);
-  c2->Divide(1,1);
-  TCanvas* c3 = new TCanvas("c3", "c3", 1200, 800);
-  c3->Divide(1,1);
-  TCanvas* c4 = new TCanvas("c4", "c4", 1200, 800);
-  c4->Divide(1,1);
-  TCanvas* c5 = new TCanvas("c5", "c5", 1200, 800);
-  c5->Divide(1,1);
-  TCanvas* c6 = new TCanvas("c6", "c6", 1200, 800);
-  c6->Divide(1,1);
-  TCanvas* c7 = new TCanvas("c7", "c7", 1200, 800);
-  c7->Divide(1,1);
 
   // Histograms
   const double pi_value = std::acos(-1);;
@@ -1233,9 +1223,10 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   double weight_totev = 0;
   long long dbg_mb_total_mixed = 0;
   long long dbg_mb_pass_muon = 0;
-  long long dbg_mb_pass_pt = 0;
+  long long dbg_mb_has_recoil = 0;
   long long dbg_mb_filled_bkg = 0;
   std::cout << "Starting Analysis Loop over " << total_events << " events..." << std::endl;
+  if (weights_only) std::cout << "Filling weight histograms with the dimuon selection." << std::endl;
   int report_step = static_cast<unsigned int>(total_events / 100); // Update 100 times
   while (fReader.Next()) {
     // Clear GenJet Vectors
@@ -1381,7 +1372,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     double dPhi_Zj_Gen = 0;
     double true_xZj = 0;
     int ijetGenLeading_unfold = -1;
-    if (!isData) {
+    if (!isData && !weights_only) {
       TLorentzVector genmuPlus, genmuMinus;
       // Loop over muons, save indices of most energetic muon and antimuon pairs
       int iHighPtgenMu = -1;
@@ -1414,6 +1405,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
               if (genpt[ijetGen] < 30 || abs(geneta[ijetGen]) > 2.1) continue;
               if (getDeltaR(geneta[ijetGen], genphi[ijetGen], genmuMinus.Eta(), genmuMinus.Phi()) < 0.2) continue;
               if (getDeltaR(geneta[ijetGen], genphi[ijetGen], genmuPlus.Eta(), genmuPlus.Phi()) < 0.2) continue;
+              const double dPhiGen = RelativePhi(gen_Z.Phi(), genphi[ijetGen]);
+              if (!(dPhiGen > 7 * pi_value / 8)) continue;
               if (ijetGenLeading_unfold == -1 || genpt[ijetGen] > genpt[ijetGenLeading_unfold]) {
                 ijetGenLeading_unfold = ijetGen;
               }
@@ -1596,6 +1589,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
     h_cen->Fill((hiBin_to_use)/2, scale);
     h_mumu->Fill(Z.M(), scale);
     h_Z_pt->Fill(Z.Pt(), scale);
+
+    if (weights_only) continue;
 
     // Fill GenJet Vectors pre-calcuted for easier passing to JER function
     if (!isData) {
@@ -1809,6 +1804,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
 
     // --- Reco leading jet selection ---
     double signal_leading_pt = (ijetLeading != -1) ? jtpt_corr[ijetLeading] : 0.0;
+      const double signal_recoil_pt =
+        (ijetLeading_signal != -1) ? jtpt_corr[ijetLeading_signal] : 0.0;
       if (isPbPb) {
         // --- Determine the current bin number for MinBias matching ---
         int current_global_bin_n = -1;
@@ -1869,6 +1866,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
                 for (const auto& mb_ev : cachedEvents) {
                 dbg_mb_total_mixed++;
                 int ijetLeading_MB = -1;
+                int ijetLeading_MB_recoil = -1;
                 float max_pt_MB = -1;
 
                 for (int k = 0; k < mb_ev.n_jets; ++k) {
@@ -1885,6 +1883,10 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
                         if (dPhi_Zj_MB > 7 * pi_value / 8) {
                             h_jet_pt_all_MinBias->Fill(mbJet.pt, scale * mixing_weight);
                             h_xZj_all_MinBias->Fill(xZj_MB, scale * mixing_weight);
+                            if (ijetLeading_MB_recoil == -1 ||
+                              mbJet.pt > mb_ev.jets[ijetLeading_MB_recoil].pt) {
+                              ijetLeading_MB_recoil = k;
+                            }
                         }
 
                         // Track the hardest MB jet in this event
@@ -1896,31 +1898,41 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
                 } // End inner jet loop
 
                 // --- 2. LEADING JET BACKGROUND ---
-                // A UE jet ONLY acts as a leading jet background if it is harder than the signal leading jet
+                const double mb_weight = scale * mixing_weight;
+
                 if (ijetLeading_MB != -1) {
-                    dbg_mb_pass_muon++; // At least one MB jet survived the muon veto
-                    if (max_pt_MB > signal_leading_pt) {
-                        dbg_mb_pass_pt++;
-                        const auto& leadMBJet = mb_ev.jets[ijetLeading_MB];
-                        double dPhi_Zj_MB = RelativePhi(Z.Phi(), leadMBJet.phi);
-                        double xZj_MB = leadMBJet.pt / Z.Pt();
+                  ++dbg_mb_pass_muon;
+                  if (max_pt_MB > signal_leading_pt) {
+                    const auto& leadMBJet = mb_ev.jets[ijetLeading_MB];
+                    h_deltaPhi_Zj_MinBias->Fill(
+                    RelativePhi(Z.Phi(), leadMBJet.phi), mb_weight);
+                  }
+                }
 
-                        h_deltaPhi_Zj_MinBias->Fill(dPhi_Zj_MB, scale * mixing_weight);
-                        if (dPhi_Zj_MB > 7 * pi_value / 8) {
-                            dbg_mb_filled_bkg++;
-                            h_jet_pt_lj_MinBias->Fill(leadMBJet.pt, scale * mixing_weight);
-                        h_xZj_MinBias->Fill(xZj_MB, scale * mixing_weight);
+                if (ijetLeading_MB_recoil == -1) continue;
+                ++dbg_mb_has_recoil;
 
-                        if (itotev < 0.6*Ngen) h_xZj_MinBias_train_closure->Fill(xZj_MB, scale * mixing_weight);
-                        else h_xZj_MinBias_test_closure->Fill(xZj_MB, scale * mixing_weight);
+                const auto& recoilMBJet = mb_ev.jets[ijetLeading_MB_recoil];
+                if (recoilMBJet.pt <= signal_recoil_pt) continue;
 
-                        if (!isData && ijetGenLeading_unfold != -1 && dPhi_Zj_Gen > 7 * pi_value / 8) {
-                                    h_response_MinBias->Fill(xZj_MB, true_xZj, scale * mixing_weight);
-                                    if (itotev < 0.6*Ngen) h_response_MinBias_closure->Fill(xZj_MB, true_xZj, scale * mixing_weight);
-                                }
-                            } // closes if (dPhi_Zj_MB > 7 * pi_value / 8)
-                        } // closes if (max_pt_MB > signal_leading_pt)
-                    } // closes if (ijetLeading_MB != -1)
+                const double xZj_MB = recoilMBJet.pt / Z.Pt();
+                ++dbg_mb_filled_bkg;
+                h_jet_pt_lj_MinBias->Fill(recoilMBJet.pt, mb_weight);
+                h_xZj_MinBias->Fill(xZj_MB, mb_weight);
+
+                if (itotev < 0.6 * Ngen) {
+                  h_xZj_MinBias_train_closure->Fill(xZj_MB, mb_weight);
+                } else {
+                  h_xZj_MinBias_test_closure->Fill(xZj_MB, mb_weight);
+                }
+
+                if (!isData && ijetGenLeading_unfold != -1 &&
+                  dPhi_Zj_Gen > 7 * pi_value / 8) {
+                  h_response_MinBias->Fill(xZj_MB, true_xZj, mb_weight);
+                  if (itotev < 0.6 * Ngen) {
+                    h_response_MinBias_closure->Fill(xZj_MB, true_xZj, mb_weight);
+                  }
+                }
                 } // End MinBias event loop (closes for-loop)
             } // closes if (current_global_bin_n != -1...)
         } // end isPbPb
@@ -1944,6 +1956,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
       // =====================================================================
       // 2. SIGNAL LEADING JET PLOTS (For final analysis observables)
       // =====================================================================
+      double scale_reco = scale;
       if (ijetLeading_signal != -1) {
           double xZj_signal = jtpt_corr[ijetLeading_signal] / Z.Pt();
           double weight_swap = 1.0;
@@ -2004,7 +2017,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
           // ---------------------------------------
 
           // Create a local scale for Reco plots so the global scale remains nominal for True plots!
-          double scale_reco = scale * weight_swap;
+          scale_reco = scale * weight_swap;
 
           h_mumu_j->Fill(Z.M(), scale_reco);
           h_Z_pt_j->Fill(Z.Pt(), scale_reco);
@@ -2065,32 +2078,6 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
           if (ijetLeading_signal != -1) {
               double xZj_signal = jtpt_corr[ijetLeading_signal] / Z.Pt();
               
-              // Recalculate the systematic weight for the Response Matrix
-              double weight_swap = 1.0;
-              if (systFlag == 19) {
-                  double eff_data = 1.0, eff_mc = 1.0;
-                  double pt_eval = jtpt_corr[ijetLeading_signal];
-                  if (!isPbPb && fit_swap_eff_pp_data && fit_swap_eff_pp_mc) {
-                      eff_data = fit_swap_eff_pp_data->Eval(pt_eval);
-                      eff_mc   = fit_swap_eff_pp_mc->Eval(pt_eval);
-                  } else if (isPbPb) {
-                      double cen_pct = hiBin_to_use / 2.0;
-                      for (const auto& kv : map_swap_eff_PbPb_data) {
-                          if (cen_pct >= kv.first.first && cen_pct < kv.first.second) {
-                              eff_data = kv.second->Eval(pt_eval);
-                              eff_mc   = map_swap_eff_PbPb_mc[kv.first]->Eval(pt_eval);
-                              break;
-                          }
-                      }
-                  }
-                  if (eff_data < 0.05) eff_data = 0.05; if (eff_data > 1.0) eff_data = 1.0;
-                  if (eff_mc < 0.05) eff_mc = 0.05;     if (eff_mc > 1.0) eff_mc = 1.0;
-                  weight_swap = eff_data / eff_mc;
-              }
-              
-              // Apply weight ONLY to the matrix fill!
-              double scale_reco = scale * weight_swap;
-
               if (ijetGenLeading_unfold == iGenjetMatchedtoSignalReco) {
                   h_response->Fill(xZj_signal, true_xZj, scale_reco);
                   h_xZj_reco->Fill(xZj_signal, scale_reco);
@@ -2108,6 +2095,30 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   // =================================================================================
   //   END MAIN EVENT LOOP
   // =================================================================================
+
+  auto write_dimuon_histograms = [&]() {
+    TDirectory* output_dir = file_output_HI_mu->mkdir(name_output);
+    output_dir->mkdir("Muons")->cd();
+    h_mumu->Write();
+    h_Z_pt->Write();
+    h_cen->Write();
+    h_muon_iso_nocut->Write();
+    h_vz->Write();
+    h_nVtx->Write();
+    h_avg_rho->Write();
+    if (!isData) {
+      h_npus_size->Write();
+      h_npus->Write();
+      h_tnpus->Write();
+    }
+  };
+
+  if (weights_only) {
+    write_dimuon_histograms();
+    file_output_HI_mu->Close();
+    std::cout << "\nWeight histograms saved after processing " << itotev << " events." << std::endl;
+    return;
+  }
 
   // Create a plot of "Efficiency vs DeltaR Cut"
   TH1 * h_eff_curve = h_deltaR_gen_reco->GetCumulative();
@@ -2189,7 +2200,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   std::cout << "\n[DEBUG MinBias Mixing Pipeline]" << std::endl;
   std::cout << "1. Total MB entries mixed: " << dbg_mb_total_mixed << std::endl;
   std::cout << "2. Passed Muon Veto:       " << dbg_mb_pass_muon << std::endl;
-  std::cout << "3. Passed pT > signal pt:  " << dbg_mb_pass_pt << std::endl;
+  std::cout << "3. Has a jet in the recoil window: " << dbg_mb_has_recoil << std::endl;
   std::cout << "4. Filled into Bkg Hist:   " << dbg_mb_filled_bkg << std::endl;
   }
   if (!isData) {
@@ -2232,6 +2243,20 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   std::cout << "------------------------------------------------" << std::endl;
   // --- End output summary ---
 
+  TCanvas* c1 = new TCanvas("c1", "c1", 1200, 800);
+  c1->Divide(1,1);
+  TCanvas* c2 = new TCanvas("c2", "c2", 1200, 800);
+  c2->Divide(1,1);
+  TCanvas* c3 = new TCanvas("c3", "c3", 1200, 800);
+  c3->Divide(1,1);
+  TCanvas* c4 = new TCanvas("c4", "c4", 1200, 800);
+  c4->Divide(1,1);
+  TCanvas* c5 = new TCanvas("c5", "c5", 1200, 800);
+  c5->Divide(1,1);
+  TCanvas* c6 = new TCanvas("c6", "c6", 1200, 800);
+  c6->Divide(1,1);
+  TCanvas* c7 = new TCanvas("c7", "c7", 1200, 800);
+  c7->Divide(1,1);
   c1->cd(1);
   h_mumu->Draw();
   c2->cd(1);
@@ -2250,18 +2275,8 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
   h_avg_rho->Draw();
   //c1->SaveAs("h_mumu_j.pdf");
 
-  // Create the main directory "MC" or "DATA"
-  TDirectory *Dir = file_output_HI_mu->mkdir(name_output);
-  // Navigate to the directory
-  Dir->cd();
-  // Create a new directory named "Muons"
-  TDirectory *muonsDir = Dir->mkdir("Muons");
-  // Navigate to the "MUONS" directory
-  muonsDir->cd();
-  h_mumu->Write();
-  h_Z_pt->Write();
+  write_dimuon_histograms();
   h_njet->Write();
-  h_cen->Write();
   h_mumu_j->Write();
   h_Z_pt_j->Write();
   h_jet_pt_lj->Write();
@@ -2278,18 +2293,7 @@ void analyze_HI_TTreeReader_ZMM(const char * collision_type = "PbPb23", const ch
 
   h_jet_etaphi_before->Write();
   h_jet_etaphi_after->Write();
-  h_muon_iso_nocut->Write();
-  h_vz->Write();
-  h_nVtx->Write();
-  h_avg_rho->Write();
   h_transverse_pt_max_vs_cen->Write();
-  // --- NEW: Write Pileup Histograms ---
-  if (!isData) {
-      h_npus_size->Write();
-      h_npus->Write();
-      h_tnpus->Write();
-  }
-  // ------------------------------------
   if (isPbPb) {
     h_jet_pt_lj_MinBias->Write();
     h_jet_pt_lj_subtracted->Write();
